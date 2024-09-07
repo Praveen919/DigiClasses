@@ -1,0 +1,16 @@
+{
+  "name": "testing_app",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "express": "^4.17.1",
+    "mongoose": "^8.6.1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
