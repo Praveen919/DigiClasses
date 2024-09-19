@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:io'; // For File class
 import 'package:image_picker/image_picker.dart'; // For picking images
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:testing_app/screens/config.dart';
 
@@ -107,17 +105,21 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
               child: const Text('Select Image'),
             ),
             const SizedBox(height: 20),
-            _buildDropdown('Display logo on receipt?', logoDisplay, ['Yes', 'No'], (value) {
+            _buildDropdown(
+                'Display logo on receipt?', logoDisplay, ['Yes', 'No'],
+                (value) {
               setState(() {
                 logoDisplay = value!;
               });
             }),
-            _buildDropdown('Display fee status on receipt?', feeStatusDisplay, ['Yes', 'No'], (value) {
+            _buildDropdown('Display fee status on receipt?', feeStatusDisplay,
+                ['Yes', 'No'], (value) {
               setState(() {
                 feeStatusDisplay = value!;
               });
             }),
-            _buildDropdown('Allow students to chat?', chatOption, ['Yes', 'No'], (value) {
+            _buildDropdown('Allow students to chat?', chatOption, ['Yes', 'No'],
+                (value) {
               setState(() {
                 chatOption = value!;
               });
@@ -128,7 +130,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             _buildTextField('Name', nameController, true),
-            _buildTextField('Mobile No.', mobileController, true, isNumeric: true),
+            _buildTextField('Mobile No.', mobileController, true,
+                isNumeric: true),
             _buildTextField('Email', emailController, true, isEmail: true),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -211,12 +214,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
 
   // Build TextField widget with validation
   Widget _buildTextField(
-      String label,
-      TextEditingController controller,
-      bool isRequired, {
-        bool isNumeric = false,
-        bool isEmail = false,
-      }) {
+    String label,
+    TextEditingController controller,
+    bool isRequired, {
+    bool isNumeric = false,
+    bool isEmail = false,
+  }) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(labelText: label),
@@ -235,11 +238,11 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
 
   // Build Dropdown widget
   Widget _buildDropdown(
-      String label,
-      String value,
-      List<String> options,
-      ValueChanged<String?> onChanged,
-      ) {
+    String label,
+    String value,
+    List<String> options,
+    ValueChanged<String?> onChanged,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -258,6 +261,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
     );
   }
 }
+
 class ChangePassword extends StatefulWidget {
   const ChangePassword({super.key});
 
@@ -266,13 +270,14 @@ class ChangePassword extends StatefulWidget {
 }
 
 class _ChangePasswordState extends State<ChangePassword> {
-  final TextEditingController currentPasswordController = TextEditingController();
+  final TextEditingController currentPasswordController =
+      TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false; // To show loading indicator when submitting
-
 
   Future<void> _changePassword() async {
     if (_formKey.currentState!.validate()) {
@@ -301,8 +306,7 @@ class _ChangePasswordState extends State<ChangePassword> {
 
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Password changed successfully')),
-
+            const SnackBar(content: Text('Password changed successfully')),
           );
         } else {
           // Handle non-200 status codes
@@ -390,17 +394,20 @@ class _ChangePasswordState extends State<ChangePassword> {
             ),
             const SizedBox(height: 20),
             _isLoading
-                ? const Center(child: CircularProgressIndicator()) // Show loading indicator
+                ? const Center(
+                    child:
+                        CircularProgressIndicator()) // Show loading indicator
                 : ElevatedButton(
-              onPressed: _changePassword,
-              child: const Text('Change Password'),
-            ),
+                    onPressed: _changePassword,
+                    child: const Text('Change Password'),
+                  ),
           ],
         ),
       ),
     );
   }
 }
+
 class AutoNotificationSettingsScreen extends StatefulWidget {
   const AutoNotificationSettingsScreen({super.key});
 
@@ -438,12 +445,15 @@ class _AutoNotificationSettingsState
     String? token = prefs.getString('token');
 
     if (token != null) {
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);  // Decode the JWT to extract user ID
-      String userId = decodedToken['id'];  // Extract the user ID from the decoded token
+      Map<String, dynamic> decodedToken =
+          JwtDecoder.decode(token); // Decode the JWT to extract user ID
+      String userId =
+          decodedToken['id']; // Extract the user ID from the decoded token
 
       try {
         final response = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/notification-settings/$userId'), // Use userId in the URL
+          Uri.parse(
+              '${AppConfig.baseUrl}/api/notification-settings/$userId'), // Use userId in the URL
           headers: {
             'Authorization': 'Bearer $token',
           },
@@ -489,39 +499,42 @@ class _AutoNotificationSettingsState
     String? token = prefs.getString('token');
 
     if (token != null) {
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);  // Decode the JWT to extract user ID
-      String userId = decodedToken['id'];  // Extract the user ID from the decoded token
+      Map<String, dynamic> decodedToken =
+          JwtDecoder.decode(token); // Decode the JWT to extract user ID
+      String userId =
+          decodedToken['id']; // Extract the user ID from the decoded token
 
       try {
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/notification-settings/$userId'),  // Use userId in the URL
+          Uri.parse(
+              '${AppConfig.baseUrl}/api/notification-settings/$userId'), // Use userId in the URL
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
           },
           body: json.encode({
             'studentAbsentAttendanceNotification':
-            notificationSettings['Student Absent Attendance Notification'],
-            'attendancePerformanceStatusNotification':
-            notificationSettings['Attendance Performance Status Notification'],
+                notificationSettings['Student Absent Attendance Notification'],
+            'attendancePerformanceStatusNotification': notificationSettings[
+                'Attendance Performance Status Notification'],
             'feeReminderNotification':
-            notificationSettings['Fee Reminder Notification'],
+                notificationSettings['Fee Reminder Notification'],
             'newManualExamScheduledNotification':
-            notificationSettings['New Manual Exam Scheduled Notification'],
+                notificationSettings['New Manual Exam Scheduled Notification'],
             'studentAbsentInExamNotification':
-            notificationSettings['Student Absent in Exam'],
+                notificationSettings['Student Absent in Exam'],
             'studentExamMarksNotification':
-            notificationSettings['Student Exam Marks Notification'],
+                notificationSettings['Student Exam Marks Notification'],
             'newMcqExamAssignedNotification':
-            notificationSettings['New MCQ Exam assigned Notification'],
+                notificationSettings['New MCQ Exam assigned Notification'],
             'studentAbsentInMcqExamNotification':
-            notificationSettings['Student absent in MCQ Exam Notification'],
+                notificationSettings['Student absent in MCQ Exam Notification'],
             'studentMcqExamMarksNotification':
-            notificationSettings['Student MCQ Exam Marks Notification'],
+                notificationSettings['Student MCQ Exam Marks Notification'],
             'newAssignmentSharedNotification':
-            notificationSettings['New Assignment shared Notification'],
+                notificationSettings['New Assignment shared Notification'],
             'newDocumentSharedNotification':
-            notificationSettings['New Document Shared Notification'],
+                notificationSettings['New Document Shared Notification'],
           }),
         );
         if (response.statusCode == 200) {
@@ -536,6 +549,7 @@ class _AutoNotificationSettingsState
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -545,7 +559,7 @@ class _AutoNotificationSettingsState
           children: [
             const NoteSection(
               noteText:
-              'You can set auto Notifications to ON & the system will send Notifications accordingly to student or parents.',
+                  'You can set auto Notifications to ON & the system will send Notifications accordingly to student or parents.',
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -595,13 +609,12 @@ class NoteSection extends StatelessWidget {
   }
 }
 
-
-
 class AutoWhatsappSettingScreen extends StatefulWidget {
   const AutoWhatsappSettingScreen({super.key});
 
   @override
-  _AutoWhatsappSettingScreenState createState() => _AutoWhatsappSettingScreenState();
+  _AutoWhatsappSettingScreenState createState() =>
+      _AutoWhatsappSettingScreenState();
 }
 
 class _AutoWhatsappSettingScreenState extends State<AutoWhatsappSettingScreen> {
@@ -635,12 +648,15 @@ class _AutoWhatsappSettingScreenState extends State<AutoWhatsappSettingScreen> {
     String? token = prefs.getString('token');
 
     if (token != null) {
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);  // Decode the JWT to extract user ID
-      String userId = decodedToken['id'];  // Extract the user ID from the decoded token
+      Map<String, dynamic> decodedToken =
+          JwtDecoder.decode(token); // Decode the JWT to extract user ID
+      String userId =
+          decodedToken['id']; // Extract the user ID from the decoded token
 
       try {
         final response = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/whatsapp-settings/$userId'),  // Use userId in the URL
+          Uri.parse(
+              '${AppConfig.baseUrl}/api/whatsapp-settings/$userId'), // Use userId in the URL
           headers: {
             'Authorization': 'Bearer $token',
           },
@@ -648,21 +664,36 @@ class _AutoWhatsappSettingScreenState extends State<AutoWhatsappSettingScreen> {
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
           setState(() {
-            whatsappSettings['Inquiry Welcome Message to Student'] = data['inquiryWelcomeMessageToStudent'] ?? false;
-            whatsappSettings['Welcome Message to Student'] = data['welcomeMessageToStudent'] ?? false;
-            whatsappSettings['Account ID/Password Message to Student'] = data['accountIdPasswordMessageToStudent'] ?? false;
-            whatsappSettings['Student Absent Attendance Notification'] = data['studentAbsentAttendanceNotification'] ?? false;
-            whatsappSettings['Attendance Performance Status Notification'] = data['attendancePerformanceStatusNotification'] ?? false;
-            whatsappSettings['Fee Reminder Notification'] = data['feeReminderNotification'] ?? false;
-            whatsappSettings['New Manual Exam Scheduled Notification'] = data['newManualExamScheduledNotification'] ?? false;
-            whatsappSettings['Student Absent in Exam'] = data['studentAbsentInExamNotification'] ?? false;
-            whatsappSettings['Student Exam Marks Notification'] = data['studentExamMarksNotification'] ?? false;
-            whatsappSettings['New MCQ Exam assigned Notification'] = data['newMcqExamAssignedNotification'] ?? false;
-            whatsappSettings['Student absent in MCQ Exam Notification'] = data['studentAbsentInMcqExamNotification'] ?? false;
-            whatsappSettings['Student MCQ Exam Marks Notification'] = data['studentMcqExamMarksNotification'] ?? false;
-            whatsappSettings['New Assignment shared Notification'] = data['newAssignmentSharedNotification'] ?? false;
-            whatsappSettings['New Document Shared Notification'] = data['newDocumentSharedNotification'] ?? false;
-            whatsappSettings['New Study Material Shared Notification'] = data['newStudyMaterialSharedNotification'] ?? false;
+            whatsappSettings['Inquiry Welcome Message to Student'] =
+                data['inquiryWelcomeMessageToStudent'] ?? false;
+            whatsappSettings['Welcome Message to Student'] =
+                data['welcomeMessageToStudent'] ?? false;
+            whatsappSettings['Account ID/Password Message to Student'] =
+                data['accountIdPasswordMessageToStudent'] ?? false;
+            whatsappSettings['Student Absent Attendance Notification'] =
+                data['studentAbsentAttendanceNotification'] ?? false;
+            whatsappSettings['Attendance Performance Status Notification'] =
+                data['attendancePerformanceStatusNotification'] ?? false;
+            whatsappSettings['Fee Reminder Notification'] =
+                data['feeReminderNotification'] ?? false;
+            whatsappSettings['New Manual Exam Scheduled Notification'] =
+                data['newManualExamScheduledNotification'] ?? false;
+            whatsappSettings['Student Absent in Exam'] =
+                data['studentAbsentInExamNotification'] ?? false;
+            whatsappSettings['Student Exam Marks Notification'] =
+                data['studentExamMarksNotification'] ?? false;
+            whatsappSettings['New MCQ Exam assigned Notification'] =
+                data['newMcqExamAssignedNotification'] ?? false;
+            whatsappSettings['Student absent in MCQ Exam Notification'] =
+                data['studentAbsentInMcqExamNotification'] ?? false;
+            whatsappSettings['Student MCQ Exam Marks Notification'] =
+                data['studentMcqExamMarksNotification'] ?? false;
+            whatsappSettings['New Assignment shared Notification'] =
+                data['newAssignmentSharedNotification'] ?? false;
+            whatsappSettings['New Document Shared Notification'] =
+                data['newDocumentSharedNotification'] ?? false;
+            whatsappSettings['New Study Material Shared Notification'] =
+                data['newStudyMaterialSharedNotification'] ?? false;
           });
         } else {
           print('Failed to load settings');
@@ -679,38 +710,58 @@ class _AutoWhatsappSettingScreenState extends State<AutoWhatsappSettingScreen> {
     String? token = prefs.getString('token');
 
     if (token != null) {
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);  // Decode the JWT to extract user ID
-      String userId = decodedToken['id'];  // Extract the user ID from the decoded token
+      Map<String, dynamic> decodedToken =
+          JwtDecoder.decode(token); // Decode the JWT to extract user ID
+      String userId =
+          decodedToken['id']; // Extract the user ID from the decoded token
 
       try {
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/whatsapp-settings/$userId'),  // Use userId in the URL
+          Uri.parse(
+              '${AppConfig.baseUrl}/api/whatsapp-settings/$userId'), // Use userId in the URL
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
           },
           body: json.encode({
-            'inquiryWelcomeMessageToStudent': whatsappSettings['Inquiry Welcome Message to Student'],
-            'welcomeMessageToStudent': whatsappSettings['Welcome Message to Student'],
-            'accountIdPasswordMessageToStudent': whatsappSettings['Account ID/Password Message to Student'],
-            'studentAbsentAttendanceNotification': whatsappSettings['Student Absent Attendance Notification'],
-            'attendancePerformanceStatusNotification': whatsappSettings['Attendance Performance Status Notification'],
-            'feeReminderNotification': whatsappSettings['Fee Reminder Notification'],
-            'newManualExamScheduledNotification': whatsappSettings['New Manual Exam Scheduled Notification'],
-            'studentAbsentInExamNotification': whatsappSettings['Student Absent in Exam'],
-            'studentExamMarksNotification': whatsappSettings['Student Exam Marks Notification'],
-            'newMcqExamAssignedNotification': whatsappSettings['New MCQ Exam assigned Notification'],
-            'studentAbsentInMcqExamNotification': whatsappSettings['Student absent in MCQ Exam Notification'],
-            'studentMcqExamMarksNotification': whatsappSettings['Student MCQ Exam Marks Notification'],
-            'newAssignmentSharedNotification': whatsappSettings['New Assignment shared Notification'],
-            'newDocumentSharedNotification': whatsappSettings['New Document Shared Notification'],
-            'newStudyMaterialSharedNotification': whatsappSettings['New Study Material Shared Notification'],
+            'inquiryWelcomeMessageToStudent':
+                whatsappSettings['Inquiry Welcome Message to Student'],
+            'welcomeMessageToStudent':
+                whatsappSettings['Welcome Message to Student'],
+            'accountIdPasswordMessageToStudent':
+                whatsappSettings['Account ID/Password Message to Student'],
+            'studentAbsentAttendanceNotification':
+                whatsappSettings['Student Absent Attendance Notification'],
+            'attendancePerformanceStatusNotification':
+                whatsappSettings['Attendance Performance Status Notification'],
+            'feeReminderNotification':
+                whatsappSettings['Fee Reminder Notification'],
+            'newManualExamScheduledNotification':
+                whatsappSettings['New Manual Exam Scheduled Notification'],
+            'studentAbsentInExamNotification':
+                whatsappSettings['Student Absent in Exam'],
+            'studentExamMarksNotification':
+                whatsappSettings['Student Exam Marks Notification'],
+            'newMcqExamAssignedNotification':
+                whatsappSettings['New MCQ Exam assigned Notification'],
+            'studentAbsentInMcqExamNotification':
+                whatsappSettings['Student absent in MCQ Exam Notification'],
+            'studentMcqExamMarksNotification':
+                whatsappSettings['Student MCQ Exam Marks Notification'],
+            'newAssignmentSharedNotification':
+                whatsappSettings['New Assignment shared Notification'],
+            'newDocumentSharedNotification':
+                whatsappSettings['New Document Shared Notification'],
+            'newStudyMaterialSharedNotification':
+                whatsappSettings['New Study Material Shared Notification'],
           }),
         );
         if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Settings saved successfully')));
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Settings saved successfully')));
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save settings')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Failed to save settings')));
         }
       } catch (error) {
         print('Error saving WhatsApp settings: $error');
@@ -725,7 +776,9 @@ class _AutoWhatsappSettingScreenState extends State<AutoWhatsappSettingScreen> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            const NoteSection(noteText: 'You can set auto WhatsApp messages to ON & the system will send messages accordingly.'),
+            const NoteSection(
+                noteText:
+                    'You can set auto WhatsApp messages to ON & the system will send messages accordingly.'),
             const SizedBox(height: 10),
             Expanded(
               child: ListView(
@@ -753,7 +806,6 @@ class _AutoWhatsappSettingScreenState extends State<AutoWhatsappSettingScreen> {
   }
 }
 
-
 // Screen for My Plan
 class MyPlanScreen extends StatefulWidget {
   const MyPlanScreen({super.key});
@@ -769,8 +821,6 @@ class _MyPlanScreenState extends State<MyPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-
       body: Column(
         children: [
           Row(
@@ -783,8 +833,8 @@ class _MyPlanScreenState extends State<MyPlanScreen> {
                     });
                   },
                   style: ElevatedButton.styleFrom(
-
-                    foregroundColor: Colors.black, backgroundColor: showPlan ? Colors.white : Colors.grey[300],
+                    foregroundColor: Colors.black,
+                    backgroundColor: showPlan ? Colors.white : Colors.grey[300],
                   ),
                   child: const Text('Plan'),
                 ),
@@ -797,7 +847,9 @@ class _MyPlanScreenState extends State<MyPlanScreen> {
                     });
                   },
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.black, backgroundColor: !showPlan ? Colors.white : Colors.grey[300],
+                    foregroundColor: Colors.black,
+                    backgroundColor:
+                        !showPlan ? Colors.white : Colors.grey[300],
                   ),
                   child: const Text('Invoices'),
                 ),
@@ -865,7 +917,8 @@ class _MyPlanScreenState extends State<MyPlanScreen> {
                 child: DropdownButton<String>(
                   value: selectedExport,
                   isExpanded: true,
-                  items: ['--Select--', 'Option 1', 'Option 2'].map((String value) {
+                  items: ['--Select--', 'Option 1', 'Option 2']
+                      .map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -919,13 +972,13 @@ class _MyPlanScreenState extends State<MyPlanScreen> {
 
 // Screen for My Referral
 class MyReferralScreen extends StatelessWidget {
-  final String referralLink = 'https://example.com/ref/ABC123DE-F4567-4A8B-1A2B4C';
+  final String referralLink =
+      'https://example.com/ref/ABC123DE-F4567-4A8B-1A2B4C';
 
   const MyReferralScreen({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -995,9 +1048,12 @@ class MyReferralScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     ElevatedButton(
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: referralLink)).then((_) {
+                        Clipboard.setData(ClipboardData(text: referralLink))
+                            .then((_) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Referral link copied to clipboard')),
+                            const SnackBar(
+                                content:
+                                    Text('Referral link copied to clipboard')),
                           );
                         });
                       },

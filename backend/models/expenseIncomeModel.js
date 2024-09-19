@@ -1,25 +1,28 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const expenseSchema = new Schema({
-  name: { type: String, required: true },
-  paymentMode: { type: String, required: true },
-  chequeNo: { type: String, required: false },
-  date: { type: String, required: true },
-  amount: { type: Number, required: true },
-  remark: { type: String, required: false }
-}, { timestamps: true });
-
-const incomeSchema = new Schema({
+// Schema for Expense
+const expenseSchema = new mongoose.Schema({
   type: { type: String, required: true },
-  paymentType: { type: String, required: true },
-  chequeNo: { type: String, required: false },
-  bankName: { type: String, required: false },
-  date: { type: String, required: true },
-  amount: { type: Number, required: true }
-}, { timestamps: true });
+  paymentMode: { type: String },
+  chequeNumber: { type: String },
+  bankName: { type: String },
+  date: { type: Date },
+  amount: { type: Number, required: true },
+  remark: { type: String }
+});
 
 const Expense = mongoose.model('Expense', expenseSchema);
+
+// Schema for Income
+const incomeSchema = new mongoose.Schema({
+  type: { type: String, required: true },
+  paymentType: { type: String },
+  chequeNumber: { type: String },
+  bankName: { type: String },
+  date: { type: Date },
+  amount: { type: Number, required: true }
+});
+
 const Income = mongoose.model('Income', incomeSchema);
 
 module.exports = { Expense, Income };

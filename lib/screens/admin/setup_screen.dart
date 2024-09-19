@@ -81,7 +81,7 @@ class _AddYearScreenState extends State<AddYearScreen> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate:
-      isFromDate ? fromDate ?? DateTime.now() : toDate ?? DateTime.now(),
+          isFromDate ? fromDate ?? DateTime.now() : toDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
@@ -124,25 +124,25 @@ class _AddYearScreenState extends State<AddYearScreen> {
 
     final response = widget.yearId == null
         ? await http.post(
-      Uri.parse('${AppConfig.baseUrl}/api/years/add'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'yearName': _yearNameController.text,
-        'fromDate': _formatDate(fromDate),
-        'toDate': _formatDate(toDate),
-        'remarks': _remarksController.text,
-      }),
-    )
+            Uri.parse('${AppConfig.baseUrl}/api/years/add'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'yearName': _yearNameController.text,
+              'fromDate': _formatDate(fromDate),
+              'toDate': _formatDate(toDate),
+              'remarks': _remarksController.text,
+            }),
+          )
         : await http.put(
-      Uri.parse('${AppConfig.baseUrl}/api/years/edit/${widget.yearId}'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'yearName': _yearNameController.text,
-        'fromDate': _formatDate(fromDate),
-        'toDate': _formatDate(toDate),
-        'remarks': _remarksController.text,
-      }),
-    );
+            Uri.parse('${AppConfig.baseUrl}/api/years/edit/${widget.yearId}'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'yearName': _yearNameController.text,
+              'fromDate': _formatDate(fromDate),
+              'toDate': _formatDate(toDate),
+              'remarks': _remarksController.text,
+            }),
+          );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -228,7 +228,7 @@ class _AddYearScreenState extends State<AddYearScreen> {
                 ElevatedButton(
                   onPressed: _submit,
                   child:
-                  Text(widget.yearId == null ? 'Add Year' : 'Update Year'),
+                      Text(widget.yearId == null ? 'Add Year' : 'Update Year'),
                 ),
                 const SizedBox(width: 20),
                 ElevatedButton(
@@ -262,7 +262,8 @@ class _ManageYearScreenState extends State<ManageYearScreen> {
   }
 
   Future<void> _fetchYears() async {
-    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/years/list'));
+    final response =
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/years/list'));
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       setState(() {
@@ -280,8 +281,8 @@ class _ManageYearScreenState extends State<ManageYearScreen> {
   }
 
   Future<void> _deleteYear(String id) async {
-    final response =
-    await http.delete(Uri.parse('${AppConfig.baseUrl}/api/years/delete/$id'));
+    final response = await http
+        .delete(Uri.parse('${AppConfig.baseUrl}/api/years/delete/$id'));
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Year deleted successfully')),
@@ -328,53 +329,53 @@ class _ManageYearScreenState extends State<ManageYearScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _years.isEmpty
-          ? const Center(child: Text('No Years Found'))
-          : ListView.builder(
-        itemCount: _years.length,
-        itemBuilder: (context, index) {
-          final year = _years[index];
-          return Card(
-            margin: const EdgeInsets.all(8.0),
-            child: ListTile(
-              title: Text(year.yearName),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('From Date: ${year.fromDate}'),
-                  Text('To Date: ${year.toDate}'),
-                  Text('Remarks: ${year.remarks}'),
-                ],
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AddYearScreen(
-                            yearId: year.id,
-                            yearName: year.yearName,
-                            fromDate: year.fromDate,
-                            toDate: year.toDate,
-                            remarks: year.remarks,
-                          ),
+              ? const Center(child: Text('No Years Found'))
+              : ListView.builder(
+                  itemCount: _years.length,
+                  itemBuilder: (context, index) {
+                    final year = _years[index];
+                    return Card(
+                      margin: const EdgeInsets.all(8.0),
+                      child: ListTile(
+                        title: Text(year.yearName),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('From Date: ${year.fromDate}'),
+                            Text('To Date: ${year.toDate}'),
+                            Text('Remarks: ${year.remarks}'),
+                          ],
                         ),
-                      ).then((_) => _fetchYears());
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _confirmDelete(year.id),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddYearScreen(
+                                      yearId: year.id,
+                                      yearName: year.yearName,
+                                      fromDate: year.fromDate,
+                                      toDate: year.toDate,
+                                      remarks: year.remarks,
+                                    ),
+                                  ),
+                                ).then((_) => _fetchYears());
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () => _confirmDelete(year.id),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
@@ -444,7 +445,8 @@ class _AssignStandardScreenState extends State<AssignStandardScreen> {
 
   Future<void> _fetchAlreadyAssignedStandards() async {
     try {
-      final url = Uri.parse('${AppConfig.baseUrl}/api/assignStandard/alreadyAssigned');
+      final url =
+          Uri.parse('${AppConfig.baseUrl}/api/assignStandard/alreadyAssigned');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -521,22 +523,22 @@ class _AssignStandardScreenState extends State<AssignStandardScreen> {
           ),
           child: alreadyAssignedStandards.isNotEmpty
               ? ListView(
-            shrinkWrap:
-            true, // Allows the ListView to size itself to the content
-            physics:
-            const NeverScrollableScrollPhysics(), // Prevents scrolling inside the container
-            children: alreadyAssignedStandards.map((standard) {
-              return ListTile(
-                title: Text(standard),
-              );
-            }).toList(),
-          )
+                  shrinkWrap:
+                      true, // Allows the ListView to size itself to the content
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Prevents scrolling inside the container
+                  children: alreadyAssignedStandards.map((standard) {
+                    return ListTile(
+                      title: Text(standard),
+                    );
+                  }).toList(),
+                )
               : const Center(
-            child: Text(
-              'No standards assigned',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ),
+                  child: Text(
+                    'No standards assigned',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ),
         ),
       ],
     );
@@ -604,31 +606,31 @@ class _AssignStandardScreenState extends State<AssignStandardScreen> {
           ),
           child: assignedStandards.isNotEmpty
               ? ListView(
-            shrinkWrap:
-            true, // Allows the ListView to size itself to the content
-            physics:
-            const NeverScrollableScrollPhysics(), // Prevents scrolling inside the container
-            children: assignedStandards.map((assignedStandard) {
-              return ListTile(
-                title: Text(assignedStandard),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    setState(() {
-                      assignedStandards.remove(assignedStandard);
-                      _showMessage('Standard removed successfully');
-                    });
-                  },
-                ),
-              );
-            }).toList(),
-          )
+                  shrinkWrap:
+                      true, // Allows the ListView to size itself to the content
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Prevents scrolling inside the container
+                  children: assignedStandards.map((assignedStandard) {
+                    return ListTile(
+                      title: Text(assignedStandard),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          setState(() {
+                            assignedStandards.remove(assignedStandard);
+                            _showMessage('Standard removed successfully');
+                          });
+                        },
+                      ),
+                    );
+                  }).toList(),
+                )
               : const Center(
-            child: Text(
-              'No standards selected',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ),
+                  child: Text(
+                    'No standards selected',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ),
         ),
       ],
     );
@@ -715,7 +717,8 @@ class _AssignStandardScreenState extends State<AssignStandardScreen> {
     }
 
     // Fetch currently assigned standards from the server
-    final url = Uri.parse('${AppConfig.baseUrl}/api/assignStandard/alreadyAssigned');
+    final url =
+        Uri.parse('${AppConfig.baseUrl}/api/assignStandard/alreadyAssigned');
     final response = await http.get(url);
 
     List<String> dbAssignedStandards = [];
@@ -743,7 +746,8 @@ class _AssignStandardScreenState extends State<AssignStandardScreen> {
     }
 
     if (newAssignments.isNotEmpty) {
-      final saveUrl = Uri.parse('${AppConfig.baseUrl}/api/assignStandard/assign');
+      final saveUrl =
+          Uri.parse('${AppConfig.baseUrl}/api/assignStandard/assign');
       final saveResponse = await http.post(
         saveUrl,
         headers: {'Content-Type': 'application/json'},
@@ -776,7 +780,8 @@ class _AssignStandardScreenState extends State<AssignStandardScreen> {
     }
 
     // Fetch currently assigned standards from the server
-    final url = Uri.parse('${AppConfig.baseUrl}/api/assignStandard/alreadyAssigned');
+    final url =
+        Uri.parse('${AppConfig.baseUrl}/api/assignStandard/alreadyAssigned');
     final response = await http.get(url);
 
     List<String> dbAssignedStandards = [];
@@ -804,7 +809,8 @@ class _AssignStandardScreenState extends State<AssignStandardScreen> {
     }
 
     if (removedAssignments.isNotEmpty) {
-      final removeUrl = Uri.parse('${AppConfig.baseUrl}/api/assignStandard/remove');
+      final removeUrl =
+          Uri.parse('${AppConfig.baseUrl}/api/assignStandard/remove');
       final removeResponse = await http.post(
         removeUrl,
         headers: {'Content-Type': 'application/json'},
@@ -879,7 +885,8 @@ class _AssignSubjectScreenState extends State<AssignSubjectScreen> {
 
   Future<void> _fetchAlreadyAssignedSubjects() async {
     try {
-      final url = Uri.parse('${AppConfig.baseUrl}/api/assignSubject/alreadyAssigned');
+      final url =
+          Uri.parse('${AppConfig.baseUrl}/api/assignSubject/alreadyAssigned');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -953,20 +960,20 @@ class _AssignSubjectScreenState extends State<AssignSubjectScreen> {
             ),
             child: alreadyAssignedSubjects.isNotEmpty
                 ? ListView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: alreadyAssignedSubjects.map((subject) {
-                return ListTile(
-                  title: Text(subject),
-                );
-              }).toList(),
-            )
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: alreadyAssignedSubjects.map((subject) {
+                      return ListTile(
+                        title: Text(subject),
+                      );
+                    }).toList(),
+                  )
                 : const Center(
-              child: Text(
-                'No Subjects Assigned.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ))
+                    child: Text(
+                      'No Subjects Assigned.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  ))
       ],
     );
   }
@@ -1028,29 +1035,29 @@ class _AssignSubjectScreenState extends State<AssignSubjectScreen> {
             ),
             child: assignedSubjects.isNotEmpty
                 ? ListView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: assignedSubjects.map((assignedSubject) {
-                return ListTile(
-                  title: Text(assignedSubject),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      setState(() {
-                        assignedSubjects.remove(assignedSubject);
-                        _showMessage('Subject removed successfully');
-                      });
-                    },
-                  ),
-                );
-              }).toList(),
-            )
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: assignedSubjects.map((assignedSubject) {
+                      return ListTile(
+                        title: Text(assignedSubject),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            setState(() {
+                              assignedSubjects.remove(assignedSubject);
+                              _showMessage('Subject removed successfully');
+                            });
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  )
                 : const Center(
-              child: Text(
-                'No subjects selected',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ))
+                    child: Text(
+                      'No subjects selected',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  ))
       ],
     );
   }
@@ -1135,7 +1142,8 @@ class _AssignSubjectScreenState extends State<AssignSubjectScreen> {
       return;
     }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/assignSubject/alreadyAssigned');
+    final url =
+        Uri.parse('${AppConfig.baseUrl}/api/assignSubject/alreadyAssigned');
     final response = await http.get(url);
 
     List<String> dbAssignedSubjects = [];
@@ -1162,7 +1170,8 @@ class _AssignSubjectScreenState extends State<AssignSubjectScreen> {
     }
 
     if (newAssignments.isNotEmpty) {
-      final saveUrl = Uri.parse('${AppConfig.baseUrl}/api/assignSubject/assign');
+      final saveUrl =
+          Uri.parse('${AppConfig.baseUrl}/api/assignSubject/assign');
       final saveResponse = await http.post(
         saveUrl,
         headers: {'Content-Type': 'application/json'},
@@ -1245,7 +1254,7 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime:
-      isFromTime ? fromTime ?? TimeOfDay.now() : toTime ?? TimeOfDay.now(),
+          isFromTime ? fromTime ?? TimeOfDay.now() : toTime ?? TimeOfDay.now(),
     );
     if (picked != null) {
       setState(() {
@@ -1534,7 +1543,6 @@ class ManageClassBatchScreen extends StatefulWidget {
 class _ManageClassBatchScreenState extends State<ManageClassBatchScreen> {
   List<ClassBatch> _classBatches = [];
   List<ClassBatch> _filteredClassBatches = [];
-  String _searchQuery = '';
 
   @override
   void initState() {
@@ -1543,7 +1551,8 @@ class _ManageClassBatchScreenState extends State<ManageClassBatchScreen> {
   }
 
   Future<void> _fetchClassBatches() async {
-    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch'));
+    final response =
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch'));
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body);
       setState(() {
@@ -1556,8 +1565,8 @@ class _ManageClassBatchScreenState extends State<ManageClassBatchScreen> {
   }
 
   Future<void> _deleteClassBatch(String id) async {
-    final response =
-    await http.delete(Uri.parse('${AppConfig.baseUrl}/api/class-batch/$id'));
+    final response = await http
+        .delete(Uri.parse('${AppConfig.baseUrl}/api/class-batch/$id'));
     if (response.statusCode == 200) {
       setState(() {
         _classBatches.removeWhere((batch) => batch.id == id);
@@ -1570,10 +1579,9 @@ class _ManageClassBatchScreenState extends State<ManageClassBatchScreen> {
 
   void _filterClassBatches(String query) {
     setState(() {
-      _searchQuery = query;
       _filteredClassBatches = _classBatches
           .where((batch) =>
-          batch.classBatchName.toLowerCase().contains(query.toLowerCase()))
+              batch.classBatchName.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -1599,7 +1607,7 @@ class _ManageClassBatchScreenState extends State<ManageClassBatchScreen> {
       if (response.statusCode == 200) {
         setState(() {
           final index =
-          _classBatches.indexWhere((b) => b.id == updatedBatch.id);
+              _classBatches.indexWhere((b) => b.id == updatedBatch.id);
           if (index != -1) {
             _classBatches[index] = updatedBatch;
             _filteredClassBatches[index] = updatedBatch;
@@ -1681,15 +1689,15 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
   final TextEditingController _batchController = TextEditingController();
   bool isEditable = false; // Controls whether the grid is editable or not
   List<List<String?>> _timeTable =
-  List.generate(5, (i) => List.filled(5, null)); // 5 days, 5 slots
+      List.generate(5, (i) => List.filled(5, null)); // 5 days, 5 slots
 
   Future<void> _viewTimeTable() async {
     final standard = _standardController.text;
     final batch = _batchController.text;
 
     // Fetch timetable from the backend
-    final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/api/timetable?standard=$standard&batch=$batch'));
+    final response = await http.get(Uri.parse(
+        '${AppConfig.baseUrl}/api/timetable?standard=$standard&batch=$batch'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as List<dynamic>;
@@ -1722,10 +1730,10 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
     // Prepare the data for update
     final updatedData = _timeTable
         .expand((row) => row.asMap().entries.map((e) => {
-      'day': e.key,
-      'timeSlot': _timeTable.indexOf(row),
-      'lecture': e.value,
-    }))
+              'day': e.key,
+              'timeSlot': _timeTable.indexOf(row),
+              'lecture': e.value,
+            }))
         .toList();
 
     final response = await http.put(
@@ -1851,7 +1859,7 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
                   Expanded(
                     child: GridView.builder(
                       gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 5, // 5 columns for Mon-Fri
                         childAspectRatio: 2.0,
                       ),
@@ -1863,14 +1871,14 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
                         return GestureDetector(
                           onTap: isEditable
                               ? () async {
-                            String? newLecture = await _editLectureDialog(
-                                _timeTable[timeSlot][day]);
-                            if (newLecture != null) {
-                              setState(() {
-                                _timeTable[timeSlot][day] = newLecture;
-                              });
-                            }
-                          }
+                                  String? newLecture = await _editLectureDialog(
+                                      _timeTable[timeSlot][day]);
+                                  if (newLecture != null) {
+                                    setState(() {
+                                      _timeTable[timeSlot][day] = newLecture;
+                                    });
+                                  }
+                                }
                               : null,
                           child: Container(
                             margin: const EdgeInsets.all(4.0),
@@ -1878,7 +1886,7 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.black),
                               color:
-                              isEditable ? Colors.white : Colors.grey[300],
+                                  isEditable ? Colors.white : Colors.grey[300],
                             ),
                             child: Center(
                               child: Text(

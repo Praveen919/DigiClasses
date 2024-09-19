@@ -163,7 +163,6 @@ class SendStudentMessageScreen extends StatelessWidget {
   }
 }
 
-
 class SendStaffMessageScreen extends StatelessWidget {
   const SendStaffMessageScreen({super.key});
 
@@ -253,9 +252,9 @@ class SendStaffIdPasswordScreen extends StatelessWidget {
                 value: '-- Select --',
                 items: <String>['Option 1', 'Option 2', 'Option 3']
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -282,7 +281,8 @@ class SendStaffIdPasswordScreen extends StatelessWidget {
               const SizedBox(height: 16.0),
 
               // Staff ID/Password Details
-              const Text('Staff ID/Password Details', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Staff ID/Password Details',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
               // List of staff details
@@ -292,8 +292,8 @@ class SendStaffIdPasswordScreen extends StatelessWidget {
                 itemCount: 1, // Replace with actual number of staff
                 itemBuilder: (context, index) {
                   return const StaffDetailsCard(
-                    // Pass staff data here
-                  );
+                      // Pass staff data here
+                      );
                 },
               ),
             ],
@@ -336,7 +336,6 @@ class StaffDetailsCard extends StatelessWidget {
   }
 }
 
-
 class SendStudentIdPasswordScreen extends StatelessWidget {
   const SendStudentIdPasswordScreen({super.key});
 
@@ -370,9 +369,9 @@ class SendStudentIdPasswordScreen extends StatelessWidget {
                 value: '-- Select --',
                 items: <String>['Option 1', 'Option 2', 'Option 3']
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -399,7 +398,8 @@ class SendStudentIdPasswordScreen extends StatelessWidget {
               const SizedBox(height: 16.0),
 
               // Staff ID/Password Details
-              const Text('Student ID/Password Details', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Student ID/Password Details',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
               // List of staff details
@@ -409,8 +409,8 @@ class SendStudentIdPasswordScreen extends StatelessWidget {
                 itemCount: 1, // Replace with actual number of staff
                 itemBuilder: (context, index) {
                   return const StaffDetailsCard(
-                    // Pass staff data here
-                  );
+                      // Pass staff data here
+                      );
                 },
               ),
             ],
@@ -461,7 +461,8 @@ class SendExamReminderScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Send Upcoming Exam Message to Student'),
       ),
-      resizeToAvoidBottomInset: true, // Ensures proper resizing to avoid keyboard overlap
+      resizeToAvoidBottomInset:
+          true, // Ensures proper resizing to avoid keyboard overlap
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -473,9 +474,9 @@ class SendExamReminderScreen extends StatelessWidget {
                 value: 'All',
                 items: <String>['All', '1st Std', '2nd Std', '3rd Std']
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -490,11 +491,19 @@ class SendExamReminderScreen extends StatelessWidget {
               // Subject
               DropdownButtonFormField<String>(
                 value: 'All',
-                items: <String>['All', 'English', 'Maths', 'Science', 'Social Science', 'Hindi', 'Marathi']
+                items: <String>[
+                  'All',
+                  'English',
+                  'Maths',
+                  'Science',
+                  'Social Science',
+                  'Hindi',
+                  'Marathi'
+                ]
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -509,11 +518,18 @@ class SendExamReminderScreen extends StatelessWidget {
               // Exam Name
               DropdownButtonFormField<String>(
                 value: '-- Select --',
-                items: <String>['English', 'Maths', 'Science', 'Social Science', 'Hindi', 'Marathi']
+                items: <String>[
+                  'English',
+                  'Maths',
+                  'Science',
+                  'Social Science',
+                  'Hindi',
+                  'Marathi'
+                ]
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -549,7 +565,8 @@ class SendExamMarksMessageScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Send Exam Marks to Student'),
       ),
-      resizeToAvoidBottomInset: true, // Ensures proper resizing to avoid keyboard overlap
+      resizeToAvoidBottomInset:
+          true, // Ensures proper resizing to avoid keyboard overlap
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -561,9 +578,9 @@ class SendExamMarksMessageScreen extends StatelessWidget {
                 value: 'All',
                 items: <String>['All', '1st Std', '2nd Std', '3rd Std']
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -578,11 +595,19 @@ class SendExamMarksMessageScreen extends StatelessWidget {
               // Subject
               DropdownButtonFormField<String>(
                 value: 'All',
-                items: <String>['All', 'English', 'Maths', 'Science', 'Social Science', 'Hindi', 'Marathi']
+                items: <String>[
+                  'All',
+                  'English',
+                  'Maths',
+                  'Science',
+                  'Social Science',
+                  'Hindi',
+                  'Marathi'
+                ]
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -597,11 +622,18 @@ class SendExamMarksMessageScreen extends StatelessWidget {
               // Exam Name
               DropdownButtonFormField<String>(
                 value: '-- Select --',
-                items: <String>['English', 'Maths', 'Science', 'Social Science', 'Hindi', 'Marathi']
+                items: <String>[
+                  'English',
+                  'Maths',
+                  'Science',
+                  'Social Science',
+                  'Hindi',
+                  'Marathi'
+                ]
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -628,7 +660,6 @@ class SendExamMarksMessageScreen extends StatelessWidget {
   }
 }
 
-
 class SendFeeStatusMessageScreen extends StatelessWidget {
   const SendFeeStatusMessageScreen({super.key});
 
@@ -638,7 +669,8 @@ class SendFeeStatusMessageScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Send Fee Status Message to Student'),
       ),
-      resizeToAvoidBottomInset: true, // Ensures proper resizing to avoid keyboard overlap
+      resizeToAvoidBottomInset:
+          true, // Ensures proper resizing to avoid keyboard overlap
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -672,18 +704,20 @@ class SendFeeStatusMessageScreen extends StatelessWidget {
               const SizedBox(height: 16.0),
 
               // Students with Pending Fees
-              const Text('Students with Pending Fees', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Students with Pending Fees',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
               // List of students with pending fees
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: 1, // Replace with actual number of students with pending fees
+                itemCount:
+                    1, // Replace with actual number of students with pending fees
                 itemBuilder: (context, index) {
                   return const StudentWithPendingFeeCard(
-                    // Pass student data here
-                  );
+                      // Pass student data here
+                      );
                 },
               ),
             ],
@@ -735,7 +769,8 @@ class SendFeeReminderScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Send Fee Reminder to Student'),
       ),
-      resizeToAvoidBottomInset: true, // Ensures proper resizing to avoid keyboard overlap
+      resizeToAvoidBottomInset:
+          true, // Ensures proper resizing to avoid keyboard overlap
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -779,18 +814,20 @@ class SendFeeReminderScreen extends StatelessWidget {
               const SizedBox(height: 16.0),
 
               // Students with Pending Fees
-              const Text('Students with Pending Fees', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Students with Pending Fees',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
               // List of students with pending fees
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: 1, // Replace with actual number of students with pending fees
+                itemCount:
+                    1, // Replace with actual number of students with pending fees
                 itemBuilder: (context, index) {
                   return const StudentWithPendingFeeCard(
-                    // Pass student data here
-                  );
+                      // Pass student data here
+                      );
                 },
               ),
             ],
@@ -842,7 +879,8 @@ class SendAbsentAttendanceMessageScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Send Today Absent Attendance Message'),
       ),
-      resizeToAvoidBottomInset: true, // Ensures proper resizing to avoid keyboard overlap
+      resizeToAvoidBottomInset:
+          true, // Ensures proper resizing to avoid keyboard overlap
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -876,7 +914,8 @@ class SendAbsentAttendanceMessageScreen extends StatelessWidget {
               const SizedBox(height: 16.0),
 
               // Today's Absentees
-              const Text('Today\'s Absentees', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Today\'s Absentees',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
               // List of today's absentees
@@ -886,8 +925,8 @@ class SendAbsentAttendanceMessageScreen extends StatelessWidget {
                 itemCount: 1, // Replace with actual number of absent students
                 itemBuilder: (context, index) {
                   return const AbsentStudentCard(
-                    // Pass absent student data here
-                  );
+                      // Pass absent student data here
+                      );
                 },
               ),
             ],

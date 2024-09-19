@@ -66,7 +66,8 @@ class CreateStaffScreen extends StatefulWidget {
   final Map<String, dynamic>? staff; // Optional parameter for editing staff
   final void Function(Map<String, dynamic>) onSave;
 
-  const CreateStaffScreen({Key? key, this.staff, required this.onSave}) : super(key: key);
+  const CreateStaffScreen({Key? key, this.staff, required this.onSave})
+      : super(key: key);
 
   @override
   _CreateStaffScreenState createState() => _CreateStaffScreenState();
@@ -98,7 +99,9 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
       _mobileController.text = staff['mobile'] ?? '';
       _emailController.text = staff['email'] ?? '';
       _addressController.text = staff['address'] ?? '';
-      _profilePicture = staff['profilePicture'] != null ? XFile(staff['profilePicture']) : null;
+      _profilePicture = staff['profilePicture'] != null
+          ? XFile(staff['profilePicture'])
+          : null;
       _isEditable = false; // Set editable state based on staff data
     }
   }
@@ -137,8 +140,6 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
           ? '${AppConfig.baseUrl}/api/staff' // URL for creating staff
           : '${AppConfig.baseUrl}/api/staff/${widget.staff!['id']}'; // URL for updating staff
 
-      final method = widget.staff == null ? 'POST' : 'PUT';
-
       final staffResponse = await http.post(
         Uri.parse(staffUrl),
         headers: {
@@ -165,7 +166,8 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
           body: jsonEncode(usersData),
         );
 
-        if (staffResponse.statusCode == 201 && usersResponse.statusCode == 201) {
+        if (staffResponse.statusCode == 201 &&
+            usersResponse.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Staff details saved successfully')),
           );
@@ -191,8 +193,8 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
     }
   }
 
-
-  Widget _buildTextField(String label, TextEditingController controller, {bool readOnly = false}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {bool readOnly = false}) {
     return TextFormField(
       controller: controller,
       readOnly: !_isEditable || readOnly,
@@ -210,7 +212,8 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
   }
 
   Widget _buildPasswordField() {
-    if (widget.staff != null) return Container(); // Don't show password field for existing staff
+    if (widget.staff != null)
+      return Container(); // Don't show password field for existing staff
     return TextFormField(
       controller: _passwordController,
       obscureText: true,
@@ -297,7 +300,8 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
                   ),
                   ElevatedButton(
                     onPressed: _saveForm,
-                    child: Text(widget.staff == null ? 'Create Staff' : 'Update Staff'),
+                    child: Text(
+                        widget.staff == null ? 'Create Staff' : 'Update Staff'),
                   ),
                 ],
               ),
@@ -308,7 +312,6 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
     );
   }
 }
-
 
 class ManageStaffScreen extends StatefulWidget {
   @override
@@ -321,23 +324,26 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchStaffList();  // Fetch staff list on initialization
+    _fetchStaffList(); // Fetch staff list on initialization
   }
 
   Future<void> _fetchStaffList() async {
-    final url = '${AppConfig.baseUrl}/api/staff';  // Replace with your backend URL
+    final url =
+        '${AppConfig.baseUrl}/api/staff'; // Replace with your backend URL
     try {
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
-          staffList = data.map((staff) => {
-            'firstName': staff['firstName'],
-            'lastName': staff['lastName'],
-            'email': staff['email'],
-            'profilePicture': staff['profilePicture'],
-          }).toList();
+          staffList = data
+              .map((staff) => {
+                    'firstName': staff['firstName'],
+                    'lastName': staff['lastName'],
+                    'email': staff['email'],
+                    'profilePicture': staff['profilePicture'],
+                  })
+              .toList();
         });
       } else {
         print('Failed to load staff');
@@ -359,44 +365,49 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: staffList.isEmpty
-          ? Center(child: CircularProgressIndicator())  // Show loading spinner while data is loading
+          ? Center(
+              child:
+                  CircularProgressIndicator()) // Show loading spinner while data is loading
           : ListView.builder(
-        itemCount: staffList.length,
-        itemBuilder: (context, index) {
-          final staff = staffList[index];
-          return ListTile(
-            leading: staff['profilePicture'] != null
-                ? CircleAvatar(
-              backgroundImage: staff['profilePicture'].startsWith('http')
-                  ? NetworkImage(staff['profilePicture']) as ImageProvider
-                  : FileImage(File(staff['profilePicture'])),
-            )
-                : const CircleAvatar(child: Icon(Icons.person)),
-            title: Text('${staff['firstName']} ${staff['lastName']}'),
-            subtitle: Text(staff['email'] ?? 'No email'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () => _onEdit(index, staff),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => _onDelete(index),
-                ),
-              ],
+              itemCount: staffList.length,
+              itemBuilder: (context, index) {
+                final staff = staffList[index];
+                return ListTile(
+                  leading: staff['profilePicture'] != null
+                      ? CircleAvatar(
+                          backgroundImage:
+                              staff['profilePicture'].startsWith('http')
+                                  ? NetworkImage(staff['profilePicture'])
+                                      as ImageProvider
+                                  : FileImage(File(staff['profilePicture'])),
+                        )
+                      : const CircleAvatar(child: Icon(Icons.person)),
+                  title: Text('${staff['firstName']} ${staff['lastName']}'),
+                  subtitle: Text(staff['email'] ?? 'No email'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => _onEdit(index, staff),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => _onDelete(index),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
 
 class ManageStaffRightsScreen extends StatefulWidget {
   @override
-  _ManageStaffRightsScreenState createState() => _ManageStaffRightsScreenState();
+  _ManageStaffRightsScreenState createState() =>
+      _ManageStaffRightsScreenState();
 }
 
 class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
@@ -407,11 +418,12 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchTeachers();  // Fetch teachers on initialization
+    _fetchTeachers(); // Fetch teachers on initialization
   }
 
   Future<void> _fetchTeachers() async {
-    final url = '${AppConfig.baseUrl}/api/users/teachers';  // Replace with your backend URL
+    final url =
+        '${AppConfig.baseUrl}/api/users/teachers'; // Replace with your backend URL
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -419,12 +431,14 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
-          staffList = data.map((staff) => {
-            'id': staff['_id'],
-            'firstName': staff['firstName'],
-            'middleName': staff['middleName'],
-            'lastName': staff['lastName'],
-          }).toList();
+          staffList = data
+              .map((staff) => {
+                    'id': staff['_id'],
+                    'firstName': staff['firstName'],
+                    'middleName': staff['middleName'],
+                    'lastName': staff['lastName'],
+                  })
+              .toList();
         });
       } else {
         print('Failed to load staff');
@@ -450,11 +464,12 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
           newRole = 'Student';
           break;
         default:
-          newRole = 'Teacher';  // Default case
+          newRole = 'Teacher'; // Default case
       }
 
       // Send the request to update the user role
-      final url = '${AppConfig.baseUrl}/api/users/updateRole/$selectedStaffId';  // Replace with your backend URL
+      final url =
+          '${AppConfig.baseUrl}/api/users/updateRole/$selectedStaffId'; // Replace with your backend URL
 
       try {
         final response = await http.put(
@@ -465,7 +480,8 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
 
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('$_selectedRight granted to ${staffList.firstWhere((staff) => staff['id'] == _selectedStaff)['firstName']}'),
+            content: Text(
+                '$_selectedRight granted to ${staffList.firstWhere((staff) => staff['id'] == _selectedStaff)['firstName']}'),
           ));
         } else {
           print('Failed to update role');
@@ -560,7 +576,6 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
   }
 }
 
-
 class StaffAttendanceScreen extends StatefulWidget {
   const StaffAttendanceScreen({super.key});
 
@@ -580,13 +595,15 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   // Fetch teacher data from the server
   Future<void> fetchTeachers() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.0.104/api/users/teachers'));
+      final response =
+          await http.get(Uri.parse('http://192.168.0.104/api/users/teachers'));
       if (response.statusCode == 200) {
         setState(() {
-          attendanceData = List<Map<String, dynamic>>.from(json.decode(response.body));
+          attendanceData =
+              List<Map<String, dynamic>>.from(json.decode(response.body));
           // Add 'attendance' field if not present
           for (var teacher in attendanceData) {
-            teacher['attendance'] = 'Present';  // Default value
+            teacher['attendance'] = 'Present'; // Default value
           }
         });
       } else {
@@ -643,7 +660,9 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: _attendanceTaken ? _buildAttendanceTable() : _buildAttendanceForm(),
+          child: _attendanceTaken
+              ? _buildAttendanceTable()
+              : _buildAttendanceForm(),
         ),
       ),
     );
@@ -673,7 +692,8 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             InkWell(
               onTap: () => _selectDate(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(5),
@@ -738,19 +758,19 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                   DataCell(
                     _isEditable
                         ? DropdownButton<String>(
-                      value: data['attendance'],
-                      items: ['Present', 'Absent'].map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          data['attendance'] = newValue!;
-                        });
-                      },
-                    )
+                            value: data['attendance'],
+                            items: ['Present', 'Absent'].map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                            onChanged: (newValue) {
+                              setState(() {
+                                data['attendance'] = newValue!;
+                              });
+                            },
+                          )
                         : Text(data['attendance']!),
                   ),
                 ]);
@@ -773,7 +793,8 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                 label: Text(_isEditable ? 'Stop Edit' : 'Edit'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
                 ),
               ),
             ),
@@ -787,7 +808,8 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               ),
               child: const Text(
                 'Update Attendance',

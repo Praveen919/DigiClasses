@@ -80,7 +80,7 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
       _subjectController.text = exam['subject'] ?? '';
       _examNameController.text = exam['examName'] ?? '';
       _totalMarksController.text =
-      exam['totalMarks'] != null ? exam['totalMarks'].toString() : '';
+          exam['totalMarks'] != null ? exam['totalMarks'].toString() : '';
       _examDate = DateTime.tryParse(exam['examDate'] ?? '') ?? DateTime.now();
       _fromTime = _parseTime(exam['fromTime']);
       _toTime = _parseTime(exam['toTime']);
@@ -116,7 +116,7 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
     if (time == null) return '';
     final now = DateTime.now();
     final dateTime =
-    DateTime(now.year, now.month, now.day, time.hour, time.minute);
+        DateTime(now.year, now.month, now.day, time.hour, time.minute);
     return DateFormat.Hm().format(dateTime); // 24-hour format
   }
 
@@ -178,15 +178,15 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
         'examName': _examNameController.text,
         'totalMarks': _totalMarksController.text,
         'examDate':
-        _examDate?.toIso8601String() ?? '', // Use empty string if null
-        'fromTime': _formatTime(_fromTime) ?? '', // Ensure time is not null
-        'toTime': _formatTime(_toTime) ?? '', // Ensure time is not null
+            _examDate?.toIso8601String() ?? '', // Use empty string if null
+        'fromTime': _formatTime(_fromTime),
+        'toTime': _formatTime(_toTime),
       };
 
       try {
         final uri = widget.examData != null
             ? Uri.parse(
-            '${AppConfig.baseUrl}/api/exams/${widget.examData!['_id']}')
+                '${AppConfig.baseUrl}/api/exams/${widget.examData!['_id']}')
             : Uri.parse('${AppConfig.baseUrl}/api/exams');
 
         final request = http.MultipartRequest(
@@ -194,7 +194,7 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
 
         // Convert nullable values to non-null values using ??
         request.fields
-            .addAll(examData.map((key, value) => MapEntry(key, value ?? '')));
+            .addAll(examData.map((key, value) => MapEntry(key, value)));
 
         if (_selectedFile != null) {
           request.files.add(await http.MultipartFile.fromPath(
@@ -428,8 +428,8 @@ class _ManageManualExamScreenState extends State<ManageManualExamScreen> {
 
   Future<void> _fetchExams() async {
     try {
-      final response = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/exams')); // Adjust API path
+      final response = await http
+          .get(Uri.parse('${AppConfig.baseUrl}/api/exams')); // Adjust API path
 
       if (response.statusCode == 200) {
         setState(() {
@@ -513,102 +513,102 @@ class _ManageManualExamScreenState extends State<ManageManualExamScreen> {
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Search Exams',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _filteredExams.isEmpty
-                ? Center(child: Text('No exams found'))
-                : ListView.builder(
-              itemCount: _filteredExams.length,
-              itemBuilder: (context, index) {
-                final exam = _filteredExams[index];
-                return ListTile(
-                  title: Text(exam['examName'] ?? ''),
-                  subtitle:
-                  Text('Standard: ${exam['standard'] ?? ''}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        onPressed: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  CreateManualExamScreen(
-                                    examData: exam,
-                                  ),
-                            ),
-                          );
-                          if (result == true) {
-                            _fetchExams(); // Refresh exam list on successful edit
-                          }
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Text('Delete Exam'),
-                                content: Text(
-                                    'Are you sure you want to delete this exam?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      labelText: 'Search Exams',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _filteredExams.isEmpty
+                      ? Center(child: Text('No exams found'))
+                      : ListView.builder(
+                          itemCount: _filteredExams.length,
+                          itemBuilder: (context, index) {
+                            final exam = _filteredExams[index];
+                            return ListTile(
+                              title: Text(exam['examName'] ?? ''),
+                              subtitle:
+                                  Text('Standard: ${exam['standard'] ?? ''}'),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit),
+                                    onPressed: () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              CreateManualExamScreen(
+                                            examData: exam,
+                                          ),
+                                        ),
+                                      );
+                                      if (result == true) {
+                                        _fetchExams(); // Refresh exam list on successful edit
+                                      }
                                     },
-                                    child: Text('Cancel'),
                                   ),
-                                  TextButton(
+                                  IconButton(
+                                    icon: Icon(Icons.delete),
                                     onPressed: () {
-                                      Navigator.of(context).pop();
-                                      _deleteExam(exam['_id']);
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            title: Text('Delete Exam'),
+                                            content: Text(
+                                                'Are you sure you want to delete this exam?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                  _deleteExam(exam['_id']);
+                                                },
+                                                child: Text('Delete'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
                                     },
-                                    child: Text('Delete'),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.picture_as_pdf),
+                                    onPressed: () {
+                                      final documentUrl = exam['documentUrl'];
+                                      if (documentUrl != null) {
+                                        _openDocument(documentUrl);
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  'No document available')),
+                                        );
+                                      }
+                                    },
                                   ),
                                 ],
-                              );
-                            },
-                          );
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.picture_as_pdf),
-                        onPressed: () {
-                          final documentUrl = exam['documentUrl'];
-                          if (documentUrl != null) {
-                            _openDocument(documentUrl);
-                          } else {
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(
-                              SnackBar(
-                                  content: Text(
-                                      'No document available')),
+                              ),
                             );
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
+                          },
+                        ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -659,7 +659,7 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                value?.isEmpty ?? true ? 'Required' : null,
+                    value?.isEmpty ?? true ? 'Required' : null,
                 onSaved: (value) => paperName = value,
               ),
               const SizedBox(height: 16),
@@ -670,7 +670,7 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                value?.isEmpty ?? true ? 'Required' : null,
+                    value?.isEmpty ?? true ? 'Required' : null,
                 onSaved: (value) => standard = value,
               ),
               const SizedBox(height: 16),
@@ -681,7 +681,7 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                value?.isEmpty ?? true ? 'Required' : null,
+                    value?.isEmpty ?? true ? 'Required' : null,
                 onSaved: (value) => subject = value,
               ),
               const SizedBox(height: 16),
@@ -692,7 +692,7 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                value?.isEmpty ?? true ? 'Required' : null,
+                    value?.isEmpty ?? true ? 'Required' : null,
                 onSaved: (value) => examPaperType = value,
               ),
               const SizedBox(height: 24),
@@ -742,6 +742,7 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
 
         if (response.statusCode == 201) {
           final responseData = json.decode(response.body);
+          // ignore: unused_local_variable
           final String examId = responseData['exam']?['_id'] ?? '';
 
           // Navigate to AddMCQQuestionsScreen with the new examId
@@ -842,7 +843,7 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content:
-              Text('Failed to save MCQ Questions: ${response.statusCode}'),
+                  Text('Failed to save MCQ Questions: ${response.statusCode}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -934,7 +935,7 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                               ),
                               TextFormField(
                                 decoration:
-                                InputDecoration(labelText: 'Question'),
+                                    InputDecoration(labelText: 'Question'),
                                 onChanged: (value) {
                                   _questions[i]['question'] = value;
                                 },
@@ -952,11 +953,11 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                                     Radio<int>(
                                       value: j,
                                       groupValue: _questions[i]
-                                      ['correctAnswer'],
+                                          ['correctAnswer'],
                                       onChanged: (value) {
                                         setState(() {
                                           _questions[i]['correctAnswer'] =
-                                          value!;
+                                              value!;
                                         });
                                       },
                                     ),
@@ -1184,54 +1185,54 @@ class _ManageMCQExamScreenState extends State<ManageMCQExamScreen> {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : exams.isEmpty
-                ? const Center(
-              child: Text(
-                'No MCQ Exams found',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-            )
-                : ListView.builder(
-              itemCount: exams.length,
-              itemBuilder: (context, index) {
-                final exam = exams[index];
-                if (!exam['paperName']
-                    .toLowerCase()
-                    .contains(searchTerm)) {
-                  return const SizedBox.shrink();
-                }
-                return Card(
-                  margin: const EdgeInsets.all(8.0),
-                  child: ListTile(
-                    title: Text(exam['paperName']),
-                    subtitle: Text(
-                        'Standard: ${exam['standard']} \nSubject: ${exam['subject']}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            _navigateToEditMCQPaperScreen(exam['id']);
-                          },
+                    ? const Center(
+                        child: Text(
+                          'No MCQ Exams found',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            _deleteExam(exam['id']);
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.question_answer),
-                          onPressed: () {
-                            _navigateToEditMCQsScreen(exam['id']);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                      )
+                    : ListView.builder(
+                        itemCount: exams.length,
+                        itemBuilder: (context, index) {
+                          final exam = exams[index];
+                          if (!exam['paperName']
+                              .toLowerCase()
+                              .contains(searchTerm)) {
+                            return const SizedBox.shrink();
+                          }
+                          return Card(
+                            margin: const EdgeInsets.all(8.0),
+                            child: ListTile(
+                              title: Text(exam['paperName']),
+                              subtitle: Text(
+                                  'Standard: ${exam['standard']} \nSubject: ${exam['subject']}'),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: () {
+                                      _navigateToEditMCQPaperScreen(exam['id']);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () {
+                                      _deleteExam(exam['id']);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.question_answer),
+                                    onPressed: () {
+                                      _navigateToEditMCQsScreen(exam['id']);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
@@ -1283,7 +1284,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content:
-              Text('Failed to load paper details: ${response.statusCode}')),
+                  Text('Failed to load paper details: ${response.statusCode}')),
         );
       }
     } catch (error) {
@@ -1306,8 +1307,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
 
       try {
         final response = await http.put(
-          Uri.parse(
-              '${AppConfig.baseUrl}/api/mcq-exams/${widget.paperId}'),
+          Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/${widget.paperId}'),
           body: json.encode(paperData),
           headers: {'Content-Type': 'application/json'},
         );
@@ -1377,7 +1377,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                value!.isEmpty ? 'Please enter paper name' : null,
+                    value!.isEmpty ? 'Please enter paper name' : null,
               ),
               SizedBox(height: 16.0),
               TextFormField(
@@ -1387,7 +1387,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                value!.isEmpty ? 'Please enter standard' : null,
+                    value!.isEmpty ? 'Please enter standard' : null,
               ),
               SizedBox(height: 16.0),
               TextFormField(
@@ -1397,7 +1397,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                value!.isEmpty ? 'Please enter subject' : null,
+                    value!.isEmpty ? 'Please enter subject' : null,
               ),
               SizedBox(height: 16.0),
               Row(
@@ -1412,7 +1412,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
                       readOnly: true,
                       onTap: () => _selectTime(context, _fromTimeController),
                       validator: (value) =>
-                      value!.isEmpty ? 'Please select from time' : null,
+                          value!.isEmpty ? 'Please select from time' : null,
                     ),
                   ),
                   SizedBox(width: 8.0),
@@ -1435,7 +1435,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
                       readOnly: true,
                       onTap: () => _selectTime(context, _toTimeController),
                       validator: (value) =>
-                      value!.isEmpty ? 'Please select to time' : null,
+                          value!.isEmpty ? 'Please select to time' : null,
                     ),
                   ),
                   SizedBox(width: 8.0),
@@ -1458,7 +1458,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
                       readOnly: true,
                       onTap: () => _selectDate(context),
                       validator: (value) =>
-                      value!.isEmpty ? 'Please select exam date' : null,
+                          value!.isEmpty ? 'Please select exam date' : null,
                     ),
                   ),
                   SizedBox(width: 8.0),
@@ -1614,77 +1614,77 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
       ),
       body: _questions.isEmpty
           ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'No questions found',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddMCQQuestionsScreen(
-                      paperId: widget.paperId, // Pass paperId
-                      paperName: widget.paperName, // Pass paperName
-                    ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'No questions found',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
-                );
-              },
-              child: Text('Add MCQs'),
-            ),
-          ],
-        ),
-      )
-          : ListView.builder(
-        itemCount: _questions.length,
-        itemBuilder: (context, index) {
-          final question = _questions[index];
-          return Card(
-            margin: EdgeInsets.all(8.0),
-            child: ListTile(
-              title: Text(question['question'] ?? 'Untitled Question'),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('1: ${question['options']?[0] ?? ''}'),
-                  Text('2: ${question['options']?[1] ?? ''}'),
-                  Text('3: ${question['options']?[2] ?? ''}'),
-                  Text('4: ${question['options']?[3] ?? ''}'),
-                ],
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.edit),
+                  SizedBox(height: 20),
+                  ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => AddMCQQuestionsScreen(
-                            paperId: widget.paperId,
+                            paperId: widget.paperId, // Pass paperId
                             paperName: widget.paperName, // Pass paperName
                           ),
                         ),
                       );
                     },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      _deleteQuestion(question['_id']);
-                    },
+                    child: Text('Add MCQs'),
                   ),
                 ],
               ),
+            )
+          : ListView.builder(
+              itemCount: _questions.length,
+              itemBuilder: (context, index) {
+                final question = _questions[index];
+                return Card(
+                  margin: EdgeInsets.all(8.0),
+                  child: ListTile(
+                    title: Text(question['question'] ?? 'Untitled Question'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('1: ${question['options']?[0] ?? ''}'),
+                        Text('2: ${question['options']?[1] ?? ''}'),
+                        Text('3: ${question['options']?[2] ?? ''}'),
+                        Text('4: ${question['options']?[3] ?? ''}'),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddMCQQuestionsScreen(
+                                  paperId: widget.paperId,
+                                  paperName: widget.paperName, // Pass paperName
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            _deleteQuestion(question['_id']);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
@@ -1706,7 +1706,7 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
   File? file;
   DateTime? dueDate;
   TextEditingController _dueDateController =
-  TextEditingController(); // Controller for the due date field
+      TextEditingController(); // Controller for the due date field
 
   @override
   void initState() {
@@ -1757,7 +1757,7 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
       setState(() {
         dueDate = selectedDate;
         _dueDateController.text =
-        '${dueDate!.day.toString().padLeft(2, '0')}-${dueDate!.month.toString().padLeft(2, '0')}-${dueDate!.year}';
+            '${dueDate!.day.toString().padLeft(2, '0')}-${dueDate!.month.toString().padLeft(2, '0')}-${dueDate!.year}';
       });
     }
   }
@@ -1865,7 +1865,7 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
                 ),
                 initialValue: standard,
                 validator: (value) =>
-                value?.isEmpty ?? true ? 'Required' : null,
+                    value?.isEmpty ?? true ? 'Required' : null,
                 onSaved: (value) => standard = value,
               ),
               SizedBox(height: 16),
@@ -1877,7 +1877,7 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
                 ),
                 initialValue: subject,
                 validator: (value) =>
-                value?.isEmpty ?? true ? 'Required' : null,
+                    value?.isEmpty ?? true ? 'Required' : null,
                 onSaved: (value) => subject = value,
               ),
               SizedBox(height: 16),
@@ -1889,7 +1889,7 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
                 ),
                 initialValue: assignmentName,
                 validator: (value) =>
-                value?.isEmpty ?? true ? 'Required' : null,
+                    value?.isEmpty ?? true ? 'Required' : null,
                 onSaved: (value) => assignmentName = value,
               ),
               SizedBox(height: 16),
@@ -1960,7 +1960,7 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
   // Fetch all assignments from the server
   Future<void> _fetchAssignments() async {
     final response =
-    await http.get(Uri.parse('${AppConfig.baseUrl}/api/assignments'));
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/assignments'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -1995,24 +1995,24 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
   // Show confirmation dialog for deletion
   Future<bool> _showDeleteConfirmationDialog() async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete this assignment?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Delete'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    ) ??
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('Confirm Deletion'),
+              content: Text('Are you sure you want to delete this assignment?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text('Delete'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('Cancel'),
+                ),
+              ],
+            );
+          },
+        ) ??
         false;
   }
 
@@ -2025,47 +2025,47 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
       ),
       body: assignments.isEmpty
           ? Center(
-        child: Text('No Assignments Found'),
-      )
+              child: Text('No Assignments Found'),
+            )
           : ListView.builder(
-        itemCount: assignments.length,
-        itemBuilder: (context, index) {
-          final assignment = assignments[index];
+              itemCount: assignments.length,
+              itemBuilder: (context, index) {
+                final assignment = assignments[index];
 
-          return Card(
-            elevation: 4,
-            margin: EdgeInsets.all(8),
-            child: ListTile(
-              title: Text(assignment['assignmentName'] ?? 'No Name'),
-              subtitle: Text(
-                'Standard: ${assignment['standard'] ?? 'No Standard'}\nDue Date: ${assignment['dueDate'] ?? 'No Due Date'}',
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.edit),
-                    onPressed: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CreateAssignmentsScreen(
-                              assignment: assignment),
+                return Card(
+                  elevation: 4,
+                  margin: EdgeInsets.all(8),
+                  child: ListTile(
+                    title: Text(assignment['assignmentName'] ?? 'No Name'),
+                    subtitle: Text(
+                      'Standard: ${assignment['standard'] ?? 'No Standard'}\nDue Date: ${assignment['dueDate'] ?? 'No Due Date'}',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CreateAssignmentsScreen(
+                                    assignment: assignment),
+                              ),
+                            );
+                            _fetchAssignments(); // Refresh the list after editing
+                          },
                         ),
-                      );
-                      _fetchAssignments(); // Refresh the list after editing
-                    },
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _deleteAssignment(assignment['_id']),
+                        ),
+                      ],
+                    ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () => _deleteAssignment(assignment['_id']),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }

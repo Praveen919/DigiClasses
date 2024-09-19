@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors'); // Include CORS middleware if needed
 const bodyParser = require('body-parser'); // Include body-parser middleware for parsing request bodies
+const mongoose = require('mongoose'); // Ensure mongoose is required for MongoDB operations
 
 // Import configuration and storage
 const cfg = require('./config/config');
@@ -51,7 +52,7 @@ app.use('/api/timetable', manageTimeTableRoutes);
 
 // Use updated/new routes
 app.use('/api/profile-settings', profileSettingRoutes); // Updated route for profile settings
-app.use('/api/expenses', expenseIncomeRoutes);
+app.use('/api/expenses', expenseIncomeRoutes); // Ensure this route is correctly defined
 
 // Use other new routes
 app.use('/api/mcq-exams', mcqExamRoutes);
@@ -66,6 +67,11 @@ app.use('/api/assignStandard', assignStandardRoutes);
 app.use('/api/assignSubject', assignSubjectRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/registration', registrationRoutes);
+
+// Connect to MongoDB (Make sure the connection string is correct in your config file)
+mongoose.connect(cfg.mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // Start the server
 const PORT = process.env.PORT || 3000;
