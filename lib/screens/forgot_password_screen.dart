@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class ForgotPasswordScreen extends StatelessWidget {
   final TextEditingController userIdController = TextEditingController();
 
+  ForgotPasswordScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Forgot Password'),
+        title: const Text('Forgot Password'),
         centerTitle: true,
       ),
       body: Center(
@@ -18,9 +20,9 @@ class ForgotPasswordScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                padding: EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(12.0),
                 color: Colors.blue[800],
-                child: Center(
+                child: const Center(
                   child: Text(
                     'Submit your User ID or User Name',
                     style: TextStyle(
@@ -30,15 +32,15 @@ class ForgotPasswordScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              Text(
+              const SizedBox(height: 20),
+              const Text(
                 'User ID / User Name * :',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: userIdController,
                 decoration: InputDecoration(
@@ -48,19 +50,19 @@ class ForgotPasswordScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   // Handle submit logic here
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue[400],
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   'Submit',
                   style: TextStyle(
                     fontSize: 16,
@@ -68,12 +70,12 @@ class ForgotPasswordScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              Divider(
+              const SizedBox(height: 20),
+              const Divider(
                 color: Colors.grey,
                 thickness: 1,
               ),
-              Center(
+              const Center(
                 child: Text(
                   '--OR--',
                   style: TextStyle(
@@ -83,19 +85,19 @@ class ForgotPasswordScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               OutlinedButton(
                 onPressed: () {
                   Navigator.pop(context); // Navigates back to login screen
                 },
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
-                  side: BorderSide(color: Colors.green),
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  side: const BorderSide(color: Colors.green),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   'Sign In',
                   style: TextStyle(
                     fontSize: 16,
@@ -103,8 +105,8 @@ class ForgotPasswordScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 40),
-              Center(
+              const SizedBox(height: 40),
+              const Center(
                 child: Text(
                   'DigiClasses ©2024',
                   style: TextStyle(

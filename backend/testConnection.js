@@ -1,6 +1,6 @@
-/*const { MongoClient } = require('mongodb');
+const { MongoClient } = require('mongodb');
 
-const uri = 'mongodb+srv://praveennaidu297:<$APLSP2utmKd$7.>@cluster0.qddnp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const uri = 'mongodb+srv://praveennaidu297:$APLSP2utmKd$7.@cluster0.qddnp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 const client = new MongoClient(uri);
 
 async function testConnection() {
@@ -15,8 +15,8 @@ async function testConnection() {
 }
 
 testConnection();
-*/
-const mongoose = require('mongoose');
+
+/*const mongoose = require('mongoose');
 
 const mondbUrl="mongodb+srv://praveennaidu297:$APLSP2utmKd$7.@cluster0.qddnp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
@@ -25,3 +25,4 @@ const connectDb=()=>{
 }
 
 module.exports={connectDb};
+*/
