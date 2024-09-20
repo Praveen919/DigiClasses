@@ -88,4 +88,28 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ message: 'Error logging in' });
     }
 });
+
+// Route to get all students
+router.get('/students', verifyJWT, async (req, res) => {
+    try {
+        const students = await User.find({ role: 'Student' }).select('-password'); // Exclude password
+        res.status(200).json(students);
+    } catch (error) {
+        console.error('Error fetching students:', error.message);
+        res.status(500).json({ message: 'Error fetching students' });
+    }
+});
+
+router.get('/users', verifyJWT, async (req, res) => {
+    const role = req.query.role;
+    try {
+        const query = role ? { role } : {}; // If role is provided, filter by it
+        const users = await User.find(query).select('-password'); // Exclude password
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error.message);
+        res.status(500).json({ message: 'Error fetching users' });
+    }
+});
+
 module.exports = router;
