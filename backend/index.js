@@ -68,11 +68,6 @@ app.use('/api/assignSubject', assignSubjectRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/registration', registrationRoutes);
 
-// Connect to MongoDB (Make sure the connection string is correct in your config file)
-mongoose.connect(cfg.mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
