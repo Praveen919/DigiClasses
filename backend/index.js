@@ -3,7 +3,6 @@ const express = require('express');
 const app = express();
 const cors = require('cors'); // Include CORS middleware if needed
 const bodyParser = require('body-parser'); // Include body-parser middleware for parsing request bodies
-const mongoose = require('mongoose'); // Ensure mongoose is required for MongoDB operations
 
 // Import configuration and storage
 const cfg = require('./config/config');
@@ -32,6 +31,12 @@ const assignSubjectRoutes = require('./routes/assignSubjectRoutes');
 const expenseIncomeRoutes = require('./routes/expenseIncomeRoutes');
 const inquiryRoutes = require('./routes/inquiryRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
+const assignClassBatchRoutes = require('./routes/assignClassBatchRoutes');
+const studentRoutes = require('./routes/studentRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
+const messageStudentRoutes = require('./messageStudentRoutes');
+const feedbacksRoutes = require('./feedbacksRoutes');
+const studentRightsRoutes = require('./studentRightsRoutes');
 
 // Middleware setup
 app.use(cors()); // Enable CORS if needed
@@ -49,11 +54,11 @@ app.use('/api/study-material', studyMaterialRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/years', yearRoutes);
 app.use('/api/timetable', manageTimeTableRoutes);
-
+app.use('/api/attendance', attendanceRoutes);
 // Use updated/new routes
 app.use('/api/profile-settings', profileSettingRoutes); // Updated route for profile settings
-app.use('/api/expenses', expenseIncomeRoutes); // Ensure this route is correctly defined
-
+app.use('/api/expenses', expenseIncomeRoutes);
+app.use('/api/messageStudent', messageStudentRoutes);
 // Use other new routes
 app.use('/api/mcq-exams', mcqExamRoutes);
 app.use('/api/exams', examRoutes); // Ensure this route is correctly defined
@@ -67,6 +72,11 @@ app.use('/api/assignStandard', assignStandardRoutes);
 app.use('/api/assignSubject', assignSubjectRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/registration', registrationRoutes);
+
+app.use('/api/assignClassBatch', assignClassBatchRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/feedbacks', feedbacksRoutes);
+app.use('/api/assign-rights', studentRightsRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;

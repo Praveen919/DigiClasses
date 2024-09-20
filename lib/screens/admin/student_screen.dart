@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:testing_app/screens/config.dart';
 import 'package:http_parser/http_parser.dart';
 
+
 class StudentScreen extends StatefulWidget {
   final String option;
 
@@ -1576,73 +1577,193 @@ class StudentCard extends StatelessWidget {
   }
 }
 
-class AssignClassBatchScreen extends StatelessWidget {
-  const AssignClassBatchScreen({Key? key}) : super(key: key);
+class AssignClassBatchScreen extends StatefulWidget {
+  const AssignClassBatchScreen ({super.key});
+  @override
+  _AssignClassBatchScreenState createState() => _AssignClassBatchScreenState();
+}
+
+class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
+  List<dynamic> students = [];
+  List<dynamic> classBatches = [];
+  String? selectedClassBatchId;
+  String? selectedStudentId;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  // Function to fetch students and class batches
+  Future<void> fetchData() async {
+    try {
+      final allStudents = await getAllStudents();
+      final allClassBatches = await getAllClassBatches();
+
+      setState(() {
+        students = allStudents;
+        classBatches = allClassBatches;
+        isLoading = false;
+      });
+    } catch (e) {
+      print(e);
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // Fetch students from API
+  Future<List<dynamic>> getAllStudents() async {
+    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/student/all'));
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load students');
+    }
+  }
+
+  // Fetch class batches from API
+  Future<List<dynamic>> getAllClassBatches() async {
+    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/class-batch/all'));
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load class batches');
+    }
+  }
+
+  // Assign student to class/batch
+  Future<void> assignStudentToClass() async {
+    if (selectedStudentId != null && selectedClassBatchId != null) {
+      try {
+        final response = await http.post(
+          Uri.parse('${AppConfig.baseUrl}/student/assign-class'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            'studentId': selectedStudentId!,
+            'classBatchId': selectedClassBatchId!,
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Student assigned to class/batch successfully.')),
+          );
+        } else {
+          throw Exception('Failed to assign student to class/batch');
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to assign student to class/batch.')),
+        );
+      }
+    }
+  }
+
+  // Remove student from class/batch
+  Future<void> removeStudentFromClass() async {
+    if (selectedStudentId != null && selectedClassBatchId != null) {
+      try {
+        final response = await http.post(
+          Uri.parse('${AppConfig.baseUrl}/student/remove-class'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            'studentId': selectedStudentId!,
+            'classBatchId': selectedClassBatchId!,
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Student removed from class/batch successfully.')),
+          );
+        } else {
+          throw Exception('Failed to remove student from class/batch');
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to remove student from class/batch.')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
+      appBar: AppBar(title: Text('Assign Class/Batch to Student')),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Assign Class/Batch to Student',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            const Text('Total Strength:-'),
-            const Text('Availability:-'),
-            const SizedBox(height: 16),
-            TextField(
+            SizedBox(height: 16),
+            DropdownButtonFormField<String>(
               decoration: InputDecoration(
-                hintText: 'Search',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                labelText: 'Select Student',
+                border: OutlineInputBorder(),
               ),
+              items: students.map<DropdownMenuItem<String>>((student) {
+                return DropdownMenuItem<String>(
+                  value: student['_id'],
+                  child: Text(student['name']),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedStudentId = value;
+                });
+              },
             ),
-            const SizedBox(height: 16),
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
+            SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: 'Select Class/Batch',
+                border: OutlineInputBorder(),
               ),
-              // This container would typically contain a list of classes/batches
+              items: classBatches.map<DropdownMenuItem<String>>((batch) {
+                return DropdownMenuItem<String>(
+                  value: batch['_id'],
+                  child: Text(batch['classBatchName']),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedClassBatchId = value;
+                });
+              },
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Assigned Student:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              height: 100,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              // This container would typically contain a list of assigned students
-            ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {},
-              child: const Text('Assign Class/Batch To Student'),
+              onPressed: assignStudentToClass,
+              child: Text('Assign Class/Batch To Student'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: EdgeInsets.symmetric(vertical: 12),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             ElevatedButton(
-              onPressed: () {},
-              child: const Text('Remove Student From Class/Batch'),
+              onPressed: removeStudentFromClass,
+              child: Text('Remove Student From Class/Batch'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ],
@@ -1651,6 +1772,7 @@ class AssignClassBatchScreen extends StatelessWidget {
     );
   }
 }
+
 
 class StudentAttendanceScreen extends StatefulWidget {
   const StudentAttendanceScreen({super.key});
@@ -1661,92 +1783,124 @@ class StudentAttendanceScreen extends StatefulWidget {
 }
 
 class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
-  // Initialize date variables with current date
   String _selectedMonth = DateFormat('MMMM').format(DateTime.now());
   String _day = DateFormat('d').format(DateTime.now());
   String _year = DateFormat('y').format(DateTime.now());
   bool _displayClassBatch = false;
   String? _selectedClassBatch;
-
-  // State flag to switch between form and attendance table
   bool _attendanceTaken = false;
   bool _isEditable = false;
-
   DateTime? _fromDate;
   DateTime? _toDate;
+  List<String> _classBatches = [];
+  List<Map<String, dynamic>> attendanceData = [];  // Updated type
 
-  // Dummy attendance data (this would come from a backend or database)
-  List<Map<String, String>> attendanceData = [
-    {
-      'srNo': '1',
-      'date': '23/6/2024',
-      'classBatch': '9th Morning',
-      'student': 'User - 1',
-      'attendance': 'Present'
-    },
-    {
-      'srNo': '2',
-      'date': '23/6/2024',
-      'classBatch': '9th Morning',
-      'student': 'User - 2',
-      'attendance': 'Absent'
-    },
-    {
-      'srNo': '3',
-      'date': '23/6/2024',
-      'classBatch': '9th Morning',
-      'student': 'User - 3',
-      'attendance': 'Present'
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchClassBatches();
+  }
+
+  Future<void> _fetchClassBatches() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          _classBatches = data.map((item) => item['name'] as String).toList();
+        });
+      }
+    } catch (e) {
+      print('Error fetching class batches: $e');
+    }
+  }
+
+  Future<void> _fetchAttendanceData() async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/attendance-data'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'classBatchId': _selectedClassBatch,
+          'date': DateFormat('yyyy-MM-dd').format(DateTime(
+            int.parse(_year),
+            DateFormat('MMMM').parse(_selectedMonth).month,
+            int.parse(_day),
+          )),
+        }),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          attendanceData = data.map((item) {
+            return {
+              'id': item['_id'] ?? '',
+              'date': DateFormat('dd/MM/yyyy').format(DateTime.parse(item['date'])),
+              'classBatch': item['classBatch'] ?? '',
+              'student': item['studentName'] ?? '',
+              'attendance': item['status'] ?? 'Absent',
+            };
+          }).toList();
+        });
+      }
+    } catch (e) {
+      print('Error fetching attendance data: $e');
+    }
+  }
+
+  Future<void> _updateAttendance() async {
+    try {
+      for (var data in attendanceData) {
+        final response = await http.post(
+          Uri.parse('${AppConfig.baseUrl}/api/update-attendance'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'attendanceId': data['id'],
+            'status': data['attendance'],
+          }),
+        );
+        if (response.statusCode != 200) {
+          throw Exception('Failed to update attendance');
+        }
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Attendance updated successfully')));
+    } catch (e) {
+      print('Error updating attendance: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Student Attendance'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child:
-        _attendanceTaken ? _buildAttendanceTable() : _buildAttendanceForm(),
+        child: _attendanceTaken ? _buildAttendanceTable() : _buildAttendanceForm(),
       ),
     );
   }
 
-  // Attendance form
   Widget _buildAttendanceForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Take Student Attendance',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text('Take Student Attendance', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 16.0),
-
-        // Attendance Date
         Row(
           children: [
             Flexible(
-              flex:
-              3, // Adjust the flex ratio to give more space to the month dropdown
+              flex: 3,
               child: DropdownButtonFormField<String>(
                 value: _selectedMonth,
                 items: <String>[
-                  'January',
-                  'February',
-                  'March',
-                  'April',
-                  'May',
-                  'June',
-                  'July',
-                  'August',
-                  'September',
-                  'October',
-                  'November',
-                  'December'
-                ]
-                    .map((String value) => DropdownMenuItem<String>(
+                  'January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December'
+                ].map((String value) => DropdownMenuItem<String>(
                   value: value,
                   child: Text(value),
-                ))
-                    .toList(),
+                )).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
                     _selectedMonth = newValue!;
@@ -1758,7 +1912,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 8.0), // Reduced width
+            const SizedBox(width: 8.0),
             Flexible(
               flex: 1,
               child: TextFormField(
@@ -1775,9 +1929,9 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                 },
               ),
             ),
-            const SizedBox(width: 8.0), // Reduced width
+            const SizedBox(width: 8.0),
             Flexible(
-              flex: 2, // Slightly more space for year
+              flex: 2,
               child: TextFormField(
                 decoration: const InputDecoration(
                   labelText: 'Year',
@@ -1795,8 +1949,6 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
           ],
         ),
         const SizedBox(height: 16.0),
-
-        // Display my Class/Batch (Time table wise)
         CheckboxListTile(
           title: const Text('Display my Class/Batch (Time table wise)'),
           value: _displayClassBatch,
@@ -1807,17 +1959,13 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
           },
         ),
         const SizedBox(height: 16.0),
-
-        // Class/Batch
         DropdownButtonFormField<String>(
           value: _selectedClassBatch,
           hint: const Text('-- Select --'),
-          items: <String>['Class/Batch 1', 'Class/Batch 2', 'Class/Batch 3']
-              .map((String value) => DropdownMenuItem<String>(
+          items: _classBatches.map((String value) => DropdownMenuItem<String>(
             value: value,
             child: Text(value),
-          ))
-              .toList(),
+          )).toList(),
           onChanged: (String? newValue) {
             setState(() {
               _selectedClassBatch = newValue;
@@ -1828,136 +1976,27 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
             border: OutlineInputBorder(),
           ),
         ),
-        const SizedBox(height: 32.0),
-
-        // Take Attendance Button
-        ElevatedButton(
-          onPressed: () {
-            // Toggle the attendance view
-            setState(() {
-              _attendanceTaken = true;
-            });
-          },
-          child: const Text('Take Attendance'),
-        ),
-      ],
-    );
-  }
-
-  // Attendance table after "Take Attendance" is pressed
-  Widget _buildAttendanceTable() {
-    return Column(
-      children: [
-        // Search bar (if needed)
-        TextField(
-          decoration: InputDecoration(
-            hintText: 'Search',
-            prefixIcon: Icon(Icons.search),
-            border: OutlineInputBorder(),
-          ),
-        ),
         const SizedBox(height: 16.0),
-
-        // Date range selection
         Row(
           children: [
-            Expanded(
-              child: _buildDatePicker('From Date', onDateSelected: (date) {
-                setState(() {
-                  _fromDate = date;
-                });
-              }),
-            ),
-            const SizedBox(width: 16.0),
-            Expanded(
-              child: _buildDatePicker('To Date', onDateSelected: (date) {
-                setState(() {
-                  _toDate = date;
-                });
-              }),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16.0),
-
-        // Attendance data table
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: const [
-                DataColumn(label: Text('Sr. No.')),
-                DataColumn(label: Text('Date')),
-                DataColumn(label: Text('Class/Batch')),
-                DataColumn(label: Text('Student')),
-                DataColumn(label: Text('Attendance')),
-              ],
-              rows: attendanceData.map((data) {
-                return DataRow(cells: [
-                  DataCell(Text(data['srNo']!)),
-                  DataCell(Text(data['date']!)),
-                  DataCell(Text(data['classBatch']!)),
-                  DataCell(Text(data['student']!)),
-                  DataCell(
-                    _isEditable
-                        ? DropdownButton<String>(
-                      value: data['attendance'],
-                      items: ['Present', 'Absent'].map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          data['attendance'] = newValue!;
-                        });
-                      },
-                    )
-                        : Text(data['attendance']!),
-                  ),
-                ]);
-              }).toList(),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16.0),
-
-        // Edit and Update buttons
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _isEditable = !_isEditable;
-                });
-              },
-              icon: Icon(_isEditable ? Icons.lock : Icons.edit),
-              label: Text(_isEditable ? 'Stop Edit' : 'Edit'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                padding:
-                const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-              ),
-            ),
-            const SizedBox(width: 20),
             ElevatedButton(
               onPressed: () {
-                // Implement your 'Update Attendance' functionality here
+                _fetchAttendanceData();
                 setState(() {
+                  _attendanceTaken = true;
                   _isEditable = false;
                 });
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                padding:
-                const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-              ),
-              child: const Text(
-                'Update Attendance',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
+              child: const Text('Get Attendance'),
+            ),
+            const SizedBox(width: 16.0),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _isEditable = true;
+                });
+              },
+              child: const Text('Reset'),
             ),
           ],
         ),
@@ -1965,47 +2004,61 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
     );
   }
 
-  // Helper widget to build the date picker
-  Widget _buildDatePicker(String label,
-      {required Function(DateTime) onDateSelected}) {
+  Widget _buildAttendanceTable() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
-        Row(
+        const Text('Student Attendance', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16.0),
+        Table(
+          border: TableBorder.all(),
           children: [
-            Expanded(
-              child: TextFormField(
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText:
-                  _formatDate(label == 'From Date' ? _fromDate : _toDate),
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                onTap: () async {
-                  DateTime? selectedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2101),
-                  );
-                  if (selectedDate != null && selectedDate != DateTime.now()) {
-                    onDateSelected(selectedDate);
-                  }
-                },
-              ),
+            TableRow(
+              children: [
+                TableCell(child: Center(child: Text('Sr. No'))),
+                TableCell(child: Center(child: Text('Date'))),
+                TableCell(child: Center(child: Text('Class/Batch'))),
+                TableCell(child: Center(child: Text('Student'))),
+                TableCell(child: Center(child: Text('Attendance'))),
+              ],
             ),
+            for (int i = 0; i < attendanceData.length; i++)
+              TableRow(
+                children: [
+                  TableCell(child: Center(child: Text('${i + 1}'))),
+                  TableCell(child: Center(child: Text(attendanceData[i]['date'] as String))),
+                  TableCell(child: Center(child: Text(attendanceData[i]['classBatch'] as String))),
+                  TableCell(child: Center(child: Text(attendanceData[i]['student'] as String))),
+                  TableCell(
+                    child: Center(
+                      child: DropdownButton<String>(
+                        value: attendanceData[i]['attendance'] as String,
+                        items: ['Present', 'Absent'].map((String value) => DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        )).toList(),
+                        onChanged: _isEditable ? (String? newValue) {
+                          setState(() {
+                            attendanceData[i]['attendance'] = newValue!;
+                          });
+                        } : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
           ],
+        ),
+        const SizedBox(height: 16.0),
+        ElevatedButton(
+          onPressed: _updateAttendance,
+          child: const Text('Save Changes'),
         ),
       ],
     );
   }
-
-  String _formatDate(DateTime? date) {
-    return date != null ? DateFormat('dd/MM/yyyy').format(date) : 'Select Date';
-  }
 }
+
 
 class ShareDocumentsScreen extends StatefulWidget {
   const ShareDocumentsScreen({super.key});
@@ -2016,88 +2069,142 @@ class ShareDocumentsScreen extends StatefulWidget {
 
 class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
   // Variables to hold selected values
-  String _selectedStandard = '-- Select --';
-  String _selectedShareOption = '-- Select --';
+  String _selectedClassBatch = '-- Select --';
+  File? _selectedFile;
+  String _message = '';
+
+  // List to hold class/batch from the backend
+  List<String> _classBatchList = ['-- Select --'];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchClassBatchData(); // Fetch the class/batch data from the backend
+  }
+
+  // Method to fetch class/batch data from the backend
+  Future<void> _fetchClassBatchData() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch')); // Replace with your backend API URL
+      if (response.statusCode == 200) {
+        List<String> classBatches = List<String>.from(jsonDecode(response.body));
+        setState(() {
+          _classBatchList = ['-- Select --'] + classBatches;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load class/batch data')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  // Method to pick a file
+  Future<void> _pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      setState(() {
+        _selectedFile = File(result.files.single.path!);
+      });
+    }
+  }
+
+  // Method to upload data to the backend
+  Future<void> _uploadDocument() async {
+    if (_selectedClassBatch == '-- Select --' || _selectedFile == null || _message.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
+      return;
+    }
+
+    var request = http.MultipartRequest('POST', Uri.parse('${AppConfig.baseUrl}/api/documents')); // Replace with your API URL
+    request.fields['class_batch'] = _selectedClassBatch;
+    request.fields['message'] = _message;
+    request.files.add(await http.MultipartFile.fromPath('file', _selectedFile!.path));
+
+    var response = await request.send();
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Document uploaded successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to upload document')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Share Document')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Selection
-            const Text('Selection',
+            // Select Class/Batch
+            const Text('Select Class/Batch',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16.0),
-
-            // Select Standard to Share Document
             DropdownButtonFormField<String>(
-              value: _selectedStandard,
-              items: <String>[
-                '-- Select --',
-                'Standard 1',
-                'Standard 2',
-                'Standard 3'
-              ]
-                  .map((String value) => DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              ))
-                  .toList(),
+              value: _selectedClassBatch,
+              items: _classBatchList.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
-                  _selectedStandard = newValue!;
+                  _selectedClassBatch = newValue!;
                 });
               },
               decoration: const InputDecoration(
-                labelText: 'Select Standard To Share Document',
+                labelText: 'Select Class/Batch',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16.0),
 
-            // How Would You Like To Share Document
-            DropdownButtonFormField<String>(
-              value: _selectedShareOption,
-              items:
-              <String>['-- Select --', 'Option 1', 'Option 2', 'Option 3']
-                  .map((String value) => DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              ))
-                  .toList(),
-              onChanged: (String? newValue) {
+            // Select File to Upload
+            const Text('Select File to Upload',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: _pickFile,
+              child: const Text('Choose File'),
+            ),
+            if (_selectedFile != null)
+              Text('Selected File: ${_selectedFile!.path}'),
+
+            const SizedBox(height: 16.0),
+
+            // Message Input Field
+            const Text('Message', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16.0),
+            TextField(
+              onChanged: (value) {
                 setState(() {
-                  _selectedShareOption = newValue!;
+                  _message = value;
                 });
               },
               decoration: const InputDecoration(
-                labelText: 'How Would You Like To Share Document',
+                labelText: 'Enter your message',
                 border: OutlineInputBorder(),
               ),
+              maxLines: 3,
             ),
             const SizedBox(height: 32.0),
 
             // Confirm Button
             ElevatedButton(
-              onPressed: () {
-                // Implement confirmation logic here
-                if (_selectedStandard == '-- Select --' ||
-                    _selectedShareOption == '-- Select --') {
-                  // Show error or perform validation
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Please select all required options')),
-                  );
-                } else {
-                  // Proceed with confirmation logic
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Document sharing confirmed')),
-                  );
-                }
-              },
+              onPressed: _uploadDocument,
               child: const Text('Confirm'),
             ),
           ],
@@ -2117,26 +2224,90 @@ class ManageSharedDocumentsScreen extends StatefulWidget {
 
 class _ManageSharedDocumentsScreenState
     extends State<ManageSharedDocumentsScreen> {
-  // Dummy data for the shared documents list
-  final List<Map<String, String>> _sharedDocuments = [
-    {'standard': 'Standard 1', 'document': 'Document1.pdf'},
-    {'standard': 'Standard 2', 'document': 'Document2.docx'},
-    // Add more documents here
-  ];
+  List<Map<String, dynamic>> _sharedDocuments = [];
+  List<Map<String, dynamic>> _filteredDocuments = [];
+  TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDocuments();
+    _searchController.addListener(_filterDocuments);
+  }
+
+  Future<void> _fetchDocuments() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/documents'));
+      if (response.statusCode == 200) {
+        final List<dynamic> documents = jsonDecode(response.body);
+        setState(() {
+          _sharedDocuments = documents.map((doc) => {
+            'id': doc['_id'],
+            'standard': doc['standard'],
+            'document': doc['documentName'],
+            'message': doc['message'] ?? ''
+          }).toList();
+          _filteredDocuments = _sharedDocuments;  // Initially, all documents are shown
+        });
+      } else {
+        throw Exception('Failed to load documents');
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _filterDocuments() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredDocuments = _sharedDocuments.where((doc) {
+        final documentName = doc['document'].toLowerCase();
+        final standard = doc['standard'].toLowerCase();
+        return documentName.contains(query) || standard.contains(query);
+      }).toList();
+    });
+  }
 
   void _editDocument(int index) {
-    // Navigate to an edit screen or show a dialog to edit the document
+    TextEditingController _messageController = TextEditingController();
+    TextEditingController _standardController = TextEditingController();
+    TextEditingController _documentController = TextEditingController();
+
+    _messageController.text = _filteredDocuments[index]['message'] ?? '';
+    _standardController.text = _filteredDocuments[index]['standard'];
+    _documentController.text = _filteredDocuments[index]['document'];
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Edit Document'),
-          content:
-          Text('Editing document: ${_sharedDocuments[index]['document']}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _standardController,
+                decoration: const InputDecoration(labelText: 'Class/Batch'),
+              ),
+              TextField(
+                controller: _documentController,
+                decoration: const InputDecoration(labelText: 'Document Name'),
+              ),
+              TextField(
+                controller: _messageController,
+                decoration: const InputDecoration(labelText: 'Message'),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
-              onPressed: () {
-                // Implement save functionality
+              onPressed: () async {
+                await _updateDocument(
+                  _filteredDocuments[index]['id'],
+                  _standardController.text,
+                  _documentController.text,
+                  _messageController.text,
+                );
                 Navigator.of(context).pop();
               },
               child: const Text('Save'),
@@ -2153,25 +2324,57 @@ class _ManageSharedDocumentsScreenState
     );
   }
 
-  void _deleteDocument(int index) {
-    // Implement delete functionality
-    setState(() {
-      _sharedDocuments.removeAt(index);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Document deleted')),
-    );
+  Future<void> _updateDocument(String id, String standard, String documentName, String message) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${AppConfig.baseUrl}/api/documents/$id'),
+        body: jsonEncode({
+          'standard': standard,
+          'documentName': documentName,
+          'message': message,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        _fetchDocuments(); // Refresh the list
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Document updated successfully')),
+        );
+      } else {
+        throw Exception('Failed to update document');
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _deleteDocument(int index) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${AppConfig.baseUrl}/api/documents/${_filteredDocuments[index]['id']}'),
+      );
+      if (response.statusCode == 200) {
+        setState(() {
+          _filteredDocuments.removeAt(index);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Document deleted')),
+        );
+      } else {
+        throw Exception('Failed to delete document');
+      }
+    } catch (e) {
+      print(e);
+    }
   }
 
   void _viewDocument(int index) {
-    // Navigate to a view screen or show a dialog to view the document
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('View Document'),
-          content:
-          Text('Viewing document: ${_sharedDocuments[index]['document']}'),
+          content: Text('Viewing document: ${_filteredDocuments[index]['document']}'),
           actions: [
             TextButton(
               onPressed: () {
@@ -2195,12 +2398,14 @@ class _ManageSharedDocumentsScreenState
           children: [
             // Search Bar
             TextField(
+              controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search',
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
+                  icon: const Icon(Icons.clear),
                   onPressed: () {
-                    // Implement search functionality here
+                    _searchController.clear();
+                    _filterDocuments();  // Reset the list to original
                   },
                 ),
               ),
@@ -2210,10 +2415,10 @@ class _ManageSharedDocumentsScreenState
             // Shared Documents List
             Expanded(
               child: ListView.builder(
-                itemCount: _sharedDocuments.length,
+                itemCount: _filteredDocuments.length,
                 itemBuilder: (context, index) {
                   return SharedDocumentCard(
-                    documentData: _sharedDocuments[index],
+                    documentData: _filteredDocuments[index],
                     onEdit: () => _editDocument(index),
                     onDelete: () => _deleteDocument(index),
                     onView: () => _viewDocument(index),
@@ -2228,15 +2433,13 @@ class _ManageSharedDocumentsScreenState
   }
 }
 
-// Custom widget for each shared document
 class SharedDocumentCard extends StatelessWidget {
-  final Map<String, String> documentData;
+  final Map<String, dynamic> documentData;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onView;
 
   const SharedDocumentCard({
-    super.key,
     required this.documentData,
     required this.onEdit,
     required this.onDelete,
@@ -2246,31 +2449,24 @@ class SharedDocumentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: ListTile(
+        title: Text(documentData['document']),
+        subtitle: Text('Class/Batch: ${documentData['standard']}'),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Standard: ${documentData['standard']}'),
-            Text('Document Shared: ${documentData['document']}'),
-
-            // Edit, Delete, and View buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: onEdit,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: onDelete,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.visibility),
-                  onPressed: onView,
-                ),
-              ],
+            IconButton(
+              icon: const Icon(Icons.visibility),
+              onPressed: onView,
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: onEdit,
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: onDelete,
             ),
           ],
         ),
@@ -2279,8 +2475,112 @@ class SharedDocumentCard extends StatelessWidget {
   }
 }
 
-class ChatWithStudentsScreen extends StatelessWidget {
+
+class ChatWithStudentsScreen extends StatefulWidget {
   const ChatWithStudentsScreen({super.key});
+
+  @override
+  _ChatWithStudentsScreenState createState() => _ChatWithStudentsScreenState();
+}
+
+class _ChatWithStudentsScreenState extends State<ChatWithStudentsScreen> {
+  List<Map<String, dynamic>> _students = [];
+  List<Map<String, dynamic>> _filteredStudents = [];
+  String? _selectedStudent;
+  TextEditingController _searchController = TextEditingController();
+  TextEditingController _subjectController = TextEditingController();
+  TextEditingController _messageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStudents();
+    _searchController.addListener(_filterStudents);
+  }
+
+  Future<void> _fetchStudents() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/students')); //if this not works change it to (Uri.parse('${AppConfig.baseUrl}/api/users?role=Student'));
+      if (response.statusCode == 200) {
+        final List<dynamic> students = jsonDecode(response.body);
+        setState(() {
+          _students = students.map((student) => {
+            'id': student['_id'],
+            'name': student['name'],
+          }).toList();
+          _filteredStudents = _students;
+        });
+      } else {
+        throw Exception('Failed to load students');
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _filterStudents() {
+    String query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredStudents = _students.where((student) {
+        return student['name'].toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
+  void _selectStudent(String studentName) {
+    setState(() {
+      _selectedStudent = studentName;
+      _searchController.text = studentName; // Set the search bar with the selected student's name
+    });
+  }
+
+  Future<void> _sendMessage() async {
+    if (_selectedStudent != null && _subjectController.text.isNotEmpty && _messageController.text.isNotEmpty) {
+      try {
+        final student = _students.firstWhere((student) => student['name'] == _selectedStudent);
+        final response = await http.post(
+          Uri.parse('${AppConfig.baseUrl}/api/messageStudent'),
+          body: jsonEncode({
+            'studentId': student['id'],
+            'subject': _subjectController.text,
+            'message': _messageController.text,
+          }),
+          headers: {'Content-Type': 'application/json'},
+        );
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Message sent successfully')),
+          );
+          _resetForm();
+        } else {
+          throw Exception('Failed to send message');
+        }
+      } catch (e) {
+        print(e);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all the fields')),
+      );
+    }
+  }
+
+  void _resetForm() {
+    setState(() {
+      _selectedStudent = null;
+      _subjectController.clear();
+      _messageController.clear();
+      _searchController.clear();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _subjectController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2294,51 +2594,55 @@ class ChatWithStudentsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Add New Chat
-            const Text('Add New Chat',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 16.0),
-
-            // Subject/Topic
-            TextFormField(
+            // Search Bar
+            TextField(
+              controller: _searchController,
               decoration: const InputDecoration(
-                labelText: 'Subject/Topic*',
-                border: OutlineInputBorder(),
-                contentPadding:
-                EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                hintText: 'Search Student',
+                suffixIcon: Icon(Icons.search),
               ),
             ),
             const SizedBox(height: 16.0),
 
-            // Student Name
+            // Dropdown for Student Names
             DropdownButtonFormField<String>(
-              value: null, // Changed to null to show default prompt
-              items: <String>['Student 1', 'Student 2', 'Student 3']
-                  .map((String value) => DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              ))
-                  .toList(),
+              value: _selectedStudent,
+              items: _filteredStudents.map((student) {
+                return DropdownMenuItem<String>(
+                  value: student['name'],
+                  child: Text(student['name']),
+                );
+              }).toList(),
               onChanged: (String? newValue) {
-                // Handle dropdown selection change
+                _selectStudent(newValue!);
               },
               decoration: const InputDecoration(
                 labelText: 'Student Name*',
                 border: OutlineInputBorder(),
-                contentPadding:
-                EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Subject/Topic
+            TextFormField(
+              controller: _subjectController,
+              decoration: const InputDecoration(
+                labelText: 'Subject/Topic*',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               ),
             ),
             const SizedBox(height: 16.0),
 
             // Message
             TextFormField(
+              controller: _messageController,
               maxLines: 5,
               decoration: const InputDecoration(
                 labelText: 'Message*',
                 border: OutlineInputBorder(),
-                contentPadding:
-                EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               ),
             ),
             const SizedBox(height: 32.0),
@@ -2351,11 +2655,9 @@ class ChatWithStudentsScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: ElevatedButton(
-                      onPressed: () {
-                        // Implement send message functionality
-                      },
+                      onPressed: _sendMessage,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue, // Custom background color
+                        backgroundColor: Colors.blue,
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                       ),
                       child: const Text('Send', style: TextStyle(fontSize: 16)),
@@ -2366,15 +2668,12 @@ class ChatWithStudentsScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 8.0),
                     child: ElevatedButton(
-                      onPressed: () {
-                        // Implement cancel functionality
-                      },
+                      onPressed: _resetForm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey, // Custom background color
+                        backgroundColor: Colors.grey,
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                       ),
-                      child:
-                      const Text('Cancel', style: TextStyle(fontSize: 16)),
+                      child: const Text('Cancel', style: TextStyle(fontSize: 16)),
                     ),
                   ),
                 ),
@@ -2387,8 +2686,50 @@ class ChatWithStudentsScreen extends StatelessWidget {
   }
 }
 
-class StudentsFeedbackScreen extends StatelessWidget {
+class StudentsFeedbackScreen extends StatefulWidget {
   const StudentsFeedbackScreen({super.key});
+
+  @override
+  _StudentsFeedbackScreenState createState() => _StudentsFeedbackScreenState();
+}
+
+class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
+  List<dynamic> _feedbacks = [];
+  List<dynamic> _filteredFeedbacks = [];
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFeedbacks();
+  }
+
+  Future<void> _fetchFeedbacks() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/feedbacks'));
+      if (response.statusCode == 200) {
+        final List<dynamic> feedbacks = jsonDecode(response.body);
+        setState(() {
+          _feedbacks = feedbacks;
+          _filteredFeedbacks = feedbacks;
+        });
+      } else {
+        throw Exception('Failed to load feedbacks');
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _filterFeedbacks(String query) {
+    setState(() {
+      _searchQuery = query;
+      _filteredFeedbacks = _feedbacks.where((feedback) {
+        return feedback['studentName'].toLowerCase().contains(query.toLowerCase()) ||
+            feedback['subject'].toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2404,12 +2745,13 @@ class StudentsFeedbackScreen extends StatelessWidget {
           children: [
             // Search Bar
             TextField(
+              onChanged: _filterFeedbacks,
               decoration: InputDecoration(
-                hintText: 'Search',
+                hintText: 'Search by Student Name or Subject',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: () {
-                    // Implement search functionality here
+                    // Implement search functionality here if needed
                   },
                 ),
                 border: const OutlineInputBorder(),
@@ -2422,10 +2764,19 @@ class StudentsFeedbackScreen extends StatelessWidget {
             // Student Feedback List
             Expanded(
               child: ListView.builder(
-                itemCount: 1, // Replace with actual number of feedback
+                itemCount: _filteredFeedbacks.length,
                 itemBuilder: (context, index) {
-                  return const StudentFeedbackCard(
-                    // Pass feedback data here
+                  return StudentFeedbackCard(
+                    feedback: _filteredFeedbacks[index],
+                    onViewDetails: () {
+                      // Implement view details functionality
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FeedbackDetailScreen(feedback: _filteredFeedbacks[index]),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
@@ -2439,52 +2790,50 @@ class StudentsFeedbackScreen extends StatelessWidget {
 
 // Custom widget for each student feedback
 class StudentFeedbackCard extends StatelessWidget {
-  const StudentFeedbackCard({super.key});
+  final Map<String, dynamic> feedback;
+  final VoidCallback onViewDetails;
 
-  // Add necessary properties for feedback data
+  const StudentFeedbackCard({super.key, required this.feedback, required this.onViewDetails});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(
-          vertical: 8.0), // Adds vertical spacing between cards
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Student Name: XXXXXX',
-              style: TextStyle(
+            Text(
+              'Student Name: ${feedback['studentName']}',
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
             ),
             const SizedBox(height: 8.0),
             Text(
-              'Subject: XXXXXXXXXX',
+              'Subject: ${feedback['subject']}',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
             ),
             const SizedBox(height: 8.0),
-            const Text(
-              'Feedback: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-              style: TextStyle(
+            Text(
+              'Feedback: ${feedback['feedback']}',
+              style: const TextStyle(
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 16.0),
 
-            // Action buttons (optional)
+            // Action button
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    // Implement view details functionality
-                  },
+                  onPressed: onViewDetails,
                   child: const Text('View Details'),
                 ),
               ],
@@ -2496,47 +2845,56 @@ class StudentFeedbackCard extends StatelessWidget {
   }
 }
 
-class StudentRightsScreen extends StatefulWidget {
-  const StudentRightsScreen({super.key});
+// Dummy feedback detail screen
+class FeedbackDetailScreen extends StatelessWidget {
+  final Map<String, dynamic> feedback;
 
+  const FeedbackDetailScreen({super.key, required this.feedback});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Feedback Details')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Student Name: ${feedback['studentName']}'),
+            Text('Subject: ${feedback['subject']}'),
+            Text('Feedback: ${feedback['feedback']}'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class StudentRightsScreen extends StatefulWidget {
+  const StudentRightsScreen ({super.key});
   @override
   _StudentRightsScreenState createState() => _StudentRightsScreenState();
 }
 
 class _StudentRightsScreenState extends State<StudentRightsScreen> {
-  // Maps to hold the checked state for each item
-  Map<String, bool> _activityChecks = {
-    'Time Table': false,
-    'My Document': false,
-    'eStudy': false,
-    'MCQ Exam': false,
-    'My Class': false,
-    'Chat With Tutor': false,
-    'Feedback': false,
-  };
-
+  Map<String, bool> _activityChecks = {};
   Map<String, bool> _reportChecks = {
     'Attendance Report': false,
-    'Exam Performance Summary Report': false,
-    'Exam Detail Report': false,
     'Fee Status Report': false,
   };
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Student Rights'),
-      ),
-      body: SingleChildScrollView(
+      appBar: AppBar(title: const Text('Assign Rights to Student Role')),
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Assign Student Rights
-            const Text('Assign Student Rights',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Assign Rights',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 16.0),
 
             // My Activity
@@ -2574,12 +2932,6 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
               children: [
                 const Text('Reports',
                     style: TextStyle(fontWeight: FontWeight.bold)),
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    _showAddItemDialog(context, 'Report');
-                  },
-                ),
               ],
             ),
             Column(
@@ -2600,7 +2952,7 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
             // Save Button
             ElevatedButton(
               onPressed: () {
-                // Implement save functionality
+                // Save the selected rights to the backend
                 _saveChanges();
               },
               child: const Text('SAVE'),
@@ -2635,8 +2987,6 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
                 setState(() {
                   if (type == 'Activity') {
                     _activityChecks[controller.text] = false;
-                  } else {
-                    _reportChecks[controller.text] = false;
                   }
                 });
                 Navigator.of(context).pop();
@@ -2648,10 +2998,28 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
     );
   }
 
-  void _saveChanges() {
-    // Implement the logic to save the changes
-    // For example, you could send the updated maps to a server or save them locally
-    print('Activities: $_activityChecks');
-    print('Reports: $_reportChecks');
+  Future<void> _saveChanges() async {
+    try {
+      // Combine selected rights from both activities and reports
+      Map<String, bool> selectedRights = {
+        ..._activityChecks,
+        ..._reportChecks,
+      };
+
+      // Send to backend
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/assign-rights'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'role': 'Student', 'rights': selectedRights}),
+      );
+
+      if (response.statusCode == 200) {
+        print('Rights saved successfully');
+      } else {
+        throw Exception('Failed to save rights');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 }

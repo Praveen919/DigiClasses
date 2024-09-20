@@ -36,7 +36,7 @@ router.post('/', upload.single('profilePicture'), async (req, res) => {
 
         res.status(201).json({ message: 'Staff created successfully', staff });
     } catch (error) {
-        res.status(500).json({ message: 'Error creating staff', error });
+        res.status(500).json({ message: 'Error creating staff', error: error.message });
     }
 });
 
@@ -66,7 +66,7 @@ router.put('/:id', upload.single('profilePicture'), async (req, res) => {
 
         res.status(200).json({ message: 'Staff updated successfully', staff });
     } catch (error) {
-        res.status(500).json({ message: 'Error updating staff', error });
+        res.status(500).json({ message: 'Error updating staff', error: error.message });
     }
 });
 
@@ -83,47 +83,47 @@ router.get('/', async (req, res) => {
 
 // Fetch users with the "Teacher" role
 router.get('/teachers', async (req, res) => {
-  try {
-    const teachers = await User.find({ role: 'Teacher' });
-    res.status(200).json(teachers);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching teachers' });
-  }
+    try {
+        const teachers = await User.find({ role: 'Teacher' });
+        res.status(200).json(teachers);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching teachers', error: error.message });
+    }
 });
 
 // Update teacher attendance
 router.put('/attendance', async (req, res) => {
-  const attendanceData = req.body.attendance;
+    const attendanceData = req.body.attendance;
 
-  try {
-    for (let i = 0; i < attendanceData.length; i++) {
-      await User.findByIdAndUpdate(attendanceData[i]._id, {
-        attendance: attendanceData[i].attendance, // Save attendance in the user document
-      });
+    try {
+        for (let i = 0; i < attendanceData.length; i++) {
+            await User.findByIdAndUpdate(attendanceData[i]._id, {
+                attendance: attendanceData[i].attendance, // Save attendance in the user document
+            });
+        }
+        res.status(200).json({ message: 'Attendance updated successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating attendance', error: error.message });
     }
-    res.status(200).json({ message: 'Attendance updated successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating attendance' });
-  }
 });
 
 // Update user's role based on selected rights
 router.put('/updateRole/:id', async (req, res) => {
-  const userId = req.params.id;
-  const newRole = req.body.role;
+    const userId = req.params.id;
+    const newRole = req.body.role;
 
-  try {
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.role = newRole;
+        await user.save();
+        res.status(200).json({ message: 'User role updated successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating user role', error: error.message });
     }
-
-    user.role = newRole;
-    await user.save();
-    res.status(200).json({ message: 'User role updated successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating user role' });
-  }
 });
 
 module.exports = router;
