@@ -14,7 +14,7 @@ router.get('/class-batch', async (req, res) => {
   }
 });
 
-// Route to get attendance data
+// Route to get attendance data by class batch and date
 router.post('/attendance-data', async (req, res) => {
   try {
     const { classBatchId, date } = req.body;
@@ -37,6 +37,25 @@ router.post('/update-attendance', async (req, res) => {
     } else {
       res.status(404).json({ message: 'Attendance record not found' });
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route to get attendance percentage for a student
+router.get('/attendance-percentage/:studentId', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    // Fetch all attendance records for the student
+    const attendanceRecords = await Attendance.find({ studentId });
+
+    const totalClasses = attendanceRecords.length;
+    const attendedClasses = attendanceRecords.filter(record => record.status === 'present').length;
+
+    const attendancePercentage = totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0;
+
+    res.json({ attendancePercentage });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
