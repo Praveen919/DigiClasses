@@ -3,7 +3,7 @@
 
 const express = require('express');
 const router = express.Router();
-const MessageStudent = require('./messageStudentModel'); // Import MessageStudent Model
+const MessageStudent = require('../models/messageStudentModel'); // Import MessageStudent Model
 
 // POST route to send a message
 router.post('/messages', async (req, res) => {
