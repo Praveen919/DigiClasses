@@ -1,8 +1,8 @@
 // routes.js
 const express = require('express');
 const router = express.Router();
-const FeeCollection = require('./feeCollectionModel'); // Import the model
-const StudentRegistration = require('./registrationModel');
+const FeeCollection = require('../models/feeCollectionModel'); // Import the model
+const StudentRegistration = require('../models/registrationModel');
 // Route to get all fee collection data or filter by date range
 router.get('/fees', async (req, res) => {
   try {
