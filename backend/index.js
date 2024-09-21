@@ -34,10 +34,10 @@ const registrationRoutes = require('./routes/registrationRoutes');
 const assignClassBatchRoutes = require('./routes/assignClassBatchRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
-const messageStudentRoutes = require('./messageStudentRoutes');
-const feedbacksRoutes = require('./feedbacksRoutes');
-const studentRightsRoutes = require('./studentRightsRoutes');
-const feeCollectionRoutes = require('./feeCollectionRoutes');
+const messageStudentRoutes = require('./routes/messageStudentRoutes');
+const feedbacksRoutes = require('./routes/feedbacksRoutes');
+const studentRightsRoutes = require('./routes/studentRightsRoutes');
+const feeCollectionRoutes = require('./routes/feeCollectionRoutes');
 
 // Middleware setup
 app.use(cors()); // Enable CORS if needed
@@ -56,10 +56,12 @@ app.use('/api/password', passwordRoutes);
 app.use('/api/years', yearRoutes);
 app.use('/api/timetable', manageTimeTableRoutes);
 app.use('/api/attendance', attendanceRoutes);
+
 // Use updated/new routes
 app.use('/api/profile-settings', profileSettingRoutes); // Updated route for profile settings
 app.use('/api/expenses', expenseIncomeRoutes);
 app.use('/api/messageStudent', messageStudentRoutes);
+
 // Use other new routes
 app.use('/api/mcq-exams', mcqExamRoutes);
 app.use('/api/exams', examRoutes); // Ensure this route is correctly defined
