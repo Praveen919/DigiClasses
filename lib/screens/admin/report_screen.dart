@@ -569,6 +569,76 @@ class StudentCardReportScreen extends StatefulWidget {
 class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
   DateTime? _fromDate;
   DateTime? _toDate;
+  String _searchQuery = '';
+  List<Student> _students = [];
+  List<Student> _filteredStudents = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStudents();
+  }
+
+  Future<void> _fetchStudents() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/registration/students'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          _students = data.map((student) => Student.fromJson(student)).toList();
+          _filteredStudents = _students; // Initial list for filtering
+        });
+        // Fetch attendance percentage for each student
+        for (var student in _students) {
+          await _fetchAttendance(student.id);
+        }
+      } else {
+        print('Error fetching students: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception: $e');
+    }
+  }
+
+  Future<void> _fetchAttendance(String studentId) async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/attendance/$studentId'));
+      if (response.statusCode == 200) {
+        final attendanceData = json.decode(response.body);
+        // Calculate attendance percentage based on attendanceData and update student
+        double percentage = calculateAttendancePercentage(attendanceData); // Implement this function
+        setState(() {
+          _students.firstWhere((student) => student.id == studentId).attendancePercentage = percentage;
+        });
+      } else {
+        print('Error fetching attendance: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception: $e');
+    }
+  }
+
+  double calculateAttendancePercentage(List<dynamic> attendanceData) {
+    // Implement your logic to calculate attendance percentage here
+    // For example:
+    int totalClasses = attendanceData.length; // Assuming attendanceData has one entry per class
+    int attendedClasses = attendanceData.where((entry) => entry['attended']).length; // Assuming each entry has an 'attended' field
+    return (totalClasses > 0) ? (attendedClasses / totalClasses) * 100 : 0.0;
+  }
+
+  void _filterStudents() {
+    setState(() {
+      _filteredStudents = _students.where((student) {
+        bool matchesDateRange = true;
+        if (_fromDate != null && _toDate != null) {
+          DateTime joinDate = DateTime.parse(student.joinDate);
+          matchesDateRange = joinDate.isAfter(_fromDate!.subtract(Duration(days: 1))) &&
+              joinDate.isBefore(_toDate!.add(Duration(days: 1)));
+        }
+        return student.name.toLowerCase().contains(_searchQuery.toLowerCase()) && matchesDateRange;
+      }).toList();
+    });
+  }
 
   Future<void> _selectDate(BuildContext context, bool isFromDate) async {
     final DateTime? picked = await showDatePicker(
@@ -585,6 +655,41 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
           _toDate = picked;
         }
       });
+      _filterStudents(); // Re-filter after selecting date
+    }
+  }
+
+  Future<void> _updateStudent(Student student) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${AppConfig.baseUrl}/api/registration/students/${student.id}'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(student.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        _fetchStudents(); // Refresh the student list
+      } else {
+        print('Error updating student: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception: $e');
+    }
+  }
+
+  Future<void> _deleteStudent(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${AppConfig.baseUrl}/api/registration/students/$id'),
+      );
+
+      if (response.statusCode == 200) {
+        _fetchStudents(); // Refresh the student list
+      } else {
+        print('Error deleting student: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception: $e');
     }
   }
 
@@ -592,7 +697,7 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading : false,
+        automaticallyImplyLeading: false,
         title: const Text('Student Card Report'),
       ),
       body: Padding(
@@ -606,11 +711,15 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
                 hintText: 'Search',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
-                  onPressed: () {
-                    // Implement search functionality here
-                  },
+                  onPressed: _filterStudents,
                 ),
               ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+                _filterStudents();
+              },
             ),
             const SizedBox(height: 16.0),
 
@@ -626,9 +735,7 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
                         border: OutlineInputBorder(),
                       ),
                       child: Text(
-                        _fromDate != null
-                            ? "${_fromDate!.toLocal()}".split(' ')[0]
-                            : 'Select Date',
+                        _fromDate != null ? "${_fromDate!.toLocal()}".split(' ')[0] : 'Select Date',
                       ),
                     ),
                   ),
@@ -643,9 +750,7 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
                         border: OutlineInputBorder(),
                       ),
                       child: Text(
-                        _toDate != null
-                            ? "${_toDate!.toLocal()}".split(' ')[0]
-                            : 'Select Date',
+                        _toDate != null ? "${_toDate!.toLocal()}".split(' ')[0] : 'Select Date',
                       ),
                     ),
                   ),
@@ -657,21 +762,15 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
             // Student Card List
             Expanded(
               child: ListView.builder(
-                itemCount: 2, // Replace with actual number of students
+                itemCount: _filteredStudents.length,
                 itemBuilder: (context, index) {
-                  return const StudentCard(
-                    // Pass student data here
+                  return StudentCard(
+                    student: _filteredStudents[index],
+                    onUpdate: _updateStudent,
+                    onDelete: _deleteStudent,
                   );
                 },
               ),
-            ),
-
-            // Export Button
-            ElevatedButton(
-              onPressed: () {
-                // Implement export functionality here
-              },
-              child: const Text('Export'),
             ),
           ],
         ),
@@ -680,11 +779,66 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
   }
 }
 
-// Custom widget for each student card
-class StudentCard extends StatelessWidget {
-  const StudentCard({super.key});
+// Model class for Student
+class Student {
+  final String id;
+  String name;
+  String standard;
+  String batch;
+  double attendancePercentage;
+  String joinDate;
 
-  // Add necessary properties for student data
+  Student({
+    required this.id,
+    required this.name,
+    required this.standard,
+    required this.batch,
+    required this.attendancePercentage,
+    required this.joinDate,
+  });
+
+  factory Student.fromJson(Map<String, dynamic> json) {
+    return Student(
+      id: json['id'],
+      name: json['name'],
+      standard: json['standard'],
+      batch: json['batch'],
+      attendancePercentage: json['attendancePercentage'],
+      joinDate: json['joinDate'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'standard': standard,
+      'batch': batch,
+      'attendancePercentage': attendancePercentage,
+      'joinDate': joinDate,
+    };
+  }
+}
+
+// Custom widget for each student card
+class StudentCard extends StatefulWidget {
+  final Student student;
+  final Function(Student) onUpdate;
+  final Function(String) onDelete;
+
+  const StudentCard({
+    super.key,
+    required this.student,
+    required this.onUpdate,
+    required this.onDelete,
+  });
+
+  @override
+  _StudentCardState createState() => _StudentCardState();
+}
+
+class _StudentCardState extends State<StudentCard> {
+  bool _isEditing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -694,26 +848,49 @@ class StudentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Student Name, Standard, Batch, etc.
-            const Text('Student Name: XXXXXX'),
-            const Text('Standard: XX'),
-            const Text('Batch: XX'),
-            const Text('Attendance: XX%'),
-            const Text('Join Date: XX/XX/XX'),
-
-            // Edit and Delete buttons
+            TextField(
+              enabled: _isEditing,
+              controller: TextEditingController(text: widget.student.name)..selection = TextSelection.fromPosition(TextPosition(offset: widget.student.name.length)),
+              onChanged: (value) {
+                widget.student.name = value;
+              },
+              decoration: InputDecoration(labelText: 'Student Name'),
+            ),
+            TextField(
+              enabled: _isEditing,
+              controller: TextEditingController(text: widget.student.standard)..selection = TextSelection.fromPosition(TextPosition(offset: widget.student.standard.length)),
+              onChanged: (value) {
+                widget.student.standard = value;
+              },
+              decoration: InputDecoration(labelText: 'Standard'),
+            ),
+            TextField(
+              enabled: _isEditing,
+              controller: TextEditingController(text: widget.student.batch)..selection = TextSelection.fromPosition(TextPosition(offset: widget.student.batch.length)),
+              onChanged: (value) {
+                widget.student.batch = value;
+              },
+              decoration: InputDecoration(labelText: 'Batch'),
+            ),
+            Text('Attendance: ${widget.student.attendancePercentage.toStringAsFixed(2)}%'),
             Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit),
+                  icon: Icon(_isEditing ? Icons.check : Icons.edit),
                   onPressed: () {
-                    // Implement edit functionality
+                    if (_isEditing) {
+                      widget.onUpdate(widget.student);
+                    }
+                    setState(() {
+                      _isEditing = !_isEditing;
+                    });
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete),
                   onPressed: () {
-                    // Implement delete functionality
+                    widget.onDelete(widget.student.id);
                   },
                 ),
               ],
