@@ -3,6 +3,7 @@ import 'package:intl/intl.dart'; // For formatting dates
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:testing_app/screens/config.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class ReportScreen extends StatefulWidget {
   final String option;
@@ -1024,6 +1025,10 @@ class FeeCollectionScreen extends StatefulWidget {
 class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
   DateTime? fromDate;
   DateTime? toDate;
+  List<Map<String, dynamic>> studentData = []; // Student data from the database
+  List<Map<String, dynamic>> filteredData = []; // Filtered data after search or date selection
+  String searchQuery = ''; // Current search query
+  bool isEditable = false; // Controls whether data is editable
 
   // Method to select a date
   Future<void> _selectDate(BuildContext context, DateTime? initialDate, Function(DateTime) onDateSelected) async {
@@ -1038,20 +1043,119 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
     }
   }
 
+  Future<void> _fetchData() async {
+    if (fromDate != null && toDate != null) {
+      // Format dates
+      final formattedFromDate = DateFormat('yyyy-MM-dd').format(fromDate!);
+      final formattedToDate = DateFormat('yyyy-MM-dd').format(toDate!);
+
+      try {
+        // API call to fetch data from the server based on date range
+        final response = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/feeCollection/fees?fromDate=$formattedFromDate&toDate=$formattedToDate'),
+        );
+
+        if (response.statusCode == 200) {
+          // Parse the response JSON into a list
+          final List<dynamic> data = json.decode(response.body);
+
+          setState(() {
+            // Cast the data into a List<Map<String, dynamic>> explicitly
+            studentData = List<Map<String, dynamic>>.from(data);
+            _filterData(); // Call your filtering method
+          });
+        } else {
+          print('Error fetching data: ${response.statusCode}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to fetch data')),
+          );
+        }
+      } catch (error) {
+        print('Error fetching data: $error');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error fetching data')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select both From and To dates')),
+      );
+    }
+  }
+
+  // Filter data based on search query
+  void _filterData() {
+    setState(() {
+      filteredData = studentData.where((student) {
+        final name = student['name']?.toString().toLowerCase() ?? '';
+        final std = student['std']?.toString().toLowerCase() ?? '';
+        final batch = student['batch']?.toString().toLowerCase() ?? '';
+        final query = searchQuery.toLowerCase();
+
+        return name.contains(query) || std.contains(query) || batch.contains(query);
+      }).toList();
+    });
+  }
+
+  Future<void> _updateData() async {
+    try {
+      // Loop through filteredData (updated student data) and send it to the database
+      for (var student in filteredData) {
+        // Example of an API call for each student update
+        final response = await http.put(
+          Uri.parse('${AppConfig.baseUrl}/api/feeCollection/updateStudent'),  // Make sure this URL is correct
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: json.encode({
+            '_id': student['id'],                       // Use '_id' if that's what your backend expects
+            'totalFees': student['totalFees'],         // Data being updated
+            'discountedFees': student['discountedFees'],
+            'amtPaid': student['amtPaid'],
+            'date': student['date'],                   // Updated date field
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          // Successfully updated the student data
+          print('Student updated: ${student['id']}');
+        } else {
+          // Handle server errors
+          print('Failed to update student: ${student['id']}');
+        }
+      }
+
+      // Show a success message after all updates
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data updated successfully')),
+      );
+    } catch (error) {
+      print('Error updating data: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error updating data')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading : false,
+        automaticallyImplyLeading: false,
         title: const Text('Fee Collection Report'),
       ),
-       // Add your drawer here
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextFormField(
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                  _filterData(); // Filter the data based on the search query
+                });
+              },
               decoration: const InputDecoration(
                 labelText: 'Search',
                 prefixIcon: Icon(Icons.search),
@@ -1104,9 +1208,7 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: () {
-                    // Handle Get Data action
-                  },
+                  onPressed: _fetchData, // Fetch data when button is clicked
                   child: const Text('Get Data'),
                 ),
               ],
@@ -1117,36 +1219,103 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
                   columns: const [
-                    DataColumn(label: Text('')),
+                    DataColumn(label: Text('Sr. No')),
                     DataColumn(label: Text('Name')),
                     DataColumn(label: Text('STD')),
                     DataColumn(label: Text('Batch')),
-                    DataColumn(label: Text('Amt')),
+                    DataColumn(label: Text('Total Fees')),
+                    DataColumn(label: Text('Discounted Fees')),
+                    DataColumn(label: Text('Amt Paid')),
+                    DataColumn(label: Text('Date')),
                   ],
                   rows: List<DataRow>.generate(
-                    5, // Adjust the number based on your data
+                    filteredData.length,
                         (index) => DataRow(
                       cells: [
                         DataCell(Text((index + 1).toString())),
-                        DataCell(Text('Name $index')),
-                        DataCell(Text('STD $index')),
-                        DataCell(Text('Batch $index')),
-                        DataCell(Text('Amt $index')),
+                        DataCell(Text(filteredData[index]['name'])),
+                        DataCell(Text(filteredData[index]['std'])),
+                        DataCell(Text(filteredData[index]['batch'])),
+                        DataCell(
+                          isEditable
+                              ? TextFormField(
+                            initialValue: filteredData[index]['totalFees'].toString(),
+                            onChanged: (value) {
+                              setState(() {
+                                filteredData[index]['totalFees'] = int.tryParse(value) ?? filteredData[index]['totalFees'];
+                              });
+                            },
+                          )
+                              : Text(filteredData[index]['totalFees'].toString()),
+                        ),
+                        DataCell(
+                          isEditable
+                              ? TextFormField(
+                            initialValue: filteredData[index]['discountedFees'].toString(),
+                            onChanged: (value) {
+                              setState(() {
+                                filteredData[index]['discountedFees'] = int.tryParse(value) ?? filteredData[index]['discountedFees'];
+                              });
+                            },
+                          )
+                              : Text(filteredData[index]['discountedFees'].toString()),
+                        ),
+                        DataCell(
+                          isEditable
+                              ? TextFormField(
+                            initialValue: filteredData[index]['amtPaid'].toString(),
+                            onChanged: (value) {
+                              setState(() {
+                                filteredData[index]['amtPaid'] = int.tryParse(value) ?? filteredData[index]['amtPaid'];
+                              });
+                            },
+                          )
+                              : Text(filteredData[index]['amtPaid'].toString()),
+                        ),
+                        DataCell(
+                          isEditable
+                              ? GestureDetector(
+                            onTap: () => _selectDate(context, DateTime.parse(filteredData[index]['date']), (date) {
+                              setState(() {
+                                filteredData[index]['date'] = DateFormat('yyyy-MM-dd').format(date);
+                              });
+                            }),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                filteredData[index]['date'],
+                                style: const TextStyle(color: Colors.black87),
+                              ),
+                            ),
+                          )
+                              : Text(filteredData[index]['date']),
+                        ),
                       ],
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Handle Export action
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Button color
-              ),
-              child: const Text('Export'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      isEditable = !isEditable; // Toggle the edit mode
+                    });
+                  },
+                  child: Text(isEditable ? 'Cancel' : 'Edit'),
+                ),
+                ElevatedButton(
+                  onPressed: _updateData, // Save the updated data
+                  child: const Text('Update'),
+                ),
+              ],
             ),
           ],
         ),
@@ -1165,6 +1334,45 @@ class ExpenseReportScreen extends StatefulWidget {
 class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
   DateTime? fromDate;
   DateTime? toDate;
+  List<dynamic> expenseData = [];
+  List<dynamic> filteredData = [];
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  // Method to fetch data from the database
+  Future<void> _fetchData() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/expenses/expenses'));
+      if (response.statusCode == 200) {
+        setState(() {
+          expenseData = json.decode(response.body);
+          filteredData = expenseData;
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
+  }
+
+  // Method to filter data based on dates and search query
+  void _filterData() {
+    setState(() {
+      filteredData = expenseData.where((expense) {
+        final expenseDate = DateTime.parse(expense['date']);
+        final isInDateRange = (fromDate == null || expenseDate.isAfter(fromDate!) || expenseDate.isAtSameMomentAs(fromDate!)) &&
+            (toDate == null || expenseDate.isBefore(toDate!) || expenseDate.isAtSameMomentAs(toDate!));
+        final matchesSearchQuery = expense['expenseType'].toLowerCase().contains(searchQuery.toLowerCase());
+        return isInDateRange && matchesSearchQuery;
+      }).toList();
+    });
+  }
 
   // Method to select a date
   Future<void> _selectDate(BuildContext context, DateTime? initialDate, Function(DateTime) onDateSelected) async {
@@ -1183,16 +1391,21 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading : false,
+        automaticallyImplyLeading: false,
         title: const Text('Expense Report'),
       ),
-      // Add your drawer here
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextFormField(
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                  _filterData();
+                });
+              },
               decoration: const InputDecoration(
                 labelText: 'Search',
                 prefixIcon: Icon(Icons.search),
@@ -1208,6 +1421,7 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
                       setState(() {
                         fromDate = date;
                       });
+                      _filterData();
                     }),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
@@ -1229,6 +1443,7 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
                       setState(() {
                         toDate = date;
                       });
+                      _filterData();
                     }),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
@@ -1246,7 +1461,7 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () {
-                    // Handle Get Data action
+                    _filterData(); // Filter data on button click
                   },
                   child: const Text('Get Data'),
                 ),
@@ -1265,29 +1480,19 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
                     DataColumn(label: Text('Amount')),
                   ],
                   rows: List<DataRow>.generate(
-                    5, // Adjust the number based on your data
+                    filteredData.length,
                         (index) => DataRow(
                       cells: [
                         DataCell(Text((index + 1).toString())),
-                        DataCell(Text('Expense Type $index')),
-                        DataCell(Text('Payment Mode $index')),
-                        DataCell(Text('Date $index')),
-                        DataCell(Text('Amount $index')),
+                        DataCell(Text(filteredData[index]['expenseType'])),
+                        DataCell(Text(filteredData[index]['paymentMode'])),
+                        DataCell(Text(filteredData[index]['date'])),
+                        DataCell(Text(filteredData[index]['amount'].toString())),
                       ],
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Handle Export action
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Button color
-              ),
-              child: const Text('Export'),
             ),
           ],
         ),
@@ -1306,6 +1511,45 @@ class IncomeReportScreen extends StatefulWidget {
 class _IncomeReportScreenState extends State<IncomeReportScreen> {
   DateTime? fromDate;
   DateTime? toDate;
+  List<dynamic> incomeData = [];
+  List<dynamic> filteredData = [];
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  // Method to fetch data from the database
+  Future<void> _fetchData() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/expenses/incomes'));
+      if (response.statusCode == 200) {
+        setState(() {
+          incomeData = json.decode(response.body);
+          filteredData = incomeData;
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
+  }
+
+  // Method to filter data based on dates and search query
+  void _filterData() {
+    setState(() {
+      filteredData = incomeData.where((income) {
+        final incomeDate = DateTime.parse(income['date']);
+        final isInDateRange = (fromDate == null || incomeDate.isAfter(fromDate!) || incomeDate.isAtSameMomentAs(fromDate!)) &&
+            (toDate == null || incomeDate.isBefore(toDate!) || incomeDate.isAtSameMomentAs(toDate!));
+        final matchesSearchQuery = income['incomeType'].toLowerCase().contains(searchQuery.toLowerCase());
+        return isInDateRange && matchesSearchQuery;
+      }).toList();
+    });
+  }
 
   // Method to select a date
   Future<void> _selectDate(BuildContext context, DateTime? initialDate, Function(DateTime) onDateSelected) async {
@@ -1324,16 +1568,21 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading : false,
+        automaticallyImplyLeading: false,
         title: const Text('Income Report'),
       ),
-      // Add your drawer here
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextFormField(
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                  _filterData();
+                });
+              },
               decoration: const InputDecoration(
                 labelText: 'Search',
                 prefixIcon: Icon(Icons.search),
@@ -1349,6 +1598,7 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
                       setState(() {
                         fromDate = date;
                       });
+                      _filterData();
                     }),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
@@ -1370,6 +1620,7 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
                       setState(() {
                         toDate = date;
                       });
+                      _filterData();
                     }),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
@@ -1387,7 +1638,7 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () {
-                    // Handle Get Data action
+                    _filterData(); // Filter data on button click
                   },
                   child: const Text('Get Data'),
                 ),
@@ -1406,29 +1657,19 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
                     DataColumn(label: Text('Amount')),
                   ],
                   rows: List<DataRow>.generate(
-                    5, // Adjust the number based on your data
+                    filteredData.length,
                         (index) => DataRow(
                       cells: [
                         DataCell(Text((index + 1).toString())),
-                        DataCell(Text('Income Type $index')),
-                        DataCell(Text('Payment Mode $index')),
-                        DataCell(Text('Date $index')),
-                        DataCell(Text('Amount $index')),
+                        DataCell(Text(filteredData[index]['incomeType'])),
+                        DataCell(Text(filteredData[index]['paymentMode'])),
+                        DataCell(Text(filteredData[index]['date'])),
+                        DataCell(Text(filteredData[index]['amount'].toString())),
                       ],
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Handle Export action
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Button color
-              ),
-              child: const Text('Export'),
             ),
           ],
         ),
@@ -1447,6 +1688,8 @@ class ProfitLossReportScreen extends StatefulWidget {
 class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
   DateTime? _fromDate;
   DateTime? _toDate;
+  double totalIncome = 0;
+  double totalExpense = 0;
 
   Future<void> _selectFromDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -1481,12 +1724,40 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
     return DateFormat('MMMM dd, yyyy').format(date);
   }
 
+  Future<void> _fetchData() async {
+    if (_fromDate != null && _toDate != null) {
+      final formattedFromDate = _fromDate!.toIso8601String();
+      final formattedToDate = _toDate!.toIso8601String();
+
+      // Fetch income data
+      final incomeResponse = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/expenses/incomes?from=$formattedFromDate&to=$formattedToDate'),
+      );
+      if (incomeResponse.statusCode == 200) {
+        final incomeData = json.decode(incomeResponse.body);
+        totalIncome = incomeData.fold(0, (sum, item) => sum + item['amount']); // Adjust based on your data structure
+      }
+
+      // Fetch expense data
+      final expenseResponse = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/expenses/expenses?from=$formattedFromDate&to=$formattedToDate'),
+      );
+      if (expenseResponse.statusCode == 200) {
+        final expenseData = json.decode(expenseResponse.body);
+        totalExpense = expenseData.fold(0, (sum, item) => sum + item['amount']); // Adjust based on your data structure
+      }
+
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // Aligns elements to the left
           children: [
             Row(
               children: [
@@ -1547,54 +1818,55 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
             ),
             const SizedBox(height: 16.0),
             ElevatedButton(
-              onPressed: () {
-                // Handle Get Data action
-              },
+              onPressed: _fetchData,
               child: const Text('Get Data'),
             ),
             const SizedBox(height: 32.0),
-            Expanded(
-              child: Column(
-                children: [
-                  // Placeholder for Pie Chart
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        'Pie Diagram Placeholder',
-                        style: TextStyle(color: Colors.grey),
-                      ),
+            totalIncome == 0 && totalExpense == 0
+                ? const Center(child: Text('No data available'))
+                : Column(
+              children: [
+                SizedBox(
+                  height: 200, // Define height for the PieChart
+                  child: PieChart(
+                    PieChartData(
+                      sections: [
+                        PieChartSectionData(
+                          value: totalIncome,
+                          title: 'Profit: \$${totalIncome.toStringAsFixed(2)}',
+                          color: Colors.green,
+                          radius: 60,
+                        ),
+                        PieChartSectionData(
+                          value: totalExpense,
+                          title: 'Loss: \$${totalExpense.toStringAsFixed(2)}',
+                          color: Colors.red,
+                          radius: 60,
+                        ),
+                      ],
+                      borderData: FlBorderData(show: false),
+                      sectionsSpace: 0,
+                      centerSpaceRadius: 40,
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildLegendItem(Colors.blue, 'Profit amount - XXXXX'),
-                    ],
-                  ),
-                  const SizedBox(height: 8.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildLegendItem(Colors.black, 'Loss amount - XXXXX'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: () {
-                // Handle Export action
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-              ),
-              child: const Text('Export'),
+                ),
+                const SizedBox(height: 16.0),
+                _buildLegend(),
+              ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLegend() {
+    return Column(
+      children: [
+        _buildLegendItem(Colors.green, 'Profit: \$${totalIncome.toStringAsFixed(2)}'),
+        const SizedBox(height: 8.0),
+        _buildLegendItem(Colors.red, 'Loss: \$${totalExpense.toStringAsFixed(2)}'),
+      ],
     );
   }
 
@@ -1610,7 +1882,7 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
         Expanded(
           child: Text(
             text,
-            maxLines: 2, // Allows wrapping to the next line
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -1618,7 +1890,6 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
     );
   }
 }
-
 
 
 class AppAccessRightsScreen extends StatefulWidget {
@@ -1630,12 +1901,56 @@ class AppAccessRightsScreen extends StatefulWidget {
 
 class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
   String selectedRights = 'Admin';
-  List<String> users = ['User-1 Name', 'User-2 Name', 'User-3 Name'];
+  List<Map<String, dynamic>> users = []; // Changed to hold user data
+  bool isLoading = false;
+
+  Future<void> _fetchUsers() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth?role=$selectedRights'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      users = List<Map<String, dynamic>>.from(data);
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> _deleteUser(String userId) async {
+    final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/api/auth/$userId'));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        users.removeWhere((user) => user['id'] == userId);
+      });
+    }
+  }
+
+  Future<void> _updateUserRole(String userId, String newRole) async {
+    final response = await http.put(
+      Uri.parse('${AppConfig.baseUrl}/api/auth/$userId'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'role': newRole}),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        final index = users.indexWhere((user) => user['id'] == userId);
+        if (index != -1) {
+          users[index]['role'] = newRole; // Update locally
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -1647,7 +1962,9 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                _fetchUsers();
+              },
               child: const Text('Check App Access Rights'),
               style: ElevatedButton.styleFrom(foregroundColor: Colors.black, backgroundColor: Colors.white),
             ),
@@ -1657,55 +1974,117 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
               title: const Text('Check Admin Rights'),
               value: 'Admin',
               groupValue: selectedRights,
-              onChanged: (value) => setState(() => selectedRights = value.toString()),
+              onChanged: (value) => setState(() {
+                selectedRights = value.toString();
+                _fetchUsers(); // Fetch users when the radio button is changed
+              }),
             ),
             RadioListTile(
               title: const Text('Check Teacher Rights'),
               value: 'Teacher',
               groupValue: selectedRights,
-              onChanged: (value) => setState(() => selectedRights = value.toString()),
+              onChanged: (value) => setState(() {
+                selectedRights = value.toString();
+                _fetchUsers(); // Fetch users when the radio button is changed
+              }),
             ),
             RadioListTile(
               title: const Text('Check Student Rights'),
               value: 'Student',
               groupValue: selectedRights,
-              onChanged: (value) => setState(() => selectedRights = value.toString()),
+              onChanged: (value) => setState(() {
+                selectedRights = value.toString();
+                _fetchUsers(); // Fetch users when the radio button is changed
+              }),
             ),
+            const SizedBox(height: 16),
+            const Text('Users with Rights:', style: TextStyle(fontWeight: FontWeight.bold)),
+            if (isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (users.isEmpty)
+              const Center(child: Text('No users found'))
+            else
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final user = users[index];
+                  return ListTile(
+                    leading: CircleAvatar(child: Text('U${index + 1}')),
+                    title: Text(user['name']),
+                    subtitle: Text('Role: ${user['role']}'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            // Show a dialog to edit the role
+                            _showEditRoleDialog(user['id'], user['role']);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () {
+                            _deleteUser(user['id']);
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {},
-              child: const Text('Check Rights'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-            ),
-            const SizedBox(height: 16),
-            const Text('Users with Admin Rights:', style: TextStyle(fontWeight: FontWeight.bold)),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: users.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: CircleAvatar(child: Text('U${index + 1}')),
-                  title: Text(users[index]),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(icon: Icon(Icons.edit), onPressed: () {}),
-                      IconButton(icon: Icon(Icons.delete), onPressed: () {}),
-                    ],
-                  ),
-                );
+              onPressed: () {
+                // Implement any additional functionality here
               },
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {},
               child: const Text('Update'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showEditRoleDialog(String userId, String currentRole) {
+    String newRole = currentRole; // Default to current role
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit User Role'),
+          content: DropdownButton<String>(
+            value: newRole,
+            items: <String>['Admin', 'Teacher', 'Student'].map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? value) {
+              if (value != null) {
+                newRole = value;
+              }
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _updateUserRole(userId, newRole);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Update'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
