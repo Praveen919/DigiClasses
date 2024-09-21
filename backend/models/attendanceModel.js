@@ -17,9 +17,11 @@ const attendanceSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Present', 'Absent'],
+    enum: ['Present', 'Absent'], // Ensure these match the values used in your app
     required: true
   }
+}, {
+  timestamps: true // Optional: to keep track of createdAt and updatedAt fields
 });
 
 module.exports = mongoose.model('Attendance', attendanceSchema);
