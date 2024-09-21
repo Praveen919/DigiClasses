@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -114,5 +113,3 @@ router.get('/users', verifyJWT, async (req, res) => {
 });
 
 module.exports = router;
-
-

@@ -6,7 +6,7 @@ const expenseSchema = new mongoose.Schema({
   paymentMode: { type: String },
   chequeNumber: { type: String },
   bankName: { type: String },
-  date: { type: Date },
+  date: { type: Date, required: true },
   amount: { type: Number, required: true },
   remark: { type: String }
 });

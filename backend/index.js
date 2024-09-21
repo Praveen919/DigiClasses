@@ -60,6 +60,7 @@ app.use('/api/attendance', attendanceRoutes);
 // Use updated/new routes
 app.use('/api/profile-settings', profileSettingRoutes); // Updated route for profile settings
 app.use('/api/expenses', expenseIncomeRoutes);
+app.use('/api/incomes', expenseIncomeRoutes);
 app.use('/api/messageStudent', messageStudentRoutes);
 
 // Use other new routes
@@ -79,7 +80,7 @@ app.use('/api/assignClassBatch', assignClassBatchRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/feedbacks', feedbacksRoutes);
 app.use('/api/assign-rights', studentRightsRoutes);
-app.use('./api/feeCollection', feeCollectionRoutes);
+app.use('/api/feeCollection', feeCollectionRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
