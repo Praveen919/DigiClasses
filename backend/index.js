@@ -34,10 +34,10 @@ const registrationRoutes = require('./routes/registrationRoutes');
 const assignClassBatchRoutes = require('./routes/assignClassBatchRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
-const messageStudentRoutes = require('./messageStudentRoutes');
-const feedbacksRoutes = require('./feedbacksRoutes');
-const studentRightsRoutes = require('./studentRightsRoutes');
-const feeCollectionRoutes = require('./feeCollectionRoutes');
+const messageStudentRoutes = require('./routes/messageStudentRoutes');
+const feedbacksRoutes = require('./routes/feedbacksRoutes');
+const studentRightsRoutes = require('./routes/studentRightsRoutes');
+const feeCollectionRoutes = require('./routes/feeCollectionRoutes');
 
 // Middleware setup
 app.use(cors()); // Enable CORS if needed
