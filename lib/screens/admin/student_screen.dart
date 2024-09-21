@@ -1820,7 +1820,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   Future<void> _fetchAttendanceData() async {
     try {
       final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/attendance-data'),
+        Uri.parse('${AppConfig.baseUrl}/api/attendance/attendance-data'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'classBatchId': _selectedClassBatch,
