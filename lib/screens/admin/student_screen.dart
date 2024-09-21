@@ -1700,7 +1700,9 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Assign Class/Batch to Student')),
+      appBar: AppBar(title: Text('Assign Class/Batch to Student'),
+      automaticallyImplyLeading: false,
+      ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -1818,7 +1820,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   Future<void> _fetchAttendanceData() async {
     try {
       final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/attendance-data'),
+        Uri.parse('${AppConfig.baseUrl}/api/attendance/attendance-data'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'classBatchId': _selectedClassBatch,
@@ -2142,7 +2144,10 @@ class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Share Document')),
+      appBar: AppBar(
+        title: const Text('Share Document'),
+        automaticallyImplyLeading: false, // Move this line to the AppBar
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -2872,13 +2877,24 @@ class FeedbackDetailScreen extends StatelessWidget {
 
 
 class StudentRightsScreen extends StatefulWidget {
-  const StudentRightsScreen ({super.key});
+  const StudentRightsScreen({super.key});
+
   @override
   _StudentRightsScreenState createState() => _StudentRightsScreenState();
 }
 
 class _StudentRightsScreenState extends State<StudentRightsScreen> {
-  Map<String, bool> _activityChecks = {};
+  // Maps to hold the checked state for each item
+  Map<String, bool> _activityChecks = {
+    'Time Table': false,
+    'My Document': false,
+    'eStudy': false,
+    'MCQ Exam': false,
+    'My Class': false,
+    'Chat With Tutor': false,
+    'Feedback': false,
+  };
+
   Map<String, bool> _reportChecks = {
     'Attendance Report': false,
     'Fee Status Report': false,
@@ -2887,22 +2903,26 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Assign Rights to Student Role')),
-      body: Padding(
+      appBar: AppBar(
+        title: const Text('Assign Rights to Student Role'),
+        automaticallyImplyLeading: false,
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Assign Rights',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'Assign Rights',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
             const SizedBox(height: 16.0),
 
             // My Activity
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('My Activity',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('My Activity', style: TextStyle(fontWeight: FontWeight.bold)),
                 IconButton(
                   icon: const Icon(Icons.edit),
                   onPressed: () {
@@ -2930,8 +2950,7 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Reports',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Reports', style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             Column(

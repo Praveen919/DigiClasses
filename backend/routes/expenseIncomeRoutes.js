@@ -1,6 +1,7 @@
-  const express = require('express');
-  const router = express.Router();
-  const { Expense, Income } = require('../models/expenseIncomeModel'); // Ensure correct path
+const express = require('express');
+const mongoose = require('mongoose');
+const router = express.Router();
+const { Expense, Income } = require('../models/expenseIncomeModel'); // Ensure correct path
 
   // Expense Routes
   // Create a new expense

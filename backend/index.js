@@ -37,6 +37,7 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const messageStudentRoutes = require('./messageStudentRoutes');
 const feedbacksRoutes = require('./feedbacksRoutes');
 const studentRightsRoutes = require('./studentRightsRoutes');
+const feeCollectionRoutes = require('./feeCollectionRoutes');
 
 // Middleware setup
 app.use(cors()); // Enable CORS if needed
@@ -72,11 +73,11 @@ app.use('/api/assignStandard', assignStandardRoutes);
 app.use('/api/assignSubject', assignSubjectRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/registration', registrationRoutes);
-
 app.use('/api/assignClassBatch', assignClassBatchRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/feedbacks', feedbacksRoutes);
 app.use('/api/assign-rights', studentRightsRoutes);
+app.use('./api/feeCollection', feeCollectionRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
