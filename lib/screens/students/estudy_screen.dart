@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-//import 'package:file_picker/file_picker.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+// import 'dart:io';
 
 class EstudyScreen extends StatelessWidget {
   final String option;
@@ -19,16 +23,81 @@ class EstudyScreen extends StatelessWidget {
   Widget _buildContent() {
     switch (option) {
       case 'viewStudyMaterial':
-        return ViewStudyMaterialScreen();
+        return const ViewStudyMaterialScreen();
       case 'viewSharedStudyMaterial':
-        return ViewSharedStudyMaterialScreen();
+        return const ViewSharedStudyMaterialScreen();
       default:
         return const Center(child: Text('Unknown Option'));
     }
   }
 }
 
-class ViewStudyMaterialScreen extends StatelessWidget {
+class ViewStudyMaterialScreen extends StatefulWidget {
+  const ViewStudyMaterialScreen({super.key});
+
+  @override
+  _ViewStudyMaterialScreenState createState() => _ViewStudyMaterialScreenState();
+}
+
+class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
+  List<dynamic> studyMaterials = [];
+  bool isLoading = true;
+  final Dio dio = Dio(); // Instance of Dio for file downloading
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStudyMaterials();
+  }
+
+  Future<void> fetchStudyMaterials() async {
+    try {
+      final response = await http.get(Uri.parse('http://192.168.0.108:3000/api/study-material'));
+      if (response.statusCode == 200) {
+        setState(() {
+          studyMaterials = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load study materials');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error fetching materials: $e');
+    }
+  }
+
+  Future<void> downloadFile(String filePath, String fileName) async {
+  try {
+    const String baseUrl = 'http://192.168.0.108:3000/';
+    
+    // Ensure the filePath uses forward slashes
+    final String normalizedFilePath = filePath.replaceAll('\\', '/');
+    final String fileUrl = '$baseUrl$normalizedFilePath';
+
+    print('Attempting to download from: $fileUrl'); // Debugging line
+
+    final directory = await getApplicationDocumentsDirectory();
+    final filePathToSave = "${directory.path}/$fileName";
+
+    await dio.download(fileUrl, filePathToSave, onReceiveProgress: (received, total) {
+      if (total != -1) {
+        print('Downloading: ${(received / total * 100).toStringAsFixed(0)}%');
+      }
+    });
+
+    print('Download complete: $filePathToSave');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Download complete: $fileName')));
+  } catch (e) {
+    print('Download failed: $e');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Download failed')));
+  }
+}
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,125 +112,98 @@ class ViewStudyMaterialScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar
-            const TextField(
-              decoration: InputDecoration(
-                hintText: 'Search study materials',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Study Material List
-            Expanded(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
               child: ListView.builder(
-                itemCount: studyMaterials.length, // Replace with the actual count
+                itemCount: studyMaterials.length,
                 itemBuilder: (context, index) {
                   final material = studyMaterials[index];
+                  final fileUrl = material['filePath']; // Assuming `filePath` is the URL of the file
+                  final fileName = material['fileName'] ?? 'unknown_file'; // Assuming `fileName` is available
+
                   return ListTile(
-                    title: Text(material['title'] ?? 'No Title'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Type: ${material['type'] ?? 'Unknown'}'),
-                        Text('Date Added: ${material['dateAdded'] ?? 'N/A'}'),
-                      ],
-                    ),
+                    title: Text(material['courseName'] ?? 'No Title'),
+                    subtitle: Text('Subject: ${material['subject'] ?? 'N/A'}'),
                     trailing: IconButton(
-                      icon: const Icon(Icons.arrow_forward),
+                      icon: const Icon(Icons.download),
                       onPressed: () {
-                        // Handle view action
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => StudyMaterialDetailsScreen(material: material),
-                          ),
-                        );
+                        downloadFile(fileUrl, fileName);
                       },
                     ),
                   );
                 },
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
-
-  // Sample data for demonstration
-  final List<Map<String, String>> studyMaterials = [
-    {'title': 'Math Notes', 'type': 'PDF', 'dateAdded': '01-09-2024'},
-    {'title': 'Science Video Lecture', 'type': 'Video', 'dateAdded': '05-09-2024'},
-    {'title': 'History Textbook', 'type': 'Link', 'dateAdded': '10-09-2024'},
-  ];
 }
 
-class StudyMaterialDetailsScreen extends StatelessWidget {
-  final Map<String, String> material;
-
-  StudyMaterialDetailsScreen({required this.material});
+class ViewSharedStudyMaterialScreen extends StatefulWidget {
+  const ViewSharedStudyMaterialScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Study Material Details'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Title: ${material['title'] ?? 'No Title'}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16.0),
-            Text('Type: ${material['type'] ?? 'Unknown'}'),
-            const SizedBox(height: 16.0),
-            Text('Date Added: ${material['dateAdded'] ?? 'N/A'}'),
-            const SizedBox(height: 16.0),
-            if (material['type'] == 'PDF') ...[
-              ElevatedButton(
-                onPressed: () {
-                  // Handle view or download action
-                },
-                child: const Text('View PDF'),
-              ),
-            ] else if (material['type'] == 'Video') ...[
-              ElevatedButton(
-                onPressed: () {
-                  // Handle watch action
-                },
-                child: const Text('Watch Video'),
-              ),
-            ] else if (material['type'] == 'Link') ...[
-              ElevatedButton(
-                onPressed: () {
-                  // Handle open link action
-                },
-                child: const Text('Open Link'),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
+  _ViewSharedStudyMaterialScreenState createState() => _ViewSharedStudyMaterialScreenState();
+}
+
+class _ViewSharedStudyMaterialScreenState extends State<ViewSharedStudyMaterialScreen> {
+  List<dynamic> sharedMaterials = [];
+  bool isLoading = true;
+  final Dio dio = Dio(); // Instance of Dio for file downloading
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSharedMaterials();
+  }
+
+  Future<void> fetchSharedMaterials() async {
+    try {
+      final response = await http.get(Uri.parse('http://192.168.0.108:3000/api/study-material'));
+      if (response.statusCode == 200) {
+        setState(() {
+          sharedMaterials = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load shared study materials');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error fetching shared materials: $e');
+    }
+  }
+
+Future<void> downloadFile(String filePath, String fileName) async {
+  try {
+    const String baseUrl = 'http://192.168.0.108:3000/';
+    
+    // Ensure the filePath uses forward slashes
+    final String normalizedFilePath = filePath.replaceAll('\\', '/');
+    final String fileUrl = '$baseUrl$normalizedFilePath';
+
+    print('Attempting to download from: $fileUrl'); // Debugging line
+
+    final directory = await getApplicationDocumentsDirectory();
+    final filePathToSave = "${directory.path}/$fileName";
+
+    await dio.download(fileUrl, filePathToSave, onReceiveProgress: (received, total) {
+      if (total != -1) {
+        print('Downloading: ${(received / total * 100).toStringAsFixed(0)}%');
+      }
+    });
+
+    print('Download complete: $filePathToSave');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Download complete: $fileName')));
+  } catch (e) {
+    print('Download failed: $e');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Download failed')));
   }
 }
 
-
-
-
-class ViewSharedStudyMaterialScreen extends StatelessWidget {
-  ViewSharedStudyMaterialScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -177,116 +219,30 @@ class ViewSharedStudyMaterialScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar
-            const TextField(
-              decoration: InputDecoration(
-                hintText: 'Search shared materials',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Shared Material List
-            Expanded(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
               child: ListView.builder(
-                itemCount: sharedMaterials.length, // Replace with actual count
+                itemCount: sharedMaterials.length,
                 itemBuilder: (context, index) {
                   final material = sharedMaterials[index];
+                  final fileUrl = material['filePath']; // Assuming `filePath` is the URL of the file
+                  final fileName = material['fileName'] ?? 'unknown_file'; // Assuming `fileName` is available
+
                   return ListTile(
-                    title: Text(material['title'] ?? 'No Title'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Type: ${material['type'] ?? 'Unknown'}'),
-                        Text('Date Shared: ${material['dateShared'] ?? 'N/A'}'),
-                      ],
-                    ),
+                    title: Text(material['courseName'] ?? 'No Title'),
+                    subtitle: Text('Subject: ${material['subject'] ?? 'N/A'}'),
                     trailing: IconButton(
-                      icon: const Icon(Icons.arrow_forward),
+                      icon: const Icon(Icons.download),
                       onPressed: () {
-                        // Handle view action
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SharedMaterialDetailsScreen(material: material),
-                          ),
-                        );
+                        downloadFile(fileUrl, fileName);
                       },
                     ),
                   );
                 },
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Sample data for demonstration
-  final List<Map<String, String>> sharedMaterials = [
-    {'title': 'Group Project Report', 'type': 'PDF', 'dateShared': '01-09-2024'},
-    {'title': 'Lecture Notes on Biology', 'type': 'Link', 'dateShared': '03-09-2024'},
-    {'title': 'Math Homework Solutions', 'type': 'Video', 'dateShared': '07-09-2024'},
-  ];
-}
-
-class SharedMaterialDetailsScreen extends StatelessWidget {
-  final Map<String, String> material;
-
-  SharedMaterialDetailsScreen({required this.material});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Shared Material Details'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Title: ${material['title'] ?? 'No Title'}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16.0),
-            Text('Type: ${material['type'] ?? 'Unknown'}'),
-            const SizedBox(height: 16.0),
-            Text('Date Shared: ${material['dateShared'] ?? 'N/A'}'),
-            const SizedBox(height: 16.0),
-            if (material['type'] == 'PDF') ...[
-              ElevatedButton(
-                onPressed: () {
-                  // Handle view or download action
-                },
-                child: const Text('View PDF'),
-              ),
-            ] else if (material['type'] == 'Video') ...[
-              ElevatedButton(
-                onPressed: () {
-                  // Handle watch action
-                },
-                child: const Text('Watch Video'),
-              ),
-            ] else if (material['type'] == 'Link') ...[
-              ElevatedButton(
-                onPressed: () {
-                  // Handle open link action
-                },
-                child: const Text('Open Link'),
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }
