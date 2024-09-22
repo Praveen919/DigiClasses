@@ -25,6 +25,6 @@ const studyMaterialSchema = new mongoose.Schema({
 });
 
 // Create the model from the schema
-const StudyMaterial = mongoose.model('StudyMaterial', studyMaterialSchema);
+const StudyMaterial = mongoose.model('StudyMaterials', studyMaterialSchema);
 
 module.exports = StudyMaterial;
