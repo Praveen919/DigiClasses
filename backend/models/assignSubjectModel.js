@@ -1,13 +1,14 @@
 const mongoose = require('mongoose');
 
-// Create the schema for Subject assignment
-const subjectSchema = new mongoose.Schema({
+const AssignedSubjectSchema = new mongoose.Schema({
   assignedSubjects: {
-    type: [String],  // Array of subject names
+    type: [String],
     required: true,
   },
-});
+  otherRequirements: {
+    type: Boolean,
+    default: false,
+  },
+}, { timestamps: true });
 
-// Create and export the Subject model
-const Subject = mongoose.model('Subject', subjectSchema);
-module.exports = Subject;
+module.exports = mongoose.model('AssignedSubject', AssignedSubjectSchema);

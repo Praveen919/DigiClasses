@@ -36,7 +36,8 @@ class EstudyScreen extends StatelessWidget {
 
 class CreateStudyMaterialScreen extends StatefulWidget {
   @override
-  _CreateStudyMaterialScreenState createState() => _CreateStudyMaterialScreenState();
+  _CreateStudyMaterialScreenState createState() =>
+      _CreateStudyMaterialScreenState();
 }
 
 class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
@@ -80,7 +81,8 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
           ..fields['subject'] = subject;
 
         if (_file != null) {
-          request.files.add(await http.MultipartFile.fromPath('file', _file!.path));
+          request.files
+              .add(await http.MultipartFile.fromPath('file', _file!.path));
         }
 
         final response = await request.send();
@@ -251,7 +253,9 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  _file != null ? _file!.path.split('/').last : 'No file selected',
+                  _file != null
+                      ? _file!.path.split('/').last
+                      : 'No file selected',
                   style: TextStyle(color: Colors.grey[600]),
                 ),
                 Icon(Icons.upload_file, color: Colors.grey[600]),
@@ -264,10 +268,10 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
   }
 }
 
-
 class ManageStudyMaterialScreen extends StatefulWidget {
   @override
-  _ManageStudyMaterialScreenState createState() => _ManageStudyMaterialScreenState();
+  _ManageStudyMaterialScreenState createState() =>
+      _ManageStudyMaterialScreenState();
 }
 
 class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
@@ -281,7 +285,8 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
 
   Future<void> _fetchStudyMaterials() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/study-material'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/study-material'));
       if (response.statusCode == 200) {
         setState(() {
           _studyMaterials = json.decode(response.body);
@@ -296,7 +301,8 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
 
   Future<void> _deleteStudyMaterial(String id) async {
     try {
-      final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/api/study-material/$id'));
+      final response = await http
+          .delete(Uri.parse('${AppConfig.baseUrl}/api/study-material/$id'));
       if (response.statusCode == 200) {
         _fetchStudyMaterials(); // Refresh the list after deletion
       } else {
@@ -329,19 +335,22 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
                     initialValue: _courseName,
                     decoration: InputDecoration(labelText: 'Course Name'),
                     onChanged: (value) => _courseName = value,
-                    validator: (value) => value!.isEmpty ? 'Please enter course name' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter course name' : null,
                   ),
                   TextFormField(
                     initialValue: _standard,
                     decoration: InputDecoration(labelText: 'Standard'),
                     onChanged: (value) => _standard = value,
-                    validator: (value) => value!.isEmpty ? 'Please enter standard' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter standard' : null,
                   ),
                   TextFormField(
                     initialValue: _subject,
                     decoration: InputDecoration(labelText: 'Subject'),
                     onChanged: (value) => _subject = value,
-                    validator: (value) => value!.isEmpty ? 'Please enter subject' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter subject' : null,
                   ),
                 ],
               ),
@@ -360,7 +369,8 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
                 if (_formKey.currentState!.validate()) {
                   try {
                     final response = await http.put(
-                      Uri.parse('${AppConfig.baseUrl}/api/study-material/${material['_id']}'),
+                      Uri.parse(
+                          '${AppConfig.baseUrl}/api/study-material/${material['_id']}'),
                       headers: {'Content-Type': 'application/json'},
                       body: json.encode({
                         'courseName': _courseName,
@@ -370,7 +380,8 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
                     );
 
                     if (response.statusCode == 200) {
-                      Navigator.of(context).pop(true); // Return true to refresh the list
+                      Navigator.of(context)
+                          .pop(true); // Return true to refresh the list
                     } else {
                       throw Exception('Failed to update study material');
                     }
@@ -387,7 +398,8 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
         );
       },
     ).then((result) {
-      if (result == true) { // Check if the result is true
+      if (result == true) {
+        // Check if the result is true
         _fetchStudyMaterials(); // Refresh data
       }
     });
@@ -399,7 +411,8 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
       MaterialPageRoute(builder: (context) => CreateStudyMaterialScreen()),
     );
 
-    if (result == true) { // Check if the result is true
+    if (result == true) {
+      // Check if the result is true
       _fetchStudyMaterials(); // Refresh data
     }
   }
@@ -467,22 +480,18 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToCreateStudyMaterial,
-        child: Icon(Icons.add),
-        tooltip: 'Add Study Material',
-      ),
     );
   }
 }
 
-
 class ManageSharedStudyMaterialScreen extends StatefulWidget {
   @override
-  _ManageSharedStudyMaterialScreenState createState() => _ManageSharedStudyMaterialScreenState();
+  _ManageSharedStudyMaterialScreenState createState() =>
+      _ManageSharedStudyMaterialScreenState();
 }
 
-class _ManageSharedStudyMaterialScreenState extends State<ManageSharedStudyMaterialScreen> {
+class _ManageSharedStudyMaterialScreenState
+    extends State<ManageSharedStudyMaterialScreen> {
   List<dynamic> _studyMaterials = [];
 
   @override
@@ -493,7 +502,8 @@ class _ManageSharedStudyMaterialScreenState extends State<ManageSharedStudyMater
 
   Future<void> _fetchStudyMaterials() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/study-material'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/study-material'));
       if (response.statusCode == 200) {
         setState(() {
           _studyMaterials = json.decode(response.body);
@@ -508,7 +518,8 @@ class _ManageSharedStudyMaterialScreenState extends State<ManageSharedStudyMater
 
   Future<void> _deleteStudyMaterial(String id) async {
     try {
-      final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/api/study-material/$id'));
+      final response = await http
+          .delete(Uri.parse('${AppConfig.baseUrl}/api/study-material/$id'));
       if (response.statusCode == 200) {
         _fetchStudyMaterials(); // Refresh the list after deletion
       } else {
@@ -541,19 +552,22 @@ class _ManageSharedStudyMaterialScreenState extends State<ManageSharedStudyMater
                     initialValue: _courseName,
                     decoration: InputDecoration(labelText: 'Course Name'),
                     onChanged: (value) => _courseName = value,
-                    validator: (value) => value!.isEmpty ? 'Please enter course name' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter course name' : null,
                   ),
                   TextFormField(
                     initialValue: _standard,
                     decoration: InputDecoration(labelText: 'Standard'),
                     onChanged: (value) => _standard = value,
-                    validator: (value) => value!.isEmpty ? 'Please enter standard' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter standard' : null,
                   ),
                   TextFormField(
                     initialValue: _subject,
                     decoration: InputDecoration(labelText: 'Subject'),
                     onChanged: (value) => _subject = value,
-                    validator: (value) => value!.isEmpty ? 'Please enter subject' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter subject' : null,
                   ),
                 ],
               ),
@@ -572,7 +586,8 @@ class _ManageSharedStudyMaterialScreenState extends State<ManageSharedStudyMater
                 if (_formKey.currentState!.validate()) {
                   try {
                     final response = await http.put(
-                      Uri.parse('${AppConfig.baseUrl}/api/study-material/${material['_id']}'),
+                      Uri.parse(
+                          '${AppConfig.baseUrl}/api/study-material/${material['_id']}'),
                       headers: {'Content-Type': 'application/json'},
                       body: json.encode({
                         'courseName': _courseName,
@@ -582,7 +597,8 @@ class _ManageSharedStudyMaterialScreenState extends State<ManageSharedStudyMater
                     );
 
                     if (response.statusCode == 200) {
-                      Navigator.of(context).pop(true); // Return true to refresh the list
+                      Navigator.of(context)
+                          .pop(true); // Return true to refresh the list
                     } else {
                       throw Exception('Failed to update study material');
                     }
@@ -599,7 +615,8 @@ class _ManageSharedStudyMaterialScreenState extends State<ManageSharedStudyMater
         );
       },
     ).then((result) {
-      if (result == true) { // Check if the result is true
+      if (result == true) {
+        // Check if the result is true
         _fetchStudyMaterials(); // Refresh data
       }
     });
@@ -611,7 +628,8 @@ class _ManageSharedStudyMaterialScreenState extends State<ManageSharedStudyMater
       MaterialPageRoute(builder: (context) => CreateStudyMaterialScreen()),
     );
 
-    if (result == true) { // Check if the result is true
+    if (result == true) {
+      // Check if the result is true
       _fetchStudyMaterials(); // Refresh data
     }
   }
@@ -678,11 +696,6 @@ class _ManageSharedStudyMaterialScreenState extends State<ManageSharedStudyMater
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToCreateStudyMaterial,
-        child: Icon(Icons.add),
-        tooltip: 'Add Study Material',
       ),
     );
   }

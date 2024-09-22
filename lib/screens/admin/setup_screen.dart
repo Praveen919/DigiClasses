@@ -96,11 +96,13 @@ class _AddYearScreenState extends State<AddYearScreen> {
     }
   }
 
+  // Format date in dd/mm/yyyy
   String? _formatDate(DateTime? date) {
     if (date == null) return null;
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
+  // Parse date from dd/mm/yyyy format
   DateTime _parseDate(String date) {
     final parts = date.split('/');
     if (parts.length != 3) {
@@ -1204,11 +1206,21 @@ class _AssignSubjectScreenState extends State<AssignSubjectScreen> {
   }
 
   Future<void> _removeAllAssignedSubjects() async {
+    // Check which subjects are assigned
+    List<String> subjectsToRemove = assignedSubjects.where((subject) {
+      return alreadyAssignedSubjects.contains(subject);
+    }).toList();
+
+    if (subjectsToRemove.isEmpty) {
+      _showMessage('Subjects not currently assigned.');
+      return;
+    }
+
     final url = Uri.parse('${AppConfig.baseUrl}/api/assignSubject/remove');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'subjectsToRemove': assignedSubjects}),
+      body: jsonEncode({'subjectsToRemove': subjectsToRemove}),
     );
 
     if (response.statusCode == 200) {
@@ -1224,7 +1236,13 @@ class _AssignSubjectScreenState extends State<AssignSubjectScreen> {
 
       await _fetchAlreadyAssignedSubjects(); // Refresh assigned subjects from the server
     } else {
-      _showMessage('Failed to remove assigned subjects: ${response.body}');
+      // If the response indicates some subjects were not assigned
+      final responseData = jsonDecode(response.body);
+      if (responseData['message'] != null) {
+        _showMessage(responseData['message']);
+      } else {
+        _showMessage('Failed to remove assigned subjects');
+      }
     }
   }
 
@@ -1687,52 +1705,102 @@ class ManageTimeTableScreen extends StatefulWidget {
 class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
   final TextEditingController _standardController = TextEditingController();
   final TextEditingController _batchController = TextEditingController();
-  bool isEditable = false; // Controls whether the grid is editable or not
+  bool isEditable = false;
+
   List<List<String?>> _timeTable =
-      List.generate(5, (i) => List.filled(5, null)); // 5 days, 5 slots
+      List.generate(5, (i) => List.filled(6, null)); // 5 time slots, 6 days
 
   Future<void> _viewTimeTable() async {
     final standard = _standardController.text;
-    final batch = _batchController.text;
+    final batch =
+        _batchController.text.toLowerCase(); // Convert to lowercase here
 
-    // Fetch timetable from the backend
-    final response = await http.get(Uri.parse(
-        '${AppConfig.baseUrl}/api/timetable?standard=$standard&batch=$batch'));
+    if (standard.isEmpty || batch.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter standard and batch')),
+      );
+      return;
+    }
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as List<dynamic>;
-      setState(() {
-        _timeTable = List.generate(
-            5, (i) => List.filled(5, null)); // Assuming 5 days, 5 slots
-        for (var item in data) {
-          int day = item['day'];
-          int timeSlot = item['timeSlot'];
-          _timeTable[timeSlot][day] = item['lecture'];
-        }
-        isEditable = false;
-      });
-    } else {
-      // Handle error
-      throw Exception('Failed to load timetable');
+    try {
+      final response = await http.get(Uri.parse(
+          '${AppConfig.baseUrl}/api/timetable?standard=$standard&batch=$batch')); // Use the lowercase batch directly
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List<dynamic>;
+        setState(() {
+          _timeTable = List.generate(5, (i) => List.filled(6, null));
+          for (var item in data) {
+            int day = item['day'] ?? 0; // Default to 0 if null
+            int timeSlot = item['timeSlot'] ?? 0; // Default to 0 if null
+            if (timeSlot >= 0 && timeSlot < 5 && day >= 0 && day < 6) {
+              _timeTable[timeSlot][day] = item['subject'] ?? null; // Allow null
+            }
+          }
+          isEditable = false;
+        });
+      } else if (response.statusCode == 404) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content:
+                  Text('Standard/Batch not found. Creating new timetable.')),
+        );
+        await _createNewTimeTable(standard, batch);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${response.statusCode}')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load timetable: $e')));
     }
   }
 
-  void _resetTimeTable() {
-    setState(() {
-      isEditable = true;
-    });
+  Future<void> _createNewTimeTable(String standard, String batch) async {
+    final newTimeTable =
+        List.generate(5, (i) => List.filled(6, null)); // Allow null values
+
+    final response = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/api/timetable/create'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'standard': standard,
+        'batch': batch.toLowerCase(),
+        'timetable': newTimeTable,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      setState(() {
+        _timeTable = newTimeTable; // Refresh the timetable to empty
+        isEditable = false; // Exit edit mode
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('New timetable created successfully.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to create new timetable.')),
+      );
+    }
   }
 
   Future<void> _updateTimeTable() async {
     final standard = _standardController.text;
     final batch = _batchController.text;
 
-    // Prepare the data for update
+    if (standard.isEmpty || batch.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter standard and batch')),
+      );
+      return;
+    }
+
     final updatedData = _timeTable
         .expand((row) => row.asMap().entries.map((e) => {
               'day': e.key,
               'timeSlot': _timeTable.indexOf(row),
-              'lecture': e.value,
+              'subject': e.value ?? null, // Allow null
             }))
         .toList();
 
@@ -1741,48 +1809,97 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'standard': standard,
-        'batch': batch,
+        'batch': batch.toLowerCase(),
         'timetable': updatedData,
       }),
     );
 
     if (response.statusCode == 200) {
       setState(() {
-        isEditable = false;
+        isEditable = false; // Exit edit mode after update
       });
-      // Handle success (e.g., show a message)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Timetable updated successfully')),
+      );
     } else {
-      // Handle error
-      throw Exception('Failed to update timetable');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update timetable')),
+      );
     }
   }
 
-  Future<String?> _editLectureDialog(String? currentLecture) async {
-    String? newLecture = currentLecture;
-    return showDialog<String>(
+  Future<void> _deleteTimeTable(String standard, String batch) async {
+    if (standard.isEmpty || batch.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Standard and Batch cannot be empty')),
+      );
+      return;
+    }
+
+    final response = await http.delete(
+      Uri.parse(
+        '${AppConfig.baseUrl}/api/timetable/delete?standard=$standard&batch=${batch.toLowerCase()}',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _timeTable =
+            List.generate(5, (i) => List.filled(6, null)); // Clear timetable
+        _standardController.clear();
+        _batchController.clear();
+        isEditable = false; // Exit edit mode
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Timetable deleted successfully')),
+      );
+    } else {
+      // Handle specific status codes for better debugging
+      String message;
+      if (response.statusCode == 404) {
+        message = 'Timetable not found';
+      } else {
+        message = 'Error: ${response.statusCode}';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete timetable: $message')),
+      );
+    }
+  }
+
+  void _resetFields() {
+    _standardController.clear();
+    _batchController.clear();
+    setState(() {
+      _timeTable =
+          List.generate(5, (i) => List.filled(6, null)); // Clear timetable
+      isEditable = false; // Reset edit state
+    });
+  }
+
+  void _confirmDelete() {
+    showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Edit Lecture'),
-          content: TextField(
-            controller: TextEditingController(text: newLecture),
-            onChanged: (value) {
-              newLecture = value;
-            },
-            decoration: const InputDecoration(hintText: 'Enter Lecture Name'),
-          ),
+          title: const Text('Confirm Delete'),
+          content:
+              const Text('Are you sure you want to delete this timetable?'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(null);
+                Navigator.of(context).pop();
               },
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(newLecture);
+                Navigator.of(context).pop();
+                _deleteTimeTable(
+                    _standardController.text, _batchController.text);
               },
-              child: const Text('Save'),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -1796,7 +1913,7 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
       appBar: AppBar(
         title: const Text('Manage Time Table'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -1814,6 +1931,7 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
                 hintText: 'e.g. Morning/Afternoon/Evening',
               ),
             ),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -1822,92 +1940,102 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
                   child: const Text('View'),
                 ),
                 ElevatedButton(
-                  onPressed: _resetTimeTable,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                  ),
+                  onPressed: () {
+                    if (_standardController.text.isNotEmpty &&
+                        _batchController.text.isNotEmpty) {
+                      setState(() {
+                        isEditable = !isEditable;
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Please enter standard and batch')),
+                      );
+                    }
+                  },
+                  child: Text(isEditable ? 'Cancel Edit' : 'Edit'),
+                ),
+                ElevatedButton(
+                  onPressed: _resetFields,
                   child: const Text('Reset'),
                 ),
               ],
             ),
-            const SizedBox(height: 16.0),
+            const SizedBox(height: 20.0),
             const Text(
               'Timetable:',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
-            Expanded(
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: Container()),
-                      for (var day in [
-                        'Mon',
-                        'Tue',
-                        'Wed',
-                        'Thu',
-                        'Fri',
-                        'Sat'
-                      ])
-                        Expanded(
-                            child: Center(
-                                child: Text(day,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)))),
-                    ],
-                  ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Expanded(
+                    child: Text('Timing',
+                        style: TextStyle(fontWeight: FontWeight.bold))),
+                const SizedBox(width: 8),
+                for (var day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'])
                   Expanded(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 5, // 5 columns for Mon-Fri
-                        childAspectRatio: 2.0,
-                      ),
-                      itemCount: 25, // 5 days * 5 time slots
-                      itemBuilder: (context, index) {
-                        int day = index % 5; // Day (Mon-Fri)
-                        int timeSlot = index ~/ 5; // Time slot index
-
-                        return GestureDetector(
-                          onTap: isEditable
-                              ? () async {
-                                  String? newLecture = await _editLectureDialog(
-                                      _timeTable[timeSlot][day]);
-                                  if (newLecture != null) {
-                                    setState(() {
-                                      _timeTable[timeSlot][day] = newLecture;
-                                    });
-                                  }
-                                }
-                              : null,
-                          child: Container(
-                            margin: const EdgeInsets.all(4.0),
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black),
-                              color:
-                                  isEditable ? Colors.white : Colors.grey[300],
-                            ),
-                            child: Center(
-                              child: Text(
-                                _timeTable[timeSlot][day] ?? '',
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                      child: Text(day,
+                          style: TextStyle(fontWeight: FontWeight.bold))),
+              ],
             ),
-            ElevatedButton(
-              onPressed: isEditable ? _updateTimeTable : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-              ),
-              child: const Text('Update Time Table'),
+            const SizedBox(height: 10),
+            ListView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: 5, // Only 5 rows for time slots
+              itemBuilder: (context, timeSlotIndex) {
+                return Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Time Slot ${timeSlotIndex + 1}',
+                          enabled: isEditable,
+                        ),
+                        onChanged: (value) {
+                          _timeTable[timeSlotIndex][0] = value.isEmpty
+                              ? null
+                              : value; // Store the time slot as nullable
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    for (var dayIndex = 0; dayIndex < 6; dayIndex++) ...[
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            enabled: isEditable,
+                          ),
+                          onChanged: (value) {
+                            _timeTable[timeSlotIndex][dayIndex] = value.isEmpty
+                                ? null
+                                : value; // Update subject to allow null
+                          },
+                          controller: TextEditingController(
+                            text: _timeTable[timeSlotIndex][dayIndex] ?? '',
+                          ),
+                        ),
+                      ),
+                      if (dayIndex < 5) const SizedBox(width: 10), // Spacing
+                    ],
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: isEditable ? _updateTimeTable : null,
+                  child: const Text('Update Timetable'),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: isEditable ? _confirmDelete : null,
+                  child: const Text('Delete Timetable'),
+                ),
+              ],
             ),
           ],
         ),

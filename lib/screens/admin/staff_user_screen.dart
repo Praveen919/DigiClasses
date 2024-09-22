@@ -78,13 +78,13 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
   final _firstNameController = TextEditingController();
   final _middleNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  final _genderController = TextEditingController();
   final _mobileController = TextEditingController();
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
   final _passwordController = TextEditingController(); // Password controller
   XFile? _profilePicture;
   bool _isEditable = true;
+  String? _selectedGender;
 
   @override
   void initState() {
@@ -95,7 +95,7 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
       _firstNameController.text = staff['firstName'] ?? '';
       _middleNameController.text = staff['middleName'] ?? '';
       _lastNameController.text = staff['lastName'] ?? '';
-      _genderController.text = staff['gender'] ?? '';
+      _selectedGender = staff['gender'] ?? '';
       _mobileController.text = staff['mobile'] ?? '';
       _emailController.text = staff['email'] ?? '';
       _addressController.text = staff['address'] ?? '';
@@ -113,7 +113,7 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
         _firstNameController.clear();
         _middleNameController.clear();
         _lastNameController.clear();
-        _genderController.clear();
+        _selectedGender = null;
         _mobileController.clear();
         _emailController.clear();
         _addressController.clear();
@@ -129,7 +129,7 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
         'firstName': _firstNameController.text,
         'middleName': _middleNameController.text,
         'lastName': _lastNameController.text,
-        'gender': _genderController.text,
+        'gender': _selectedGender,
         'mobile': _mobileController.text,
         'email': _emailController.text,
         'address': _addressController.text,
@@ -211,6 +211,31 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
     );
   }
 
+  Widget _buildGenderDropdown() {
+    return DropdownButtonFormField<String>(
+      value: _selectedGender,
+      hint: const Text('Select Gender*'),
+      items: const [
+        DropdownMenuItem(value: 'Male', child: Text('Male')),
+        DropdownMenuItem(value: 'Female', child: Text('Female')),
+        DropdownMenuItem(value: 'Other', child: Text('Other')),
+      ],
+      onChanged: _isEditable
+          ? (value) {
+              setState(() {
+                _selectedGender = value;
+              });
+            }
+          : null,
+      validator: (value) {
+        if (value == null) {
+          return 'Gender is required';
+        }
+        return null;
+      },
+    );
+  }
+
   Widget _buildPasswordField() {
     if (widget.staff != null)
       return Container(); // Don't show password field for existing staff
@@ -267,6 +292,9 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.staff == null ? 'Create Staff' : 'Edit Staff'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -275,13 +303,14 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
             children: [
               _buildTextField('First Name*', _firstNameController),
               const SizedBox(height: 16),
-              _buildTextField('Middle Name*', _middleNameController),
+              _buildTextField('Middle Name', _middleNameController),
               const SizedBox(height: 16),
               _buildTextField('Last Name*', _lastNameController),
               const SizedBox(height: 16),
-              _buildTextField('Gender*', _genderController),
+              _buildGenderDropdown(),
               const SizedBox(height: 16),
-              _buildTextField('Mobile No*', _mobileController),
+              _buildTextField('Mobile No*', _mobileController,
+                  readOnly: !_isEditable),
               const SizedBox(height: 16),
               _buildTextField('Email', _emailController),
               const SizedBox(height: 16),
@@ -320,16 +349,24 @@ class ManageStaffScreen extends StatefulWidget {
 
 class _ManageStaffScreenState extends State<ManageStaffScreen> {
   List<Map<String, dynamic>> staffList = [];
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  int? _editingIndex;
+  String? _profilePicturePath;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _fetchStaffList(); // Fetch staff list on initialization
+    _fetchStaffList();
   }
 
   Future<void> _fetchStaffList() async {
-    final url =
-        '${AppConfig.baseUrl}/api/staff'; // Replace with your backend URL
+    final url = '${AppConfig.baseUrl}/api/staff';
     try {
       final response = await http.get(Uri.parse(url));
 
@@ -338,9 +375,13 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
         setState(() {
           staffList = data
               .map((staff) => {
+                    'id': staff['_id'],
                     'firstName': staff['firstName'],
                     'lastName': staff['lastName'],
                     'email': staff['email'],
+                    'mobile': staff['mobile'],
+                    'gender': staff['gender'],
+                    'address': staff['address'],
                     'profilePicture': staff['profilePicture'],
                   })
               .toList();
@@ -353,21 +394,104 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
     }
   }
 
-  void _onEdit(int index, Map<String, dynamic> staff) {
-    // Handle edit staff
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _profilePicturePath = pickedFile.path;
+      });
+    }
   }
 
-  void _onDelete(int index) {
-    // Handle delete staff
+  void _onEdit(int index, Map<String, dynamic> staff) {
+    setState(() {
+      _editingIndex = index;
+      _firstNameController.text = staff['firstName'];
+      _lastNameController.text = staff['lastName'];
+      _emailController.text = staff['email'] ?? '';
+      _mobileController.text = staff['mobile'] ?? '';
+      _genderController.text = staff['gender'] ?? '';
+      _addressController.text = staff['address'] ?? '';
+      _profilePicturePath = staff['profilePicture'];
+    });
+  }
+
+  Future<void> _onSave() async {
+    if (_editingIndex == null) return;
+
+    final updatedStaff = {
+      'firstName': _firstNameController.text,
+      'lastName': _lastNameController.text,
+      'email': _emailController.text,
+      'mobile': _mobileController.text,
+      'gender': _genderController.text,
+      'address': _addressController.text,
+    };
+
+    final url =
+        '${AppConfig.baseUrl}/api/staff/${staffList[_editingIndex!]['id']}'; // Adjust the endpoint
+    final request = http.MultipartRequest('PUT', Uri.parse(url));
+    request.fields
+        .addAll(updatedStaff.map((key, value) => MapEntry(key, value)));
+
+    if (_profilePicturePath != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+          'profilePicture', _profilePicturePath!));
+    }
+
+    final response = await request.send();
+    if (response.statusCode == 200) {
+      final responseData = await http.Response.fromStream(response);
+      setState(() {
+        staffList[_editingIndex!] = json.decode(responseData.body);
+        _editingIndex = null;
+        _clearControllers();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Staff updated successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update staff')),
+      );
+    }
+  }
+
+  Future<void> _onDelete(int index) async {
+    final url =
+        '${AppConfig.baseUrl}/api/staff/${staffList[index]['id']}'; // Adjust the endpoint
+    final response = await http.delete(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        staffList.removeAt(index);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Staff deleted successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete staff')),
+      );
+    }
+  }
+
+  void _clearControllers() {
+    _firstNameController.clear();
+    _lastNameController.clear();
+    _emailController.clear();
+    _mobileController.clear();
+    _genderController.clear();
+    _addressController.clear();
+    _profilePicturePath = null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Manage Staff')),
       body: staffList.isEmpty
-          ? Center(
-              child:
-                  CircularProgressIndicator()) // Show loading spinner while data is loading
+          ? Center(child: Text('No staff members currently'))
           : ListView.builder(
               itemCount: staffList.length,
               itemBuilder: (context, index) {
@@ -376,21 +500,69 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
                   leading: staff['profilePicture'] != null
                       ? CircleAvatar(
                           backgroundImage:
-                              staff['profilePicture'].startsWith('http')
-                                  ? NetworkImage(staff['profilePicture'])
-                                      as ImageProvider
-                                  : FileImage(File(staff['profilePicture'])),
+                              NetworkImage(staff['profilePicture']),
                         )
                       : const CircleAvatar(child: Icon(Icons.person)),
-                  title: Text('${staff['firstName']} ${staff['lastName']}'),
-                  subtitle: Text(staff['email'] ?? 'No email'),
+                  title: _editingIndex == index
+                      ? TextField(
+                          controller: _firstNameController,
+                          decoration:
+                              const InputDecoration(labelText: 'First Name'),
+                        )
+                      : Text('${staff['firstName']} ${staff['lastName']}'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _editingIndex == index
+                          ? TextField(
+                              controller: _lastNameController,
+                              decoration:
+                                  const InputDecoration(labelText: 'Last Name'),
+                            )
+                          : Text('Email: ${staff['email']}'),
+                      _editingIndex == index
+                          ? TextField(
+                              controller: _emailController,
+                              decoration:
+                                  const InputDecoration(labelText: 'Email'),
+                            )
+                          : Text('Mobile: ${staff['mobile']}'),
+                      _editingIndex == index
+                          ? TextField(
+                              controller: _mobileController,
+                              decoration:
+                                  const InputDecoration(labelText: 'Mobile'),
+                            )
+                          : Text('Gender: ${staff['gender']}'),
+                      _editingIndex == index
+                          ? TextField(
+                              controller: _genderController,
+                              decoration:
+                                  const InputDecoration(labelText: 'Gender'),
+                            )
+                          : Text('Address: ${staff['address']}'),
+                      _editingIndex == index
+                          ? TextField(
+                              controller: _addressController,
+                              decoration:
+                                  const InputDecoration(labelText: 'Address'),
+                            )
+                          : Container(),
+                    ],
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _onEdit(index, staff),
-                      ),
+                      if (_editingIndex == index)
+                        IconButton(
+                          icon: const Icon(Icons.save),
+                          onPressed: _onSave,
+                        )
+                      else
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () => _onEdit(index, staff),
+                        ),
                       IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () => _onDelete(index),
@@ -400,6 +572,10 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
                 );
               },
             ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _pickImage,
+        child: const Icon(Icons.add_a_photo),
+      ),
     );
   }
 }

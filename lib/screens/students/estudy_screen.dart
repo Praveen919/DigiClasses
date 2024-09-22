@@ -36,7 +36,8 @@ class ViewStudyMaterialScreen extends StatefulWidget {
   const ViewStudyMaterialScreen({super.key});
 
   @override
-  _ViewStudyMaterialScreenState createState() => _ViewStudyMaterialScreenState();
+  _ViewStudyMaterialScreenState createState() =>
+      _ViewStudyMaterialScreenState();
 }
 
 class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
@@ -52,7 +53,8 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
 
   Future<void> fetchStudyMaterials() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.0.108:3000/api/study-material'));
+      final response = await http
+          .get(Uri.parse('http://192.168.0.108:3000/api/study-material'));
       if (response.statusCode == 200) {
         setState(() {
           studyMaterials = json.decode(response.body);
@@ -70,33 +72,34 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
   }
 
   Future<void> downloadFile(String filePath, String fileName) async {
-  try {
-    const String baseUrl = 'http://192.168.0.108:3000/';
-    
-    // Ensure the filePath uses forward slashes
-    final String normalizedFilePath = filePath.replaceAll('\\', '/');
-    final String fileUrl = '$baseUrl$normalizedFilePath';
+    try {
+      const String baseUrl = 'http://192.168.0.108:3000/';
 
-    print('Attempting to download from: $fileUrl'); // Debugging line
+      // Ensure the filePath uses forward slashes
+      final String normalizedFilePath = filePath.replaceAll('\\', '/');
+      final String fileUrl = '$baseUrl$normalizedFilePath';
 
-    final directory = await getApplicationDocumentsDirectory();
-    final filePathToSave = "${directory.path}/$fileName";
+      print('Attempting to download from: $fileUrl'); // Debugging line
 
-    await dio.download(fileUrl, filePathToSave, onReceiveProgress: (received, total) {
-      if (total != -1) {
-        print('Downloading: ${(received / total * 100).toStringAsFixed(0)}%');
-      }
-    });
+      final directory = await getApplicationDocumentsDirectory();
+      final filePathToSave = "${directory.path}/$fileName";
 
-    print('Download complete: $filePathToSave');
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Download complete: $fileName')));
-  } catch (e) {
-    print('Download failed: $e');
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Download failed')));
+      await dio.download(fileUrl, filePathToSave,
+          onReceiveProgress: (received, total) {
+        if (total != -1) {
+          print('Downloading: ${(received / total * 100).toStringAsFixed(0)}%');
+        }
+      });
+
+      print('Download complete: $filePathToSave');
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Download complete: $fileName')));
+    } catch (e) {
+      print('Download failed: $e');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Download failed')));
+    }
   }
-}
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -120,8 +123,10 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
                 itemCount: studyMaterials.length,
                 itemBuilder: (context, index) {
                   final material = studyMaterials[index];
-                  final fileUrl = material['filePath']; // Assuming `filePath` is the URL of the file
-                  final fileName = material['fileName'] ?? 'unknown_file'; // Assuming `fileName` is available
+                  final fileUrl = material[
+                      'filePath']; // Assuming `filePath` is the URL of the file
+                  final fileName = material['fileName'] ??
+                      'unknown_file'; // Assuming `fileName` is available
 
                   return ListTile(
                     title: Text(material['courseName'] ?? 'No Title'),
@@ -144,10 +149,12 @@ class ViewSharedStudyMaterialScreen extends StatefulWidget {
   const ViewSharedStudyMaterialScreen({super.key});
 
   @override
-  _ViewSharedStudyMaterialScreenState createState() => _ViewSharedStudyMaterialScreenState();
+  _ViewSharedStudyMaterialScreenState createState() =>
+      _ViewSharedStudyMaterialScreenState();
 }
 
-class _ViewSharedStudyMaterialScreenState extends State<ViewSharedStudyMaterialScreen> {
+class _ViewSharedStudyMaterialScreenState
+    extends State<ViewSharedStudyMaterialScreen> {
   List<dynamic> sharedMaterials = [];
   bool isLoading = true;
   final Dio dio = Dio(); // Instance of Dio for file downloading
@@ -160,7 +167,8 @@ class _ViewSharedStudyMaterialScreenState extends State<ViewSharedStudyMaterialS
 
   Future<void> fetchSharedMaterials() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.0.108:3000/api/study-material'));
+      final response = await http
+          .get(Uri.parse('http://192.168.0.108:3000/api/study-material'));
       if (response.statusCode == 200) {
         setState(() {
           sharedMaterials = json.decode(response.body);
@@ -177,33 +185,35 @@ class _ViewSharedStudyMaterialScreenState extends State<ViewSharedStudyMaterialS
     }
   }
 
-Future<void> downloadFile(String filePath, String fileName) async {
-  try {
-    const String baseUrl = 'http://192.168.0.108:3000/';
-    
-    // Ensure the filePath uses forward slashes
-    final String normalizedFilePath = filePath.replaceAll('\\', '/');
-    final String fileUrl = '$baseUrl$normalizedFilePath';
+  Future<void> downloadFile(String filePath, String fileName) async {
+    try {
+      const String baseUrl = 'http://192.168.0.108:3000/';
 
-    print('Attempting to download from: $fileUrl'); // Debugging line
+      // Ensure the filePath uses forward slashes
+      final String normalizedFilePath = filePath.replaceAll('\\', '/');
+      final String fileUrl = '$baseUrl$normalizedFilePath';
 
-    final directory = await getApplicationDocumentsDirectory();
-    final filePathToSave = "${directory.path}/$fileName";
+      print('Attempting to download from: $fileUrl'); // Debugging line
 
-    await dio.download(fileUrl, filePathToSave, onReceiveProgress: (received, total) {
-      if (total != -1) {
-        print('Downloading: ${(received / total * 100).toStringAsFixed(0)}%');
-      }
-    });
+      final directory = await getApplicationDocumentsDirectory();
+      final filePathToSave = "${directory.path}/$fileName";
 
-    print('Download complete: $filePathToSave');
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Download complete: $fileName')));
-  } catch (e) {
-    print('Download failed: $e');
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Download failed')));
+      await dio.download(fileUrl, filePathToSave,
+          onReceiveProgress: (received, total) {
+        if (total != -1) {
+          print('Downloading: ${(received / total * 100).toStringAsFixed(0)}%');
+        }
+      });
+
+      print('Download complete: $filePathToSave');
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Download complete: $fileName')));
+    } catch (e) {
+      print('Download failed: $e');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Download failed')));
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -227,8 +237,10 @@ Future<void> downloadFile(String filePath, String fileName) async {
                 itemCount: sharedMaterials.length,
                 itemBuilder: (context, index) {
                   final material = sharedMaterials[index];
-                  final fileUrl = material['filePath']; // Assuming `filePath` is the URL of the file
-                  final fileName = material['fileName'] ?? 'unknown_file'; // Assuming `fileName` is available
+                  final fileUrl = material[
+                      'filePath']; // Assuming `filePath` is the URL of the file
+                  final fileName = material['fileName'] ??
+                      'unknown_file'; // Assuming `fileName` is available
 
                   return ListTile(
                     title: Text(material['courseName'] ?? 'No Title'),

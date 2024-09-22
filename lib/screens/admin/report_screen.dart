@@ -60,10 +60,12 @@ class StudentInquiryReportScreen extends StatefulWidget {
   const StudentInquiryReportScreen({super.key});
 
   @override
-  _StudentInquiryReportScreenState createState() => _StudentInquiryReportScreenState();
+  _StudentInquiryReportScreenState createState() =>
+      _StudentInquiryReportScreenState();
 }
 
-class _StudentInquiryReportScreenState extends State<StudentInquiryReportScreen> {
+class _StudentInquiryReportScreenState
+    extends State<StudentInquiryReportScreen> {
   DateTime? fromDate;
   DateTime? toDate;
   TextEditingController searchController = TextEditingController();
@@ -71,7 +73,8 @@ class _StudentInquiryReportScreenState extends State<StudentInquiryReportScreen>
   List<Map<String, dynamic>> inquiries = []; // Store inquiries data
 
   // Method to select a date
-  Future<void> _selectDate(BuildContext context, DateTime? initialDate, Function(DateTime) onDateSelected) async {
+  Future<void> _selectDate(BuildContext context, DateTime? initialDate,
+      Function(DateTime) onDateSelected) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -90,7 +93,8 @@ class _StudentInquiryReportScreenState extends State<StudentInquiryReportScreen>
     });
 
     // Fetch the data based on the fromDate and toDate
-    final results = await fetchInquiriesFromDB(fromDate, toDate, searchController.text);
+    final results =
+        await fetchInquiriesFromDB(fromDate, toDate, searchController.text);
 
     setState(() {
       inquiries = results;
@@ -134,13 +138,16 @@ class _StudentInquiryReportScreenState extends State<StudentInquiryReportScreen>
                       });
                     }),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        fromDate != null ? DateFormat.yMMMd().format(fromDate!) : 'From Date',
+                        fromDate != null
+                            ? DateFormat.yMMMd().format(fromDate!)
+                            : 'From Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -155,13 +162,16 @@ class _StudentInquiryReportScreenState extends State<StudentInquiryReportScreen>
                       });
                     }),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        toDate != null ? DateFormat.yMMMd().format(toDate!) : 'To Date',
+                        toDate != null
+                            ? DateFormat.yMMMd().format(toDate!)
+                            : 'To Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -179,23 +189,29 @@ class _StudentInquiryReportScreenState extends State<StudentInquiryReportScreen>
             isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : Expanded(
-              child: inquiries.isNotEmpty
-                  ? ListView.builder(
-                itemCount: inquiries.length,
-                itemBuilder: (context, index) {
-                  final inquiry = inquiries[index];
-                  return ListTile(
-                    title: Text('Student Name: ${inquiry['studentName']}\nStandard: ${inquiry['standard']}\nInquiry Date: ${inquiry['inquiryDate']}\nInquiry Source: ${inquiry['inquirySource']}'),
-                    subtitle: Text(inquiry['status'] ? 'Solved' : 'Unsolved'),
-                    trailing: Icon(
-                      inquiry['status'] ? Icons.check_circle : Icons.cancel,
-                      color: inquiry['status'] ? Colors.green : Colors.red,
-                    ),
-                  );
-                },
-              )
-                  : const Center(child: Text('No inquiries found')),
-            ),
+                    child: inquiries.isNotEmpty
+                        ? ListView.builder(
+                            itemCount: inquiries.length,
+                            itemBuilder: (context, index) {
+                              final inquiry = inquiries[index];
+                              return ListTile(
+                                title: Text(
+                                    'Student Name: ${inquiry['studentName']}\nStandard: ${inquiry['standard']}\nInquiry Date: ${inquiry['inquiryDate']}\nInquiry Source: ${inquiry['inquirySource']}'),
+                                subtitle: Text(
+                                    inquiry['status'] ? 'Solved' : 'Unsolved'),
+                                trailing: Icon(
+                                  inquiry['status']
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                                  color: inquiry['status']
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              );
+                            },
+                          )
+                        : const Center(child: Text('No inquiries found')),
+                  ),
             const SizedBox(height: 16),
             // View Report button
             Center(
@@ -216,19 +232,23 @@ class _StudentInquiryReportScreenState extends State<StudentInquiryReportScreen>
   }
 
   // Method to fetch inquiries from the database
-  Future<List<Map<String, dynamic>>> fetchInquiriesFromDB(DateTime? fromDate, DateTime? toDate, String search) async {
-    const String apiUrl = '${AppConfig.baseUrl}/inquiries'; // Replace with your actual API endpoint
+  Future<List<Map<String, dynamic>>> fetchInquiriesFromDB(
+      DateTime? fromDate, DateTime? toDate, String search) async {
+    const String apiUrl =
+        '${AppConfig.baseUrl}/inquiries'; // Replace with your actual API endpoint
 
     try {
       // Create query parameters
       Map<String, String> queryParams = {
         'search': search,
-        'fromDate': fromDate != null ? DateFormat('yyyy-MM-dd').format(fromDate) : '',
+        'fromDate':
+            fromDate != null ? DateFormat('yyyy-MM-dd').format(fromDate) : '',
         'toDate': toDate != null ? DateFormat('yyyy-MM-dd').format(toDate) : '',
       };
 
       // Make the HTTP GET request
-      final response = await http.get(Uri.parse('$apiUrl?${Uri(queryParameters: queryParams).query}'));
+      final response = await http
+          .get(Uri.parse('$apiUrl?${Uri(queryParameters: queryParams).query}'));
 
       if (response.statusCode == 200) {
         // Parse the JSON response
@@ -250,7 +270,8 @@ class StudentDetailReportScreen extends StatefulWidget {
   const StudentDetailReportScreen({super.key});
 
   @override
-  _StudentDetailReportScreenState createState() => _StudentDetailReportScreenState();
+  _StudentDetailReportScreenState createState() =>
+      _StudentDetailReportScreenState();
 }
 
 class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
@@ -267,7 +288,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
   }
 
   Future<void> fetchStudents() async {
-    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/students'));
+    final response =
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/students'));
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       setState(() {
@@ -280,7 +302,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
   }
 
   // Method to select a date
-  Future<void> _selectDate(BuildContext context, DateTime? initialDate, Function(DateTime) onDateSelected) async {
+  Future<void> _selectDate(BuildContext context, DateTime? initialDate,
+      Function(DateTime) onDateSelected) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -296,9 +319,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
   void _filterStudents() {
     setState(() {
       filteredStudents = students.where((student) {
-        bool matchesSearchQuery = student['name']
-            .toLowerCase()
-            .contains(searchQuery.toLowerCase());
+        bool matchesSearchQuery =
+            student['name'].toLowerCase().contains(searchQuery.toLowerCase());
 
         bool matchesFromDate = fromDate == null ||
             DateTime.parse(student['joinDate']).isAfter(fromDate!);
@@ -311,7 +333,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
     });
   }
 
-  Future<void> _editStudentDetail(int studentId, Map<String, dynamic> updatedData) async {
+  Future<void> _editStudentDetail(
+      int studentId, Map<String, dynamic> updatedData) async {
     final response = await http.put(
       Uri.parse('${AppConfig.baseUrl}/api/students/$studentId'),
       headers: {'Content-Type': 'application/json'},
@@ -321,7 +344,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
     if (response.statusCode == 200) {
       setState(() {
         // Update the local students list with the new data
-        final index = students.indexWhere((student) => student['id'] == studentId);
+        final index =
+            students.indexWhere((student) => student['id'] == studentId);
         if (index != -1) {
           students[index] = updatedData;
           _filterStudents(); // Re-filter the list with updated data
@@ -333,7 +357,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
   }
 
   Future<void> _deleteStudentDetail(int studentId) async {
-    final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/api/students/$studentId'));
+    final response = await http
+        .delete(Uri.parse('${AppConfig.baseUrl}/api/students/$studentId'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -346,10 +371,14 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
   }
 
   void _showEditDialog(dynamic student) {
-    TextEditingController nameController = TextEditingController(text: student['name']);
-    TextEditingController standardController = TextEditingController(text: student['standard']);
-    TextEditingController courseController = TextEditingController(text: student['course']);
-    TextEditingController batchController = TextEditingController(text: student['batch']);
+    TextEditingController nameController =
+        TextEditingController(text: student['name']);
+    TextEditingController standardController =
+        TextEditingController(text: student['standard']);
+    TextEditingController courseController =
+        TextEditingController(text: student['course']);
+    TextEditingController batchController =
+        TextEditingController(text: student['batch']);
 
     showDialog(
       context: context,
@@ -476,13 +505,16 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                       _filterStudents(); // Apply filter after selecting the from date
                     }),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        fromDate != null ? DateFormat.yMMMd().format(fromDate!) : 'From Date',
+                        fromDate != null
+                            ? DateFormat.yMMMd().format(fromDate!)
+                            : 'From Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -498,13 +530,16 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                       _filterStudents(); // Apply filter after selecting the to date
                     }),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        toDate != null ? DateFormat.yMMMd().format(toDate!) : 'To Date',
+                        toDate != null
+                            ? DateFormat.yMMMd().format(toDate!)
+                            : 'To Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -512,7 +547,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _filterStudents, // Filter data based on selected dates and search query
+                  onPressed:
+                      _filterStudents, // Filter data based on selected dates and search query
                   child: const Text('Get Data'),
                 ),
               ],
@@ -563,7 +599,8 @@ class StudentCardReportScreen extends StatefulWidget {
   const StudentCardReportScreen({super.key});
 
   @override
-  _StudentCardReportScreenState createState() => _StudentCardReportScreenState();
+  _StudentCardReportScreenState createState() =>
+      _StudentCardReportScreenState();
 }
 
 class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
@@ -592,7 +629,7 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading : false,
+        automaticallyImplyLeading: false,
         title: const Text('Student Card Report'),
       ),
       body: Padding(
@@ -660,8 +697,8 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
                 itemCount: 2, // Replace with actual number of students
                 itemBuilder: (context, index) {
                   return const StudentCard(
-                    // Pass student data here
-                  );
+                      // Pass student data here
+                      );
                 },
               ),
             ),
@@ -729,17 +766,20 @@ class StudentAttendanceReportScreen extends StatefulWidget {
   const StudentAttendanceReportScreen({super.key});
 
   @override
-  _StudentAttendanceReportScreenState createState() => _StudentAttendanceReportScreenState();
+  _StudentAttendanceReportScreenState createState() =>
+      _StudentAttendanceReportScreenState();
 }
 
-class _StudentAttendanceReportScreenState extends State<StudentAttendanceReportScreen> {
+class _StudentAttendanceReportScreenState
+    extends State<StudentAttendanceReportScreen> {
   DateTime? selectedDate;
   List<Map<String, dynamic>> allAttendanceData = [];
   List<Map<String, dynamic>> filteredAttendanceData = [];
   TextEditingController searchController = TextEditingController();
 
   // Method to fetch attendance data from API
-  Future<void> _fetchAttendance({String? searchQuery, DateTime? selectedDate}) async {
+  Future<void> _fetchAttendance(
+      {String? searchQuery, DateTime? selectedDate}) async {
     try {
       String apiUrl = '${AppConfig.baseUrl}/api/attendance';
 
@@ -749,7 +789,8 @@ class _StudentAttendanceReportScreenState extends State<StudentAttendanceReportS
         queryParams['name'] = searchQuery;
       }
       if (selectedDate != null) {
-        queryParams['date'] = selectedDate.toIso8601String(); // Convert to ISO string
+        queryParams['date'] =
+            selectedDate.toIso8601String(); // Convert to ISO string
       }
 
       Uri uri = Uri.parse(apiUrl).replace(queryParameters: queryParams);
@@ -758,7 +799,8 @@ class _StudentAttendanceReportScreenState extends State<StudentAttendanceReportS
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
-        List<Map<String, dynamic>> fetchedData = List<Map<String, dynamic>>.from(json.decode(response.body));
+        List<Map<String, dynamic>> fetchedData =
+            List<Map<String, dynamic>>.from(json.decode(response.body));
 
         setState(() {
           allAttendanceData = fetchedData;
@@ -832,13 +874,16 @@ class _StudentAttendanceReportScreenState extends State<StudentAttendanceReportS
                   child: GestureDetector(
                     onTap: () => _selectDate(context, selectedDate),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        selectedDate != null ? DateFormat.yMMMd().format(selectedDate!) : 'Select Date',
+                        selectedDate != null
+                            ? DateFormat.yMMMd().format(selectedDate!)
+                            : 'Select Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -870,13 +915,14 @@ class _StudentAttendanceReportScreenState extends State<StudentAttendanceReportS
                   ],
                   rows: List<DataRow>.generate(
                     filteredAttendanceData.length,
-                        (index) => DataRow(
+                    (index) => DataRow(
                       cells: [
                         DataCell(Text((index + 1).toString())),
                         DataCell(Text(filteredAttendanceData[index]['name'])),
                         DataCell(Text(filteredAttendanceData[index]['std'])),
                         DataCell(Text(filteredAttendanceData[index]['batch'])),
-                        DataCell(Text(filteredAttendanceData[index]['attendance'])),
+                        DataCell(
+                            Text(filteredAttendanceData[index]['attendance'])),
                       ],
                     ),
                   ),
@@ -889,7 +935,6 @@ class _StudentAttendanceReportScreenState extends State<StudentAttendanceReportS
     );
   }
 }
-
 
 class FeeStatusReportScreen extends StatelessWidget {
   const FeeStatusReportScreen({super.key});
@@ -1019,19 +1064,22 @@ class FeeCollectionScreen extends StatefulWidget {
   const FeeCollectionScreen({super.key});
 
   @override
-  _FeeCollectionReportScreenState createState() => _FeeCollectionReportScreenState();
+  _FeeCollectionReportScreenState createState() =>
+      _FeeCollectionReportScreenState();
 }
 
 class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
   DateTime? fromDate;
   DateTime? toDate;
   List<Map<String, dynamic>> studentData = []; // Student data from the database
-  List<Map<String, dynamic>> filteredData = []; // Filtered data after search or date selection
+  List<Map<String, dynamic>> filteredData =
+      []; // Filtered data after search or date selection
   String searchQuery = ''; // Current search query
   bool isEditable = false; // Controls whether data is editable
 
   // Method to select a date
-  Future<void> _selectDate(BuildContext context, DateTime? initialDate, Function(DateTime) onDateSelected) async {
+  Future<void> _selectDate(BuildContext context, DateTime? initialDate,
+      Function(DateTime) onDateSelected) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -1042,6 +1090,7 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
       onDateSelected(picked);
     }
   }
+
   Future<void> _fetchData() async {
     if (fromDate != null && toDate != null) {
       // Format dates
@@ -1051,7 +1100,8 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
       try {
         // API call to fetch data from the server based on date range
         final response = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/feeCollection/fees?fromDate=$formattedFromDate&toDate=$formattedToDate'),
+          Uri.parse(
+              '${AppConfig.baseUrl}/api/feeCollection/fees?fromDate=$formattedFromDate&toDate=$formattedToDate'),
         );
 
         if (response.statusCode == 200) {
@@ -1093,7 +1143,9 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
         final batch = student['batch']?.toString().toLowerCase() ?? '';
         final query = searchQuery.toLowerCase();
 
-        return name.contains(query) || std.contains(query) || batch.contains(query);
+        return name.contains(query) ||
+            std.contains(query) ||
+            batch.contains(query);
       }).toList();
     });
   }
@@ -1104,16 +1156,18 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
       for (var student in filteredData) {
         // Example of an API call for each student update
         final response = await http.put(
-          Uri.parse('${AppConfig.baseUrl}/api/feeCollection/updateStudent'),  // Make sure this URL is correct
+          Uri.parse(
+              '${AppConfig.baseUrl}/api/feeCollection/updateStudent'), // Make sure this URL is correct
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
           body: json.encode({
-            '_id': student['id'],                       // Use '_id' if that's what your backend expects
-            'totalFees': student['totalFees'],         // Data being updated
+            '_id':
+                student['id'], // Use '_id' if that's what your backend expects
+            'totalFees': student['totalFees'], // Data being updated
             'discountedFees': student['discountedFees'],
             'amtPaid': student['amtPaid'],
-            'date': student['date'],                   // Updated date field
+            'date': student['date'], // Updated date field
           }),
         );
 
@@ -1137,6 +1191,7 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
       );
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1173,13 +1228,16 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
                       });
                     }),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        fromDate != null ? DateFormat.yMMMd().format(fromDate!) : 'From Date',
+                        fromDate != null
+                            ? DateFormat.yMMMd().format(fromDate!)
+                            : 'From Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -1194,13 +1252,16 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
                       });
                     }),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        toDate != null ? DateFormat.yMMMd().format(toDate!) : 'To Date',
+                        toDate != null
+                            ? DateFormat.yMMMd().format(toDate!)
+                            : 'To Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -1231,7 +1292,7 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
                   ],
                   rows: List<DataRow>.generate(
                     filteredData.length,
-                        (index) => DataRow(
+                    (index) => DataRow(
                       cells: [
                         DataCell(Text((index + 1).toString())),
                         DataCell(TextFormField(
@@ -1259,30 +1320,40 @@ class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
                           },
                         )),
                         DataCell(TextFormField(
-                          initialValue: filteredData[index]['totalFees'].toString(),
+                          initialValue:
+                              filteredData[index]['totalFees'].toString(),
                           onChanged: (value) {
                             setState(() {
-                              filteredData[index]['totalFees'] = int.tryParse(value) ?? filteredData[index]['totalFees'];
+                              filteredData[index]['totalFees'] =
+                                  int.tryParse(value) ??
+                                      filteredData[index]['totalFees'];
                             });
                           },
                         )),
                         DataCell(TextFormField(
-                          initialValue: filteredData[index]['discountedFees'].toString(),
+                          initialValue:
+                              filteredData[index]['discountedFees'].toString(),
                           onChanged: (value) {
                             setState(() {
-                              filteredData[index]['discountedFees'] = int.tryParse(value) ?? filteredData[index]['discountedFees'];
+                              filteredData[index]['discountedFees'] =
+                                  int.tryParse(value) ??
+                                      filteredData[index]['discountedFees'];
                             });
                           },
                         )),
                         DataCell(TextFormField(
-                          initialValue: filteredData[index]['amtPaid'].toString(),
+                          initialValue:
+                              filteredData[index]['amtPaid'].toString(),
                           onChanged: (value) {
                             setState(() {
-                              filteredData[index]['amtPaid'] = int.tryParse(value) ?? filteredData[index]['amtPaid'];
+                              filteredData[index]['amtPaid'] =
+                                  int.tryParse(value) ??
+                                      filteredData[index]['amtPaid'];
                             });
                           },
                         )),
-                        DataCell(Text(DateFormat.yMMMd().format(filteredData[index]['date']))),
+                        DataCell(Text(DateFormat.yMMMd()
+                            .format(filteredData[index]['date']))),
                         DataCell(IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () {
@@ -1340,7 +1411,8 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
   // Method to fetch data from the database
   Future<void> _fetchData() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/expenses/expenses'));
+      final response = await http
+          .get(Uri.parse('${AppConfig.baseUrl}/api/expenses/expenses'));
       if (response.statusCode == 200) {
         setState(() {
           expenseData = json.decode(response.body);
@@ -1359,16 +1431,23 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
     setState(() {
       filteredData = expenseData.where((expense) {
         final expenseDate = DateTime.parse(expense['date']);
-        final isInDateRange = (fromDate == null || expenseDate.isAfter(fromDate!) || expenseDate.isAtSameMomentAs(fromDate!)) &&
-            (toDate == null || expenseDate.isBefore(toDate!) || expenseDate.isAtSameMomentAs(toDate!));
-        final matchesSearchQuery = expense['expenseType'].toLowerCase().contains(searchQuery.toLowerCase());
+        final isInDateRange = (fromDate == null ||
+                expenseDate.isAfter(fromDate!) ||
+                expenseDate.isAtSameMomentAs(fromDate!)) &&
+            (toDate == null ||
+                expenseDate.isBefore(toDate!) ||
+                expenseDate.isAtSameMomentAs(toDate!));
+        final matchesSearchQuery = expense['expenseType']
+            .toLowerCase()
+            .contains(searchQuery.toLowerCase());
         return isInDateRange && matchesSearchQuery;
       }).toList();
     });
   }
 
   // Method to select a date
-  Future<void> _selectDate(BuildContext context, DateTime? initialDate, Function(DateTime) onDateSelected) async {
+  Future<void> _selectDate(BuildContext context, DateTime? initialDate,
+      Function(DateTime) onDateSelected) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -1417,13 +1496,16 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
                       _filterData();
                     }),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        fromDate != null ? DateFormat.yMMMd().format(fromDate!) : 'From Date',
+                        fromDate != null
+                            ? DateFormat.yMMMd().format(fromDate!)
+                            : 'From Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -1439,13 +1521,16 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
                       _filterData();
                     }),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        toDate != null ? DateFormat.yMMMd().format(toDate!) : 'To Date',
+                        toDate != null
+                            ? DateFormat.yMMMd().format(toDate!)
+                            : 'To Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -1474,13 +1559,14 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
                   ],
                   rows: List<DataRow>.generate(
                     filteredData.length,
-                        (index) => DataRow(
+                    (index) => DataRow(
                       cells: [
                         DataCell(Text((index + 1).toString())),
                         DataCell(Text(filteredData[index]['expenseType'])),
                         DataCell(Text(filteredData[index]['paymentMode'])),
                         DataCell(Text(filteredData[index]['date'])),
-                        DataCell(Text(filteredData[index]['amount'].toString())),
+                        DataCell(
+                            Text(filteredData[index]['amount'].toString())),
                       ],
                     ),
                   ),
@@ -1517,7 +1603,8 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
   // Method to fetch data from the database
   Future<void> _fetchData() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/expenses/incomes'));
+      final response = await http
+          .get(Uri.parse('${AppConfig.baseUrl}/api/expenses/incomes'));
       if (response.statusCode == 200) {
         setState(() {
           incomeData = json.decode(response.body);
@@ -1536,16 +1623,23 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
     setState(() {
       filteredData = incomeData.where((income) {
         final incomeDate = DateTime.parse(income['date']);
-        final isInDateRange = (fromDate == null || incomeDate.isAfter(fromDate!) || incomeDate.isAtSameMomentAs(fromDate!)) &&
-            (toDate == null || incomeDate.isBefore(toDate!) || incomeDate.isAtSameMomentAs(toDate!));
-        final matchesSearchQuery = income['incomeType'].toLowerCase().contains(searchQuery.toLowerCase());
+        final isInDateRange = (fromDate == null ||
+                incomeDate.isAfter(fromDate!) ||
+                incomeDate.isAtSameMomentAs(fromDate!)) &&
+            (toDate == null ||
+                incomeDate.isBefore(toDate!) ||
+                incomeDate.isAtSameMomentAs(toDate!));
+        final matchesSearchQuery = income['incomeType']
+            .toLowerCase()
+            .contains(searchQuery.toLowerCase());
         return isInDateRange && matchesSearchQuery;
       }).toList();
     });
   }
 
   // Method to select a date
-  Future<void> _selectDate(BuildContext context, DateTime? initialDate, Function(DateTime) onDateSelected) async {
+  Future<void> _selectDate(BuildContext context, DateTime? initialDate,
+      Function(DateTime) onDateSelected) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -1594,13 +1688,16 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
                       _filterData();
                     }),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        fromDate != null ? DateFormat.yMMMd().format(fromDate!) : 'From Date',
+                        fromDate != null
+                            ? DateFormat.yMMMd().format(fromDate!)
+                            : 'From Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -1616,13 +1713,16 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
                       _filterData();
                     }),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        toDate != null ? DateFormat.yMMMd().format(toDate!) : 'To Date',
+                        toDate != null
+                            ? DateFormat.yMMMd().format(toDate!)
+                            : 'To Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -1651,13 +1751,14 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
                   ],
                   rows: List<DataRow>.generate(
                     filteredData.length,
-                        (index) => DataRow(
+                    (index) => DataRow(
                       cells: [
                         DataCell(Text((index + 1).toString())),
                         DataCell(Text(filteredData[index]['incomeType'])),
                         DataCell(Text(filteredData[index]['paymentMode'])),
                         DataCell(Text(filteredData[index]['date'])),
-                        DataCell(Text(filteredData[index]['amount'].toString())),
+                        DataCell(
+                            Text(filteredData[index]['amount'].toString())),
                       ],
                     ),
                   ),
@@ -1670,7 +1771,6 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
     );
   }
 }
-
 
 class ProfitLossReportScreen extends StatefulWidget {
   const ProfitLossReportScreen({Key? key}) : super(key: key);
@@ -1736,7 +1836,8 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
         );
         if (incomeResponse.statusCode == 200) {
           final incomeData = json.decode(incomeResponse.body);
-          totalIncome = incomeData.fold(0.0, (sum, item) => sum + item['amount']);
+          totalIncome =
+              incomeData.fold(0.0, (sum, item) => sum + item['amount']);
         }
 
         // Fetch expense data
@@ -1746,7 +1847,8 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
         );
         if (expenseResponse.statusCode == 200) {
           final expenseData = json.decode(expenseResponse.body);
-          totalExpense = expenseData.fold(0.0, (sum, item) => sum + item['amount']);
+          totalExpense =
+              expenseData.fold(0.0, (sum, item) => sum + item['amount']);
         }
       } catch (e) {
         // Handle errors
@@ -1777,7 +1879,8 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
                   child: GestureDetector(
                     onTap: () => _selectFromDate(context),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12.0, horizontal: 16.0),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(8.0),
@@ -1791,7 +1894,8 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
                   child: GestureDetector(
                     onTap: () => _selectToDate(context),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12.0, horizontal: 16.0),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(8.0),
@@ -1818,12 +1922,14 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
                 children: [
                   Text(
                     'Total Income: \$${totalIncome.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     'Total Expenses: \$${totalExpense.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -1842,6 +1948,7 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
     );
   }
 }
+
 class AppAccessRightsScreen extends StatefulWidget {
   const AppAccessRightsScreen({Key? key}) : super(key: key);
 
@@ -1859,7 +1966,8 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
       isLoading = true;
     });
 
-    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth?role=$selectedRights'));
+    final response = await http
+        .get(Uri.parse('${AppConfig.baseUrl}/api/auth?role=$selectedRights'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -1872,7 +1980,8 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
   }
 
   Future<void> _deleteUser(String userId) async {
-    final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/api/auth/$userId'));
+    final response =
+        await http.delete(Uri.parse('${AppConfig.baseUrl}/api/auth/$userId'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -1916,10 +2025,12 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
                 _fetchUsers();
               },
               child: const Text('Check App Access Rights'),
-              style: ElevatedButton.styleFrom(foregroundColor: Colors.black, backgroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.black, backgroundColor: Colors.white),
             ),
             const SizedBox(height: 16),
-            const Text('Check Rights:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Check Rights:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             RadioListTile(
               title: const Text('Check Admin Rights'),
               value: 'Admin',
@@ -1948,7 +2059,8 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
               }),
             ),
             const SizedBox(height: 16),
-            const Text('Users with Rights:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Users with Rights:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             if (isLoading)
               const Center(child: CircularProgressIndicator())
             else if (users.isEmpty)
@@ -2008,7 +2120,8 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
           title: const Text('Edit User Role'),
           content: DropdownButton<String>(
             value: newRole,
-            items: <String>['Admin', 'Teacher', 'Student'].map<DropdownMenuItem<String>>((String value) {
+            items: <String>['Admin', 'Teacher', 'Student']
+                .map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),

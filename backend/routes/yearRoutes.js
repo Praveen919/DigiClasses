@@ -2,16 +2,26 @@ const express = require('express');
 const router = express.Router();
 const Year = require('../models/yearModel');
 
+// Utility function to parse date from dd/mm/yyyy
+function parseDate(dateStr) {
+  const [day, month, year] = dateStr.split('/');
+  return new Date(year, month - 1, day); // Months are 0-based
+}
+
 // Add a new Year
 router.post('/add', async (req, res) => {
   try {
     const { yearName, fromDate, toDate, remarks } = req.body;
 
+    // Parse the date from dd/mm/yyyy format
+    const parsedFromDate = parseDate(fromDate);
+    const parsedToDate = parseDate(toDate);
+
     // Create a new Year instance
     const newYear = new Year({
       yearName,
-      fromDate,
-      toDate,
+      fromDate: parsedFromDate,
+      toDate: parsedToDate,
       remarks,
     });
 
@@ -43,10 +53,14 @@ router.put('/edit/:id', async (req, res) => {
       return res.status(404).json({ message: 'Year not found' });
     }
 
+    // Parse the dates if provided
+    const parsedFromDate = fromDate ? parseDate(fromDate) : year.fromDate;
+    const parsedToDate = toDate ? parseDate(toDate) : year.toDate;
+
     // Update fields
-    year.name = yearName || year.name;
-    year.fromDate = fromDate || year.fromDate;
-    year.toDate = toDate || year.toDate;
+    year.yearName = yearName || year.yearName;
+    year.fromDate = parsedFromDate;
+    year.toDate = parsedToDate;
     year.remarks = remarks || year.remarks;
 
     // Save changes to database
