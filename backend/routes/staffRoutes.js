@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const mongoose = require('mongoose');
 const Staff = require('../models/staffModel');
 const User = require('../models/userModel');
 
@@ -40,25 +41,43 @@ router.post('/', upload.single('profilePicture'), async (req, res) => {
     }
 });
 
-// Update staff
+// Update Staff
 router.put('/:id', upload.single('profilePicture'), async (req, res) => {
-    try {
-        const staffData = {
-            firstName: req.body.firstName,
-            middleName: req.body.middleName,
-            lastName: req.body.lastName,
-            gender: req.body.gender,
-            mobile: req.body.mobile,
-            email: req.body.email,
-            address: req.body.address,
-        };
+    console.log('Updating staff with ID:', req.params.id); // Log staff ID
 
-        // Check if a profile picture is provided in the update
-        if (req.file) {
-            staffData.profilePicture = req.file.path;
+    try {
+        const staffId = req.params.id;
+
+        // Validate staff ID
+        if (!staffId || !mongoose.Types.ObjectId.isValid(staffId)) {
+            return res.status(400).json({ message: 'Invalid staff ID.' });
         }
 
-        const staff = await Staff.findByIdAndUpdate(req.params.id, staffData, { new: true });
+        // Log the incoming request body
+        console.log('Request Body:', req.body);
+
+        const staffData = {};
+
+        // Check for required fields
+        if (!req.body.firstName || !req.body.lastName || !req.body.email) {
+            return res.status(400).json({ message: 'First name, last name, and email are required.' });
+        }
+
+        // Assign fields if provided
+        staffData.firstName = req.body.firstName;
+        staffData.lastName = req.body.lastName;
+        if (req.body.gender) staffData.gender = req.body.gender;
+        if (req.body.mobile) staffData.mobile = req.body.mobile;
+        if (req.body.email) staffData.email = req.body.email;
+        if (req.body.address) staffData.address = req.body.address;
+
+        // Check if a new profile picture is uploaded
+        if (req.file) {
+            staffData.profilePicture = `${req.protocol}://${req.get('host')}/${req.file.path}`;
+        }
+
+        // Find staff and update
+        const staff = await Staff.findByIdAndUpdate(staffId, staffData, { new: true });
 
         if (!staff) {
             return res.status(404).json({ message: 'Staff not found' });
@@ -66,6 +85,7 @@ router.put('/:id', upload.single('profilePicture'), async (req, res) => {
 
         res.status(200).json({ message: 'Staff updated successfully', staff });
     } catch (error) {
+        console.error('Error updating staff:', error); // Log the error for debugging
         res.status(500).json({ message: 'Error updating staff', error: error.message });
     }
 });
@@ -80,6 +100,26 @@ router.get('/', async (req, res) => {
         res.status(500).json({ message: 'Error fetching staff list' });
     }
 });
+
+// DELETE route to delete staff by ID
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+      // Find and delete the staff member by ID
+      const staff = await Staff.findByIdAndDelete(id);
+  
+      if (!staff) {
+        return res.status(404).json({ message: 'Staff not found' });
+      }
+  
+      // Respond with success message
+      return res.status(200).json({ message: 'Staff deleted successfully' });
+    } catch (error) {
+      // Handle errors and send an error message
+      return res.status(500).json({ message: 'Failed to delete staff', error });
+    }
+  });
 
 // Fetch users with the "Teacher" role
 router.get('/teachers', async (req, res) => {

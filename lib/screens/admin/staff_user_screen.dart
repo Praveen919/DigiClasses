@@ -369,7 +369,6 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
     final url = '${AppConfig.baseUrl}/api/staff';
     try {
       final response = await http.get(Uri.parse(url));
-
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -382,12 +381,14 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
                     'mobile': staff['mobile'],
                     'gender': staff['gender'],
                     'address': staff['address'],
-                    'profilePicture': staff['profilePicture'],
+                    'profilePicture': staff['profilePicture'] != null
+                        ? '${AppConfig.baseUrl}/${staff['profilePicture']}'
+                        : null,
                   })
               .toList();
         });
       } else {
-        print('Failed to load staff');
+        print('Failed to load staff: ${response.reasonPhrase}');
       }
     } catch (e) {
       print('Error fetching staff list: $e');
@@ -395,19 +396,23 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _profilePicturePath = pickedFile.path;
-      });
+    try {
+      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _profilePicturePath = pickedFile.path;
+        });
+      }
+    } catch (e) {
+      print('Error picking image: $e');
     }
   }
 
   void _onEdit(int index, Map<String, dynamic> staff) {
     setState(() {
       _editingIndex = index;
-      _firstNameController.text = staff['firstName'];
-      _lastNameController.text = staff['lastName'];
+      _firstNameController.text = staff['firstName'] ?? '';
+      _lastNameController.text = staff['lastName'] ?? '';
       _emailController.text = staff['email'] ?? '';
       _mobileController.text = staff['mobile'] ?? '';
       _genderController.text = staff['gender'] ?? '';
@@ -419,18 +424,38 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
   Future<void> _onSave() async {
     if (_editingIndex == null) return;
 
-    final updatedStaff = {
-      'firstName': _firstNameController.text,
-      'lastName': _lastNameController.text,
-      'email': _emailController.text,
-      'mobile': _mobileController.text,
-      'gender': _genderController.text,
-      'address': _addressController.text,
-    };
+    final updatedStaff = <String, dynamic>{};
+    if (_firstNameController.text.isNotEmpty) {
+      updatedStaff['firstName'] = _firstNameController.text;
+    }
+    if (_lastNameController.text.isNotEmpty) {
+      updatedStaff['lastName'] = _lastNameController.text;
+    }
+    if (_emailController.text.isNotEmpty) {
+      updatedStaff['email'] = _emailController.text;
+    }
+    if (_mobileController.text.isNotEmpty) {
+      updatedStaff['mobile'] = _mobileController.text;
+    }
+    if (_genderController.text.isNotEmpty) {
+      updatedStaff['gender'] = _genderController.text;
+    }
+    if (_addressController.text.isNotEmpty) {
+      updatedStaff['address'] = _addressController.text;
+    }
 
-    final url =
-        '${AppConfig.baseUrl}/api/staff/${staffList[_editingIndex!]['id']}'; // Adjust the endpoint
+    // Get the staff ID from the staffList
+    final staffId = staffList[_editingIndex!]['id'];
+    print('Updating staff with ID: $staffId'); // Debug print
+
+    if (staffId == null) {
+      print('Error: Staff ID is null');
+      return; // Exit if ID is null
+    }
+
+    final url = '${AppConfig.baseUrl}/api/staff/$staffId';
     final request = http.MultipartRequest('PUT', Uri.parse(url));
+
     request.fields
         .addAll(updatedStaff.map((key, value) => MapEntry(key, value)));
 
@@ -439,40 +464,70 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
           'profilePicture', _profilePicturePath!));
     }
 
-    final response = await request.send();
-    if (response.statusCode == 200) {
-      final responseData = await http.Response.fromStream(response);
-      setState(() {
-        staffList[_editingIndex!] = json.decode(responseData.body);
-        _editingIndex = null;
-        _clearControllers();
-      });
+    try {
+      final response = await request.send();
+      if (response.statusCode == 200) {
+        final responseData = await http.Response.fromStream(response);
+        setState(() {
+          staffList[_editingIndex!] = json.decode(responseData.body)['staff'];
+          _editingIndex = null;
+          _clearControllers();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Staff updated successfully')),
+        );
+      } else {
+        print('Failed to update staff: ${response.reasonPhrase}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update staff')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Staff updated successfully')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update staff')),
+        SnackBar(content: Text('Error: ${e.toString()}')),
       );
     }
   }
 
   Future<void> _onDelete(int index) async {
-    final url =
-        '${AppConfig.baseUrl}/api/staff/${staffList[index]['id']}'; // Adjust the endpoint
-    final response = await http.delete(Uri.parse(url));
+    bool confirmDelete = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Delete'),
+          content:
+              const Text('Are you sure you want to delete this staff member?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
 
-    if (response.statusCode == 200) {
-      setState(() {
-        staffList.removeAt(index);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Staff deleted successfully')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to delete staff')),
-      );
+    if (confirmDelete) {
+      final url = '${AppConfig.baseUrl}/api/staff/${staffList[index]['id']}';
+      final response = await http.delete(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          staffList.removeAt(index);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Staff deleted successfully')),
+        );
+      } else {
+        print('Failed to delete staff: ${response.reasonPhrase}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete staff')),
+        );
+      }
     }
   }
 
@@ -491,7 +546,7 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Staff')),
       body: staffList.isEmpty
-          ? Center(child: Text('No staff members currently'))
+          ? const Center(child: Text('No staff members currently'))
           : ListView.builder(
               itemCount: staffList.length,
               itemBuilder: (context, index) {
@@ -536,46 +591,48 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
                           : Text('Gender: ${staff['gender']}'),
                       _editingIndex == index
                           ? TextField(
-                              controller: _genderController,
-                              decoration:
-                                  const InputDecoration(labelText: 'Gender'),
-                            )
-                          : Text('Address: ${staff['address']}'),
-                      _editingIndex == index
-                          ? TextField(
                               controller: _addressController,
                               decoration:
                                   const InputDecoration(labelText: 'Address'),
                             )
-                          : Container(),
+                          : Text('Address: ${staff['address']}'),
                     ],
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_editingIndex == index)
-                        IconButton(
-                          icon: const Icon(Icons.save),
-                          onPressed: _onSave,
+                  trailing: _editingIndex == index
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.save),
+                              onPressed: _onSave,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.cancel),
+                              onPressed: () {
+                                setState(() {
+                                  _editingIndex = null;
+                                  _clearControllers();
+                                });
+                              },
+                            ),
+                          ],
                         )
-                      else
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () => _onEdit(index, staff),
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _onEdit(index, staff),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () => _onDelete(index),
+                            ),
+                          ],
                         ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _onDelete(index),
-                      ),
-                    ],
-                  ),
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _pickImage,
-        child: const Icon(Icons.add_a_photo),
-      ),
     );
   }
 }
