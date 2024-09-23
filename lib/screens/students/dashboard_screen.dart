@@ -129,8 +129,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const AutoNotificationSettingsScreen(),
+                    MaterialPageRoute(builder: (context) => const AutoNotificationSettingsScreen(),
                     ),
                   );
                   // Navigate to Change Password screen
@@ -158,7 +157,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) =>  ViewMyAttendanceScreen()),
+                    MaterialPageRoute(builder: (context) =>  ViewMyAttendanceScreen(classBatchId: '')),
                   );
                 },
               ),
@@ -212,18 +211,6 @@ class SidePanel extends StatelessWidget {
                 },
               ),
 
-              ListTile(
-                leading: Icon(Icons.my_library_books_sharp),
-                title: const Text('View MCQ Paper'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) =>  ViewMCQPaperScreen()),
-
-                  );
-                },
-              ),
               ListTile(
                 leading: Icon(Icons.edit_note),
                 title: const Text('View MCQ Exam'),
@@ -355,28 +342,24 @@ class SidePanel extends StatelessWidget {
 
               ListTile(
                 leading: Icon(Icons.details_rounded),
-                title: const Text('View My Detail Report'),
+                title: const Text('View My Detailed Report'),
                 onTap: () {
+                  // Pop the current screen
                   Navigator.pop(context);
 
+                  // Retrieve the student ID from your authentication context or provider
+                  String studentId = AuthProvider.of(context).currentUser?.id ?? '';
+
+                  // Navigate to the ViewDetailReportScreen with the dynamic student ID
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) =>ViewDetailReportScreen( report: StudentReport(
-                      studentName: 'John Doe',
-                      rollNumber: '12345',
-                      classSection: '10-A',
-                      academicPerformance: [],
-                      totalClassesHeld: 0,
-                      totalClassesAttended: 0,
-                      detailedAttendance: [],
-                      achievements: [],
-                      teacherComments: '',
-                    ),)),
-
+                    MaterialPageRoute(
+                      builder: (context) => ViewDetailReportScreen(studentId: studentId),
+                    ),
                   );
                 },
               ),
-              ListTile(
+              /*ListTile(
                 leading: Icon(Icons.grade),
                 title: const Text('View My Card Report'),
                 onTap: () {
@@ -387,7 +370,7 @@ class SidePanel extends StatelessWidget {
 
                   );
                 },
-              ),
+              ),*/
               ListTile(
                 leading: Icon(Icons.edit_calendar_outlined),
                 title: const Text('View Attendance Report'),
