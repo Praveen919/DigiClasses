@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 //import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:testing_app/screens/config.dart';
 
 class ExamScreen extends StatelessWidget {
   final String option;
@@ -19,123 +22,173 @@ class ExamScreen extends StatelessWidget {
     switch (option) {
       case 'viewManualExam':
         return ViewManualExamScreen();
-      case 'viewMCQPaper':
-        return ViewMCQPaperScreen();
       case 'viewMCQExam':
         return ViewMCQExamScreen();
-
       case 'viewAssignments':
         return ViewAssignmentsScreen();
-
-
       default:
         return Center(child: Text('Unknown Option'));
     }
   }
 }
 
-class ViewManualExamScreen extends StatelessWidget {
-  final String examName = 'English Semester 1';
-  final String subject = 'English';
-  final String standard = '10th Grade';
-  final DateTime examDate = DateTime(2024, 12, 15);
-  final TimeOfDay fromTime = TimeOfDay(hour: 10, minute: 0);
-  final TimeOfDay toTime = TimeOfDay(hour: 12, minute: 0);
-  final int totalMarks = 100;
-  final List<String> instructions = [
-    'Be on time.',
-    'Bring all necessary stationery.',
-    'No electronic devices allowed.'
-  ];
-  final List<String> notes = [
-    'Please ensure you have read the assigned chapters.',
-    'Focus on grammar and comprehension for the essay section.'
-  ];
-  final String? uploadedDocument = 'exam_guide.pdf';
+class Exam {
+  final String standard;
+  final String subject;
+  final String examName;
+  final int totalMarks;
+  final DateTime examDate;
+  final String fromTime;
+  final String toTime;
+  final String? note;
+  final String? remark;
+  final String? documentPath;
+
+  Exam({
+    required this.standard,
+    required this.subject,
+    required this.examName,
+    required this.totalMarks,
+    required this.examDate,
+    required this.fromTime,
+    required this.toTime,
+    this.note,
+    this.remark,
+    this.documentPath,
+  });
+
+  factory Exam.fromJson(Map<String, dynamic> json) {
+    return Exam(
+      standard: json['standard'],
+      subject: json['subject'],
+      examName: json['examName'],
+      totalMarks: json['totalMarks'],
+      examDate: DateTime.parse(json['examDate']),
+      fromTime: json['fromTime'],
+      toTime: json['toTime'],
+      note: json['note'],
+      remark: json['remark'],
+      documentPath: json['documentPath'],
+    );
+  }
+}
+
+class ExamService {
+  Future<List<Exam>> fetchExams() async {
+    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/exams'));
+
+    if (response.statusCode == 200) {
+      List jsonResponse = json.decode(response.body);
+      return jsonResponse.map((exam) => Exam.fromJson(exam)).toList();
+    } else {
+      throw Exception('Failed to load exams');
+    }
+  }
+}
+
+class ViewManualExamScreen extends StatefulWidget {
+  @override
+  _ViewManualExamScreenState createState() => _ViewManualExamScreenState();
+}
+
+class _ViewManualExamScreenState extends State<ViewManualExamScreen> {
+  late Future<List<Exam>> futureExams;
+
+  @override
+  void initState() {
+    super.initState();
+    futureExams = ExamService().fetchExams();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Manual Exam Details'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        title: Text('Manual Exams'),
+      ),
+      body: FutureBuilder<List<Exam>>(
+        future: futureExams,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No exams found'));
+          }
+
+          List<Exam> exams = snapshot.data!;
+
+          return ListView.builder(
+            itemCount: exams.length,
+            itemBuilder: (context, index) {
+              Exam exam = exams[index];
+              return ListTile(
+                title: Text(exam.examName),
+                subtitle: Text('Subject: ${exam.subject} | Standard: ${exam.standard}'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ExamDetailsScreen(exam: exam),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class ExamDetailsScreen extends StatelessWidget {
+  final Exam exam;
+
+  ExamDetailsScreen({required this.exam});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(exam.examName),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Exam Information
-              Text(
-                'Exam: $examName',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8.0),
-              Text('Subject: $subject'),
-              SizedBox(height: 8.0),
-              Text('Standard: $standard'),
-              SizedBox(height: 8.0),
-              Text('Date: ${DateFormat('dd-MM-yyyy').format(examDate)}'),
-              SizedBox(height: 8.0),
-              Text('Time: ${fromTime.format(context)} - ${toTime.format(context)}'),
-              SizedBox(height: 8.0),
-              Text('Total Marks: $totalMarks'),
-              SizedBox(height: 16.0),
-
-              // Instructions
-              Text(
-                'Instructions:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8.0),
-              for (String instruction in instructions)
-                Text('- $instruction', style: TextStyle(fontSize: 16)),
-              SizedBox(height: 16.0),
-
-              // Notes
-              Text(
-                'Important Notes:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8.0),
-              for (String note in notes)
-                Text('- $note', style: TextStyle(fontSize: 16)),
-              SizedBox(height: 16.0),
-
-              // Uploaded Document
-              if (uploadedDocument != null)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Attached Document:',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8.0),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Logic to view or download the document
-                      },
-                      child: Text('View $uploadedDocument'),
-                    ),
-                  ],
+              Text('Standard: ${exam.standard}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Subject: ${exam.subject}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Total Marks: ${exam.totalMarks}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Exam Date: ${exam.examDate.toLocal().toIso8601String()}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Time: ${exam.fromTime} - ${exam.toTime}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 16),
+              if (exam.note != null) ...[
+                Text('Note:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(exam.note!, style: TextStyle(fontSize: 16)),
+                SizedBox(height: 16),
+              ],
+              if (exam.remark != null) ...[
+                Text('Remark:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(exam.remark!, style: TextStyle(fontSize: 16)),
+                SizedBox(height: 16),
+              ],
+              if (exam.documentPath != null) ...[
+                Text('Document:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ElevatedButton(
+                  onPressed: () {
+                    // Handle document view or download
+                  },
+                  child: Text('View Document'),
                 ),
-
-              // Countdown Timer (optional feature)
-              SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: () {
-                  // Logic to go back or close the screen
-                  Navigator.pop(context);
-                },
-                child: Text('Back'),
-              ),
+              ],
             ],
           ),
         ),
@@ -143,158 +196,8 @@ class ViewManualExamScreen extends StatelessWidget {
     );
   }
 }
-class ViewMCQPaperScreen extends StatefulWidget {
-  @override
-  _ViewMCQPaperScreenState createState() => _ViewMCQPaperScreenState();
-}
 
-class _ViewMCQPaperScreenState extends State<ViewMCQPaperScreen> {
-  int currentQuestionIndex = 0;
-  Map<int, String?> selectedAnswers = {};
-  final List<String> questions = [
-    'What is the capital of France?',
-    'What is 2 + 2?',
-    'What is the chemical symbol for water?',
-  ];
-  final List<List<String>> options = [
-    ['Berlin', 'Madrid', 'Paris', 'Rome'],
-    ['3', '4', '5', '6'],
-    ['H2O', 'O2', 'CO2', 'H2'],
-  ];
 
-  // Dummy timer value for countdown
-  Duration examDuration = Duration(minutes: 30);
-
-  // Timer related variables
-  late DateTime examEndTime;
-  late Duration timeRemaining;
-  late String timerDisplay;
-
-  @override
-  void initState() {
-    super.initState();
-    examEndTime = DateTime.now().add(examDuration);
-    updateTimer();
-  }
-
-  void updateTimer() {
-    final now = DateTime.now();
-    if (examEndTime.isAfter(now)) {
-      setState(() {
-        timeRemaining = examEndTime.difference(now);
-        timerDisplay = formatDuration(timeRemaining);
-      });
-    } else {
-      setState(() {
-        timerDisplay = "Time's up!";
-      });
-      submitExam();
-    }
-  }
-
-  String formatDuration(Duration duration) {
-    return "${duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${duration.inSeconds.remainder(60).toString().padLeft(2, '0')}";
-  }
-
-  void selectAnswer(int index, String answer) {
-    setState(() {
-      selectedAnswers[index] = answer;
-    });
-  }
-
-  void goToNextQuestion() {
-    if (currentQuestionIndex < questions.length - 1) {
-      setState(() {
-        currentQuestionIndex++;
-      });
-    }
-  }
-
-  void goToPreviousQuestion() {
-    if (currentQuestionIndex > 0) {
-      setState(() {
-        currentQuestionIndex--;
-      });
-    }
-  }
-
-  void submitExam() {
-    print('Exam submitted');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('MCQ Exam'),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Exam: MCQ Paper',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              'Subject: General Knowledge',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              'Time Remaining: $timerDisplay',
-              style: TextStyle(fontSize: 16, color: Colors.red),
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              'Question ${currentQuestionIndex + 1} of ${questions.length}',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              questions[currentQuestionIndex],
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.0),
-            ...options[currentQuestionIndex].map((option) {
-              return RadioListTile<String>(
-                title: Text(option),
-                value: option,
-                groupValue: selectedAnswers[currentQuestionIndex] ?? '', // Provide default value
-                onChanged: (value) {
-                  selectAnswer(currentQuestionIndex, value!);
-                },
-              );
-            }).toList(),
-            SizedBox(height: 16.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: goToPreviousQuestion,
-                  child: Text('Previous'),
-                ),
-                ElevatedButton(
-                  onPressed: goToNextQuestion,
-                  child: Text('Next'),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.0),
-            Center(
-              child: ElevatedButton(
-                onPressed: submitExam,
-                child: Text('Submit'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 class ViewMCQExamScreen extends StatefulWidget {
   @override
   _ViewMCQExamScreenState createState() => _ViewMCQExamScreenState();
@@ -303,30 +206,50 @@ class ViewMCQExamScreen extends StatefulWidget {
 class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   int currentQuestionIndex = 0;
   Map<int, String?> selectedAnswers = {}; // Stores selected answers for each question
-  final List<String> questions = [
-    'What is the capital of France?',
-    'What is 2 + 2?',
-    'What is the chemical symbol for water?',
-  ];
-  final List<List<String>> options = [
-    ['Berlin', 'Madrid', 'Paris', 'Rome'],
-    ['3', '4', '5', '6'],
-    ['H2O', 'O2', 'CO2', 'H2'],
-  ];
+  List<String> questions = [];
+  List<List<String>> options = [];
+  String paperName = '';
+  String subject = '';
+  String examId = '';
+  bool isLoading = true;
 
-  // Dummy timer value for countdown
+  // Timer and Exam Duration
   Duration examDuration = Duration(minutes: 30);
   late DateTime examEndTime;
   late Duration timeRemaining;
-  late String timerDisplay;
+  late String timerDisplay = '';
 
   @override
   void initState() {
     super.initState();
-    examEndTime = DateTime.now().add(examDuration);
-    updateTimer();
+    fetchMCQExam();
   }
 
+  // Fetch the exam from the server
+  Future<void> fetchMCQExam() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/EXAM_ID')); // Update EXAM_ID dynamically
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          paperName = data['paperName'];
+          subject = data['subject'];
+          questions = List<String>.from(data['questions'].map((q) => q['question']));
+          options = List<List<String>>.from(data['questions'].map((q) => List<String>.from(q['options'])));
+          examId = data['_id']; // Store exam ID for submitting later
+          examEndTime = DateTime.now().add(examDuration); // Set exam timer
+          updateTimer();
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load exam');
+      }
+    } catch (error) {
+      print('Error loading MCQ exam: $error');
+    }
+  }
+
+  // Update the timer display
   void updateTimer() {
     final now = DateTime.now();
     if (examEndTime.isAfter(now)) {
@@ -336,15 +259,14 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
       });
       Future.delayed(Duration(seconds: 1), updateTimer);
     } else {
-      // Time's up
       setState(() {
         timerDisplay = "Time's up!";
       });
-      // Optionally, submit the exam automatically when time is up
-      submitExam();
+      submitExam(); // Automatically submit when time's up
     }
   }
 
+  // Format duration to display in MM:SS
   String formatDuration(Duration duration) {
     return "${duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${duration.inSeconds.remainder(60).toString().padLeft(2, '0')}";
   }
@@ -371,10 +293,28 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
     }
   }
 
-  void submitExam() {
-    // Logic to handle exam submission
-    // For example: Save answers to a database or send to server
-    print('Exam submitted');
+  // Submit the exam answers to the server
+  void submitExam() async {
+    final submissionData = {
+      'examId': examId,
+      'answers': selectedAnswers.entries.map((e) => {'questionIndex': e.key, 'answer': e.value}).toList(),
+    };
+
+    try {
+      final response = await http.post(
+          Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/submit'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(submissionData)
+      );
+
+      if (response.statusCode == 200) {
+        print('Exam submitted successfully');
+      } else {
+        print('Failed to submit exam');
+      }
+    } catch (error) {
+      print('Error submitting exam: $error');
+    }
   }
 
   @override
@@ -383,19 +323,21 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
       appBar: AppBar(
         title: Text('MCQ Exam'),
       ),
-      body: Padding(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator()) // Show a loader while fetching data
+          : Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Exam Information
             Text(
-              'Exam: MCQ Paper',
+              'Exam: $paperName',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8.0),
             Text(
-              'Subject: General Knowledge',
+              'Subject: $subject',
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 8.0),
@@ -461,7 +403,83 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
     );
   }
 }
-class ViewAssignmentsScreen extends StatelessWidget {
+
+class ViewAssignmentsScreen extends StatefulWidget {
+  @override
+  _ViewAssignmentsScreenState createState() => _ViewAssignmentsScreenState();
+}
+
+class _ViewAssignmentsScreenState extends State<ViewAssignmentsScreen> {
+  List<Map<String, dynamic>> assignments = [];
+  List<Map<String, dynamic>> filteredAssignments = [];
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAssignments();
+  }
+
+  Future<void> fetchAssignments() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/assignments'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          assignments = List<Map<String, dynamic>>.from(json.decode(response.body));
+          filteredAssignments = assignments; // Initialize filtered list
+        });
+      } else {
+        print('Failed to load assignments');
+      }
+    } catch (error) {
+      print('Error fetching assignments: $error');
+    }
+  }
+
+  void filterAssignments(String query) {
+    setState(() {
+      searchQuery = query;
+      filteredAssignments = assignments.where((assignment) {
+        final assignmentName = assignment['assignmentName']?.toLowerCase() ?? '';
+        return assignmentName.contains(query.toLowerCase());
+      }).toList();
+    });
+  }
+
+  void showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String tempQuery = searchQuery; // Temporary variable for dialog
+        return AlertDialog(
+          title: Text('Search Assignments'),
+          content: TextField(
+            onChanged: (value) {
+              tempQuery = value;
+            },
+            decoration: InputDecoration(
+              hintText: 'Type to search...',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                filterAssignments(tempQuery);
+                Navigator.of(context).pop();
+              },
+              child: Text('Search'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -470,9 +488,7 @@ class ViewAssignmentsScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.search),
-            onPressed: () {
-              // Handle search action
-            },
+            onPressed: showSearchDialog, // Call the search dialog function
           ),
         ],
       ),
@@ -483,6 +499,7 @@ class ViewAssignmentsScreen extends StatelessWidget {
           children: [
             // Search Bar
             TextField(
+              onChanged: filterAssignments,
               decoration: InputDecoration(
                 hintText: 'Search assignments',
                 prefixIcon: Icon(Icons.search),
@@ -494,16 +511,17 @@ class ViewAssignmentsScreen extends StatelessWidget {
             // Assignment List
             Expanded(
               child: ListView.builder(
-                itemCount: assignments.length, // Replace with the actual count
+                itemCount: filteredAssignments.length,
                 itemBuilder: (context, index) {
-                  final assignment = assignments[index];
+                  final assignment = filteredAssignments[index];
                   return ListTile(
-                    title: Text(assignment['title'] ?? 'No Title'), // Provide default value
+                    title: Text(assignment['assignmentName'] ?? 'No Title'),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Due Date: ${assignment['dueDate'] ?? 'No Due Date'}'), // Provide default value
-                        Text('Status: ${assignment['status'] ?? 'No Status'}'), // Provide default value
+                        Text('Standard: ${assignment['standard'] ?? 'N/A'}'),
+                        Text('Subject: ${assignment['subject'] ?? 'N/A'}'),
+                        Text('Due Date: ${assignment['dueDate'] ?? 'No Due Date'}'),
                       ],
                     ),
                     trailing: IconButton(
@@ -526,17 +544,10 @@ class ViewAssignmentsScreen extends StatelessWidget {
       ),
     );
   }
-
-  // Sample data for demonstration
-  final List<Map<String, String?>> assignments = [
-    {'title': 'Math Homework', 'dueDate': '01-10-2024', 'status': 'Pending'},
-    {'title': 'Science Project', 'dueDate': '05-10-2024', 'status': 'Completed'},
-    {'title': 'History Essay', 'dueDate': '10-10-2024', 'status': 'Overdue'},
-  ];
 }
 
 class AssignmentDetailsScreen extends StatelessWidget {
-  final Map<String, String?> assignment;
+  final Map<String, dynamic> assignment;
 
   AssignmentDetailsScreen({required this.assignment});
 
@@ -552,37 +563,19 @@ class AssignmentDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Title: ${assignment['title'] ?? 'No Title'}', // Provide default value
+              'Title: ${assignment['assignmentName'] ?? 'No Title'}',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.0),
-            Text('Due Date: ${assignment['dueDate'] ?? 'No Due Date'}'), // Provide default value
+            Text('Standard: ${assignment['standard'] ?? 'N/A'}'),
             SizedBox(height: 16.0),
-            Text('Status: ${assignment['status'] ?? 'No Status'}'), // Provide default value
+            Text('Subject: ${assignment['subject'] ?? 'N/A'}'),
             SizedBox(height: 16.0),
-            if (assignment['status'] == 'Pending') ...[
-              ElevatedButton(
-                onPressed: () {
-                  // Handle submission action
-                },
-                child: Text('Submit Assignment'),
-              ),
+            Text('Due Date: ${assignment['dueDate'] ?? 'No Due Date'}'),
+            SizedBox(height: 16.0),
+
             ],
-            if (assignment['status'] == 'Completed') ...[
-              ElevatedButton(
-                onPressed: () {
-                  // Handle view or download action
-                },
-                child: Text('View Submitted Assignment'),
-              ),
-            ],
-            if (assignment['status'] == 'Overdue') ...[
-              Text(
-                'This assignment is overdue.',
-                style: TextStyle(color: Colors.red),
-              ),
-            ],
-          ],
+
         ),
       ),
     );
