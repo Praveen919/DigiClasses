@@ -1,6 +1,8 @@
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'package:testing_app/screens/config.dart';
 
 
 class StudentScreen extends StatelessWidget {
@@ -19,7 +21,7 @@ class StudentScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ViewMyAttendanceScreen()),
+                MaterialPageRoute(builder: (context) => ViewMyAttendanceScreen(classBatchId: '',)),
               );
             },
           ),
@@ -50,7 +52,59 @@ class StudentScreen extends StatelessWidget {
 
 
 
-class ViewMyAttendanceScreen extends StatelessWidget {
+class ViewMyAttendanceScreen extends StatefulWidget {
+  final String classBatchId; // Pass classBatchId from login or state management
+
+  ViewMyAttendanceScreen({required this.classBatchId});
+
+  @override
+  _ViewMyAttendanceScreenState createState() => _ViewMyAttendanceScreenState();
+}
+
+class _ViewMyAttendanceScreenState extends State<ViewMyAttendanceScreen> {
+  List<Map<String, dynamic>> attendanceData = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAttendanceData();
+  }
+
+  Future<void> fetchAttendanceData() async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/attendance-data'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'classBatchId': widget.classBatchId, // Use the classBatchId passed to the widget
+          'date': DateTime.now().toIso8601String(), // Adjust date as needed
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          attendanceData = data.map((item) {
+            return {
+              'subject': item['classBatchName'], // Adjust based on your response structure
+              'date': item['date'], // Adjust based on your response structure
+              'status': item['status'],
+            };
+          }).toList();
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load attendance data');
+      }
+    } catch (e) {
+      print(e);
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,13 +113,13 @@ class ViewMyAttendanceScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () {
-              // Handle refresh action
-            },
+            onPressed: fetchAttendanceData,
           ),
         ],
       ),
-      body: Padding(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,26 +131,25 @@ class ViewMyAttendanceScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Attendance Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Attendance Summary',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 8.0),
-                    Text('Total Classes: 30'),
-                    Text('Classes Attended: 25'),
-                    Text('Classes Missed: 5'),
-                    Text('Attendance Percentage: 83.33%'),
+                    Text('Total Classes: ${attendanceData.length}'),
+                    Text('Classes Attended: ${attendanceData.where((a) => a['status'] == 'Present').length}'),
+                    Text('Classes Missed: ${attendanceData.where((a) => a['status'] == 'Absent').length}'),
+                    Text('Attendance Percentage: ${((attendanceData.where((a) => a['status'] == 'Present').length / attendanceData.length) * 100).toStringAsFixed(2)}%'),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 16.0),
 
-            // Calendar View (Placeholder)
-            const Text('Attendance Calendar (Coming Soon)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16.0),
-
             // Detailed Attendance Data
             Expanded(
               child: ListView.builder(
-                itemCount: attendanceData.length, // Replace with actual count
+                itemCount: attendanceData.length,
                 itemBuilder: (context, index) {
                   final attendance = attendanceData[index];
                   return ListTile(
@@ -112,15 +165,49 @@ class ViewMyAttendanceScreen extends StatelessWidget {
       ),
     );
   }
-
-  // Sample data for demonstration
-  final List<Map<String, String>> attendanceData = [
-    {'subject': 'Math', 'date': DateFormat('dd-MM-yyyy').format(DateTime.now().subtract(Duration(days: 2))), 'status': 'Attended'},
-    {'subject': 'Science', 'date': DateFormat('dd-MM-yyyy').format(DateTime.now().subtract(Duration(days: 1))), 'status': 'Missed'},
-    {'subject': 'History', 'date': DateFormat('dd-MM-yyyy').format(DateTime.now()), 'status': 'Attended'},
-  ];
 }
-class ViewSharedDocumentsScreen extends StatelessWidget {
+
+class ViewSharedDocumentsScreen extends StatefulWidget {
+  @override
+  _ViewSharedDocumentsScreenState createState() => _ViewSharedDocumentsScreenState();
+}
+
+class _ViewSharedDocumentsScreenState extends State<ViewSharedDocumentsScreen> {
+  List<Map<String, dynamic>> sharedDocuments = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSharedDocuments();
+  }
+
+  Future<void> fetchSharedDocuments() async {
+    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/documents'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      setState(() {
+        sharedDocuments = data.map((item) {
+          return {
+            'id': item['_id'],
+            'title': item['documentName'],
+            'type': item['documentPath'].split('.').last, // Extracting file type
+            'url': item['documentPath'],
+            'message': item['message'],
+            'dateAdded': item['uploadedAt'],
+          };
+        }).toList();
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      // Handle error
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,38 +215,22 @@ class ViewSharedDocumentsScreen extends StatelessWidget {
         title: const Text('Shared Documents'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // Handle search action
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () {
-              // Handle refresh action
-            },
+            onPressed: fetchSharedDocuments,
           ),
         ],
       ),
-      body: Padding(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Search Bar
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Search documents',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
             // Document List
             Expanded(
               child: ListView.builder(
-                itemCount: sharedDocuments.length, // Replace with actual count
+                itemCount: sharedDocuments.length,
                 itemBuilder: (context, index) {
                   final document = sharedDocuments[index];
                   return ListTile(
@@ -169,7 +240,7 @@ class ViewSharedDocumentsScreen extends StatelessWidget {
                       icon: Icon(Icons.download),
                       onPressed: () {
                         // Handle document download or view action
-                        // For example, you might use a package to open the document
+                        // Use document['url'] for the download link
                       },
                     ),
                   );
@@ -181,17 +252,25 @@ class ViewSharedDocumentsScreen extends StatelessWidget {
       ),
     );
   }
-
-  // Sample data for demonstration
-  final List<Map<String, String>> sharedDocuments = [
-    {'title': 'Math Assignment', 'type': 'PDF', 'dateAdded': '01-09-2024'},
-    {'title': 'Science Lab Report', 'type': 'PDF', 'dateAdded': '05-09-2024'},
-    {'title': 'History Notes', 'type': 'Word', 'dateAdded': '10-09-2024'},
-  ];
 }
-class GiveFeedbackScreen extends StatelessWidget {
+
+class GiveFeedbackScreen extends StatefulWidget {
+  @override
+  _GiveFeedbackScreenState createState() => _GiveFeedbackScreenState();
+}
+
+class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
   final TextEditingController _feedbackController = TextEditingController();
-  final int _rating = 0; // Replace with actual rating logic if needed
+  int _rating = 0; // Track the rating
+  String? studentId; // Store the student ID
+  String selectedCategory = 'Course'; // Store the selected category
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch the studentId from your user management or login state here
+    // Example: studentId = Provider.of<UserProvider>(context, listen: false).studentId;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -216,7 +295,7 @@ class GiveFeedbackScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16.0),
 
-            // Optional Rating System
+            // Rating System
             Text('Rate Your Experience:'),
             Row(
               children: List.generate(5, (index) {
@@ -226,19 +305,23 @@ class GiveFeedbackScreen extends StatelessWidget {
                     color: Colors.amber,
                   ),
                   onPressed: () {
-                    // Handle rating logic
+                    setState(() {
+                      _rating = index + 1; // Update rating
+                    });
                   },
                 );
               }),
             ),
             const SizedBox(height: 16.0),
 
-            // Optional Feedback Category
+            // Feedback Category
             Text('Feedback Category:'),
             DropdownButton<String>(
-              value: 'Course',
+              value: selectedCategory,
               onChanged: (String? newValue) {
-                // Handle category change
+                setState(() {
+                  selectedCategory = newValue!;
+                });
               },
               items: <String>['Course', 'Instructor', 'App', 'Other']
                   .map<DropdownMenuItem<String>>((String value) {
@@ -255,26 +338,8 @@ class GiveFeedbackScreen extends StatelessWidget {
               onPressed: () {
                 String feedbackText = _feedbackController.text;
                 // Check if feedback is not empty
-                if (feedbackText.isNotEmpty) {
-                  // Process the feedback (e.g., send it to a server)
-                  submitFeedback(feedbackText, _rating);
-                  // Show confirmation message or navigate back
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Feedback Submitted'),
-                      content: const Text('Thank you for your feedback!'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            Navigator.of(context).pop(); // Optionally navigate back
-                          },
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
+                if (feedbackText.isNotEmpty && studentId != null) {
+                  submitFeedback(feedbackText, _rating, studentId!);
                 } else {
                   // Show an error message if feedback is empty
                   showDialog(
@@ -302,9 +367,53 @@ class GiveFeedbackScreen extends StatelessWidget {
     );
   }
 
-  // Example method to handle feedback submission
-  void submitFeedback(String feedbackText, int rating) {
-    // Implement the feedback submission logic
-    // For example, send the feedbackText and rating to a server
-  }
+  // Method to handle feedback submission
+  void submitFeedback(String feedbackText, int rating, String studentId) async {
+    final response = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/api/feedbacks'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'studentId': studentId,
+        'subject': selectedCategory, // Use selected category here
+        'feedback': feedbackText,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      // Show confirmation message
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+            title: const Text('Feedback Submitted'),
+            content: const Text('Thank you for your feedback!'),
+            actions: <Widget>[
+            TextButton(
+            onPressed: () {
+      Navigator.of(context).pop();
+      Navigator.of(context).pop(); // Optionally navigate back
+      },
+        child: const Text('OK'),
+            ),
+        ],
+      ),
+    );
+  } else {
+  // Show an error message
+  showDialog(
+  context: context,
+  builder: (context) => AlertDialog(
+  title: const Text('Error'),
+  content: const Text('Failed to submit feedback. Please try again.'),
+  actions: <Widget>[
+  TextButton(
+  onPressed: () {
+  Navigator.of(context).pop();
+  },
+  child: const Text('OK'),
+  ),
+  ],
+  ),
+  );
+}
+}
 }
