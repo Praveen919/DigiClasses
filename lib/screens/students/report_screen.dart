@@ -1,5 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:testing_app/screens/config.dart';
+import 'package:testing_app/screens/students/help_screen.dart';
 
+// User model and AuthProvider
+class User {
+  final String id;
+
+  User({required this.id});
+}
+
+class AuthProvider with ChangeNotifier {
+  User? _currentUser;
+
+  User? get currentUser => _currentUser;
+
+  void login(String userId) {
+    _currentUser = User(id: userId);
+    notifyListeners();
+  }
+
+  void logout() {
+    _currentUser = null;
+    notifyListeners();
+  }
+
+  static AuthProvider of(BuildContext context) {
+    return Provider.of<AuthProvider>(context, listen: false);
+  }
+}
+
+// ReportScreen to show report options
 class ReportScreen extends StatelessWidget {
   const ReportScreen({super.key});
 
@@ -14,27 +47,16 @@ class ReportScreen extends StatelessWidget {
           ListTile(
             title: const Text('View My Detailed Report'),
             onTap: () {
+              String studentId = AuthProvider.of(context).currentUser?.id ?? '';
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ViewDetailReportScreen(
-                    report: StudentReport(
-                      studentName: 'John Doe',
-                      rollNumber: '12345',
-                      classSection: '10-A',
-                      academicPerformance: [],
-                      totalClassesHeld: 0,
-                      totalClassesAttended: 0,
-                      detailedAttendance: [],
-                      achievements: [],
-                      teacherComments: '',
-                    ),
-                  ),
+                  builder: (context) => ViewDetailReportScreen(studentId: studentId),
                 ),
               );
             },
           ),
-          ListTile(
+          /*ListTile(
             title: const Text('View My Card Report'),
             onTap: () {
               Navigator.push(
@@ -44,7 +66,7 @@ class ReportScreen extends StatelessWidget {
                 ),
               );
             },
-          ),
+          ),*/
           ListTile(
             title: const Text('View My Attendance Report'),
             onTap: () {
@@ -62,13 +84,62 @@ class ReportScreen extends StatelessWidget {
   }
 }
 
-class ViewDetailReportScreen extends StatelessWidget {
-  final StudentReport report;
+// View Detail Report Screen
+class ViewDetailReportScreen extends StatefulWidget {
+  final String studentId;
 
-  const ViewDetailReportScreen({required this.report});
+  const ViewDetailReportScreen({required this.studentId});
+
+  @override
+  _ViewDetailReportScreenState createState() => _ViewDetailReportScreenState();
+}
+
+class _ViewDetailReportScreenState extends State<ViewDetailReportScreen> {
+  StudentReport? _report;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStudentReport();
+  }
+
+  Future<void> fetchStudentReport() async {
+    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/students/${widget.studentId}'));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _report = StudentReport.fromJson(json.decode(response.body));
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      // Optionally show an error message
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('My Detailed Report'),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_report == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('My Detailed Report'),
+        ),
+        body: const Center(child: Text('No report available.')),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Detailed Report'),
@@ -83,68 +154,20 @@ class ViewDetailReportScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8.0),
-            Text('Name: ${report.studentName}'),
-            Text('Roll Number: ${report.rollNumber}'),
-            Text('Class/Section: ${report.classSection}'),
-            const SizedBox(height: 16.0),
+            Text('Name: ${_report!.studentName}'),
+            Text('Standard: ${_report!.classSection}'),
+            Text('Batch: ${_report!.classBatch}'),
+            Text('Course: ${_report!.courseName}'),
+            Text('Join Date: ${_report!.joinDate}'),
 
-            Text(
-              'Academic Performance',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8.0),
-            for (var subject in report.academicPerformance)
-              ListTile(
-                title: Text(subject['name'] ?? 'Unknown'),
-                trailing: Text('Grade: ${subject['grade'] ?? 'N/A'}'),
-              ),
-            const SizedBox(height: 16.0),
-
-            Text(
-              'Attendance Record',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8.0),
-            Text('Total Classes Held: ${report.totalClassesHeld}'),
-            Text('Total Classes Attended: ${report.totalClassesAttended}'),
-            const SizedBox(height: 8.0),
-            for (var attendance in report.detailedAttendance)
-              ListTile(
-                title: Text(attendance['date'] ?? 'Unknown'),
-                subtitle: Text('Status: ${attendance['status'] ?? 'N/A'}'),
-              ),
-            const SizedBox(height: 16.0),
-
-            Text(
-              'Achievements',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8.0),
-            for (var achievement in report.achievements)
-              ListTile(
-                title: Text(achievement),
-              ),
-            const SizedBox(height: 16.0),
-
-            Text(
-              'Teacher\'s Comments',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8.0),
-            Text(report.teacherComments),
-
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: () {
-                // Handle download or export
-              },
-              child: const Text('Download Report'),
-            ),
             const SizedBox(height: 16.0),
 
             TextButton(
               onPressed: () {
-                // Navigate to contact or help screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HelpScreen()), // Navigate to your existing HelpScreen
+                );
               },
               child: const Text('Need Help? Contact Support'),
             ),
@@ -155,35 +178,35 @@ class ViewDetailReportScreen extends StatelessWidget {
   }
 }
 
+// Student Report Model
 class StudentReport {
   final String studentName;
-  final String rollNumber;
   final String classSection;
-  final List<Map<String, String>> academicPerformance;
-  final int totalClassesHeld;
-  final int totalClassesAttended;
-  final List<Map<String, String>> detailedAttendance;
-  final List<String> achievements;
-  final String teacherComments;
+  final String classBatch;
+  final String courseName;
+  final String joinDate;
 
   StudentReport({
     required this.studentName,
-    required this.rollNumber,
     required this.classSection,
-    required this.academicPerformance,
-    required this.totalClassesHeld,
-    required this.totalClassesAttended,
-    required this.detailedAttendance,
-    required this.achievements,
-    required this.teacherComments,
+    required this.classBatch,
+    required this.courseName,
+    required this.joinDate,
   });
+
+  factory StudentReport.fromJson(Map<String, dynamic> json) {
+    return StudentReport(
+      studentName: json['studentName'],
+      classSection: json['classSection'],
+      classBatch: json['classBatch'],
+      courseName: json['courseName'],
+      joinDate: json['joinDate'],
+    );
+  }
 }
 
 
-
-
-
-class ViewMyCardReport extends StatelessWidget {
+/*class ViewMyCardReport extends StatelessWidget {
   const ViewMyCardReport({super.key});
 
   // Define the card report data as a static constant
@@ -288,120 +311,113 @@ class StudentCardReport {
     required this.comments,
   });
 }
-
+*/
 
 class ViewMyAttendanceReport extends StatelessWidget {
   const ViewMyAttendanceReport({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final attendanceReport = StudentAttendanceReport(
-      studentName: 'John Doe',
-      rollNumber: '12345',
-      classSection: '10-A',
-      totalClassesHeld: 100,
-      totalClassesAttended: 90,
-      attendanceRecords: [
-        {'date': '01-09-2024', 'status': 'Present'},
-        {'date': '02-09-2024', 'status': 'Absent'},
-        {'date': '03-09-2024', 'status': 'Present'},
-      ],
-      comments: 'John has maintained good attendance overall but missed a few classes.',
-    );
+    // Assuming you have access to the student ID from the AuthProvider
+    final studentId = AuthProvider.of(context).currentUser?.id ?? '';
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Attendance Report'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Student Information',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8.0),
-            Text('Name: ${attendanceReport.studentName}'),
-            Text('Roll Number: ${attendanceReport.rollNumber}'),
-            Text('Class/Section: ${attendanceReport.classSection}'),
-            const SizedBox(height: 16.0),
+      body: FutureBuilder<List<StudentAttendanceRecord>>(
+        future: fetchAttendanceReport(studentId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            Text(
-              'Attendance Summary',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8.0),
-            Text('Total Classes Held: ${attendanceReport.totalClassesHeld}'),
-            Text('Total Classes Attended: ${attendanceReport.totalClassesAttended}'),
-            Text('Total Absences: ${attendanceReport.totalClassesHeld - attendanceReport.totalClassesAttended}'),
-            const SizedBox(height: 16.0),
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
 
-            Text(
-              'Detailed Attendance Records',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8.0),
-            Expanded(
-              child: ListView.builder(
-                itemCount: attendanceReport.attendanceRecords.length,
-                itemBuilder: (context, index) {
-                  final record = attendanceReport.attendanceRecords[index];
-                  return ListTile(
-                    title: Text(record['date'] ?? 'Unknown Date'),
-                    trailing: Text('Status: ${record['status'] ?? 'N/A'}'),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16.0),
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No attendance records available.'));
+          }
 
-            Text(
-              'Comments',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8.0),
-            Text(attendanceReport.comments),
+          final attendanceRecords = snapshot.data!;
 
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: () {
-                // Handle download or export
-              },
-              child: const Text('Download Report'),
-            ),
-            const SizedBox(height: 16.0),
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Attendance Summary',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8.0),
+                Text('Total Classes Held: ${attendanceRecords.length}'),
+                Text('Total Classes Attended: ${attendanceRecords.where((record) => record.status == 'Present').length}'),
+                Text('Total Absences: ${attendanceRecords.where((record) => record.status == 'Absent').length}'),
+                const SizedBox(height: 16.0),
 
-            TextButton(
-              onPressed: () {
-                // Navigate to contact or help screen
-              },
-              child: const Text('Need Help? Contact Support'),
+                Text(
+                  'Detailed Attendance Records',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8.0),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: attendanceRecords.length,
+                    itemBuilder: (context, index) {
+                      final record = attendanceRecords[index];
+                      return ListTile(
+                        title: Text(record.date),
+                        trailing: Text('Status: ${record.status}'),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const HelpScreen()),
+                    );
+                  },
+                  child: const Text('Need Help? Contact Support'),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
+
+  Future<List<StudentAttendanceRecord>> fetchAttendanceReport(String studentId) async {
+    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/attendance/student-attendance/$studentId'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonResponse = json.decode(response.body);
+      return jsonResponse.map((data) => StudentAttendanceRecord.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to load attendance data');
+    }
+  }
 }
 
-class StudentAttendanceReport {
-  final String studentName;
-  final String rollNumber;
-  final String classSection;
-  final int totalClassesHeld;
-  final int totalClassesAttended;
-  final List<Map<String, String>> attendanceRecords;
-  final String comments;
+class StudentAttendanceRecord {
+  final String date;
+  final String status;
 
-  StudentAttendanceReport({
-    required this.studentName,
-    required this.rollNumber,
-    required this.classSection,
-    required this.totalClassesHeld,
-    required this.totalClassesAttended,
-    required this.attendanceRecords,
-    required this.comments,
+  StudentAttendanceRecord({
+    required this.date,
+    required this.status,
   });
+
+  factory StudentAttendanceRecord.fromJson(Map<String, dynamic> json) {
+    return StudentAttendanceRecord(
+      date: json['date'],
+      status: json['status'],
+    );
+  }
 }
