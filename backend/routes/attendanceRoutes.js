@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Student = require('../models/studentModel');
 const ClassBatch = require('../models/classBatchModel');
-const Attendance = require('../models/attendanceModel'); // Assuming you have an attendance model
+const Attendance = require('../models/attendanceModel');
 
 // Route to get all class batches
 router.get('/class-batch', async (req, res) => {
@@ -14,7 +14,26 @@ router.get('/class-batch', async (req, res) => {
   }
 });
 
-// Route to get attendance data by class batch and date
+// Route for students to get their attendance data
+router.get('/student-attendance/:studentId', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const attendanceRecords = await Attendance.find({ student: studentId }).populate('classBatch');
+
+    // Transform data if necessary
+    const response = attendanceRecords.map(record => ({
+      date: record.date.toISOString().split('T')[0], // Format the date as needed
+      status: record.status,
+      classBatch: record.classBatch.name // Assuming classBatch has a name field
+    }));
+
+    res.json(response);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route to get attendance data for a specific class batch and date (Admin/Teacher use)
 router.post('/attendance-data', async (req, res) => {
   try {
     const { classBatchId, date } = req.body;
@@ -25,7 +44,7 @@ router.post('/attendance-data', async (req, res) => {
   }
 });
 
-// Route to update attendance
+// Route to update attendance (Admin/Teacher use)
 router.post('/update-attendance', async (req, res) => {
   try {
     const { attendanceId, status } = req.body;
@@ -37,25 +56,6 @@ router.post('/update-attendance', async (req, res) => {
     } else {
       res.status(404).json({ message: 'Attendance record not found' });
     }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Route to get attendance percentage for a student
-router.get('/attendance-percentage/:studentId', async (req, res) => {
-  try {
-    const { studentId } = req.params;
-
-    // Fetch all attendance records for the student
-    const attendanceRecords = await Attendance.find({ studentId });
-
-    const totalClasses = attendanceRecords.length;
-    const attendedClasses = attendanceRecords.filter(record => record.status === 'present').length;
-
-    const attendancePercentage = totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0;
-
-    res.json({ attendancePercentage });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
