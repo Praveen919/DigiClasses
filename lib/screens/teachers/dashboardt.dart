@@ -463,7 +463,7 @@ class SidePanel extends StatelessWidget {
                   );
                 },
               ),
-              ListTile(
+            /*  ListTile(
                 leading: const Icon(Icons.score_outlined),
                 title: const Text('Send Exam Marks Message'),
                 onTap: () {
@@ -475,7 +475,7 @@ class SidePanel extends StatelessWidget {
                         const MessagingT(option: 'examMarks')),
                   );
                 },
-              ),
+              ), */
               ListTile(
                 leading: const Icon(Icons.person_remove_alt_1_outlined),
                 title: const Text('Send Absent Student Attendance Message'),
