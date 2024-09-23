@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // For formatting dates
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:testing_app/screens/config.dart';
+
 
 class ReportT extends StatefulWidget {
   final String option;
@@ -23,212 +27,18 @@ class _ReportScreenState extends State<ReportT> {
 
   Widget _buildContent() {
     switch (widget.option) {
-      case 'studentInquiry':
-        return const StudentInquiryReportScreen();
       case 'studentDetail':
         return const StudentDetailReportScreen();
       case 'studentCard':
         return const StudentCardReportScreen();
       case 'studentAttendance':
         return const StudentAttendanceReportScreen();
-      case 'pendingFee':
-        return const PendingFeeReportScreen();
-      case 'feeStatus':
-        return const FeeStatusReportScreen();
-      case 'feeCollection':
-        return const FeeCollectionScreen();
-      case 'expense':
-        return const ExpenseReportScreen();
-      case 'income':
-        return const IncomeReportScreen();
-      case 'profitLoss':
-        return const ProfitLossReportScreen();
-      case 'studentInquiryAnalysis':
-        return const StudentInquiryAnalysisReportScreen();
-      case 'feeAnalysis':
-        return const FeeAnalysisReportScreen();
-      case 'appAccessRights':
-        return const AppAccessRightsScreen();
       default:
         return const Center(child: Text('Unknown Option'));
     }
   }
 }
 
-// Below are the placeholder widgets for each report screen.
-// Replace these with your actual implementation.
-
-class StudentInquiryReportScreen extends StatefulWidget {
-  const StudentInquiryReportScreen({super.key});
-
-  @override
-  _StudentInquiryReportScreenState createState() =>
-      _StudentInquiryReportScreenState();
-}
-
-class _StudentInquiryReportScreenState
-    extends State<StudentInquiryReportScreen> {
-  DateTime? fromDate;
-  DateTime? toDate;
-  bool isSolved1 = false;
-  bool isSolved2 = false;
-
-  // Method to select a date
-  Future<void> _selectDate(BuildContext context, DateTime? initialDate,
-      Function(DateTime) onDateSelected) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: initialDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null && picked != initialDate) {
-      onDateSelected(picked);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Student Inquiry Report'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              // Handle settings action
-            },
-          ),
-        ],
-      ),
-      drawer: const Drawer(), // Add your drawer here
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Search',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDate(context, fromDate, (date) {
-                      setState(() {
-                        fromDate = date;
-                      });
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        fromDate != null
-                            ? DateFormat.yMMMd().format(fromDate!)
-                            : 'From Date',
-                        style: const TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDate(context, toDate, (date) {
-                      setState(() {
-                        toDate = date;
-                      });
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        toDate != null
-                            ? DateFormat.yMMMd().format(toDate!)
-                            : 'To Date',
-                        style: const TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handle Get Data action
-                  },
-                  child: const Text('Get Data'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView(
-                children: [
-                  ListTile(
-                    title: const Text(
-                        'Student Name: XXXXXXX\nStandard: XX\nInquiry Date: XX/XX/XXXX\nInquiry Source: XXXXXXXX'),
-                    trailing: IconButton(
-                      icon: Icon(
-                        isSolved1 ? Icons.check_circle : Icons.cancel,
-                        color: isSolved1 ? Colors.green : Colors.red,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          isSolved1 = !isSolved1;
-                        });
-                      },
-                    ),
-                    subtitle: Text(isSolved1 ? 'Solved' : 'Unsolved'),
-                  ),
-                  const Divider(),
-                  ListTile(
-                    title: const Text(
-                        'Student Name: XXXXXXX\nStandard: XX\nInquiry Date: XX/XX/XXXX\nInquiry Source: XXXXXXXX'),
-                    trailing: IconButton(
-                      icon: Icon(
-                        isSolved2 ? Icons.check_circle : Icons.cancel,
-                        color: isSolved2 ? Colors.green : Colors.red,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          isSolved2 = !isSolved2;
-                        });
-                      },
-                    ),
-                    subtitle: Text(isSolved2 ? 'Solved' : 'Unsolved'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Handle Export action
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Button color
-              ),
-              child: const Text('Export'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class StudentDetailReportScreen extends StatefulWidget {
   const StudentDetailReportScreen({super.key});
@@ -241,6 +51,29 @@ class StudentDetailReportScreen extends StatefulWidget {
 class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
   DateTime? fromDate;
   DateTime? toDate;
+  List<dynamic> students = []; // List to hold student data
+  List<dynamic> filteredStudents = []; // Filtered list to be displayed
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStudents(); // Fetch data from the API on screen load
+  }
+
+  Future<void> fetchStudents() async {
+    final response =
+    await http.get(Uri.parse('${AppConfig.baseUrl}/api/student/students'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      setState(() {
+        students = data;
+        filteredStudents = data; // Initially, show all students
+      });
+    } else {
+      throw Exception('Failed to load students');
+    }
+  }
 
   // Method to select a date
   Future<void> _selectDate(BuildContext context, DateTime? initialDate,
@@ -256,29 +89,166 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
     }
   }
 
-  void _editStudentDetail() {
-    // Handle edit action
+  // Filter students by date and search query
+  void _filterStudents() {
+    setState(() {
+      filteredStudents = students.where((student) {
+        bool matchesSearchQuery =
+        student['name'].toLowerCase().contains(searchQuery.toLowerCase());
+
+        bool matchesFromDate = fromDate == null ||
+            DateTime.parse(student['joinDate']).isAfter(fromDate!);
+
+        bool matchesToDate = toDate == null ||
+            DateTime.parse(student['joinDate']).isBefore(toDate!);
+
+        return matchesSearchQuery && matchesFromDate && matchesToDate;
+      }).toList();
+    });
   }
 
-  void _deleteStudentDetail() {
-    // Handle delete action
+  Future<void> _editStudentDetail(
+      int studentId, Map<String, dynamic> updatedData) async {
+    final response = await http.put(
+      Uri.parse('${AppConfig.baseUrl}/api/student/students/$studentId'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(updatedData),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        // Update the local students list with the new data
+        final index =
+        students.indexWhere((student) => student['id'] == studentId);
+        if (index != -1) {
+          students[index] = updatedData;
+          _filterStudents(); // Re-filter the list with updated data
+        }
+      });
+    } else {
+      throw Exception('Failed to update student');
+    }
+  }
+
+  Future<void> _deleteStudentDetail(int studentId) async {
+    final response = await http
+        .delete(Uri.parse('${AppConfig.baseUrl}/api/student/students/$studentId'));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        students.removeWhere((student) => student['id'] == studentId);
+        _filterStudents(); // Re-filter the list after deletion
+      });
+    } else {
+      throw Exception('Failed to delete student');
+    }
+  }
+
+  void _showEditDialog(dynamic student) {
+    TextEditingController nameController =
+    TextEditingController(text: student['name']);
+    TextEditingController standardController =
+    TextEditingController(text: student['standard']);
+    TextEditingController courseController =
+    TextEditingController(text: student['course']);
+    TextEditingController batchController =
+    TextEditingController(text: student['batch']);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Student'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Student Name'),
+              ),
+              TextField(
+                controller: standardController,
+                decoration: InputDecoration(labelText: 'Standard'),
+              ),
+              TextField(
+                controller: courseController,
+                decoration: InputDecoration(labelText: 'Course'),
+              ),
+              TextField(
+                controller: batchController,
+                decoration: InputDecoration(labelText: 'Batch'),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                final updatedData = {
+                  'id': student['id'],
+                  'name': nameController.text,
+                  'standard': standardController.text,
+                  'course': courseController.text,
+                  'batch': batchController.text,
+                  'joinDate': student['joinDate'],
+                };
+                _editStudentDetail(student['id'], updatedData);
+                Navigator.of(context).pop();
+              },
+              child: Text('Save'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _viewReport() {
+    // You can customize this report view further
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Filtered Student Report'),
+          content: Container(
+            width: double.maxFinite,
+            child: ListView.builder(
+              itemCount: filteredStudents.length,
+              itemBuilder: (context, index) {
+                final student = filteredStudents[index];
+                return ListTile(
+                  title: Text(
+                    'Student Name: ${student['name']}\nStandard: ${student['standard']}\nCourse: ${student['course']}\nBatch: ${student['batch']}\nJoin Date: ${student['joinDate']}',
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Student Detail Report'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              // Handle settings action
-            },
-          ),
-        ],
       ),
-      drawer: const Drawer(), // Add your drawer here
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -290,6 +260,12 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+                _filterStudents(); // Filter students based on the search query
+              },
             ),
             const SizedBox(height: 16),
             Row(
@@ -300,6 +276,7 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                       setState(() {
                         fromDate = date;
                       });
+                      _filterStudents(); // Apply filter after selecting the from date
                     }),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -324,6 +301,7 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                       setState(() {
                         toDate = date;
                       });
+                      _filterStudents(); // Apply filter after selecting the to date
                     }),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -343,82 +321,46 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: () {
-                    // Handle Get Data action
-                  },
+                  onPressed:
+                  _filterStudents, // Filter data based on selected dates and search query
                   child: const Text('Get Data'),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView(
-                children: [
-                  ListTile(
-                    title: const Text(
-                        'Student Name: XXXXXXX\nStandard: XX\nCourse Name: XXXXXXX\nClass/Batch: XXXXXXX\nJoin Date: XX/XX/XXXX'),
+              child: ListView.builder(
+                itemCount: filteredStudents.length,
+                itemBuilder: (context, index) {
+                  final student = filteredStudents[index];
+                  return ListTile(
+                    title: Text(student['name']),
+                    subtitle: Text(
+                        'Standard: ${student['standard']} | Course: ${student['course']} | Batch: ${student['batch']}'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: _editStudentDetail,
+                          icon: Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () {
+                            _showEditDialog(student);
+                          },
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: _deleteStudentDetail,
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            _deleteStudentDetail(student['id']);
+                          },
                         ),
                       ],
                     ),
-                  ),
-                  const Divider(),
-                  ListTile(
-                    title: const Text(
-                        'Student Name: XXXXXXX\nStandard: XX\nCourse Name: XXXXXXX\nClass/Batch: XXXXXXX\nJoin Date: XX/XX/XXXX'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: _editStudentDetail,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: _deleteStudentDetail,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(),
-                  ListTile(
-                    title: const Text(
-                        'Student Name: XXXXXXX\nStandard: XX\nCourse Name: XXXXXXX\nClass/Batch: XXXXXXX\nJoin Date: XX/XX/XXXX'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: _editStudentDetail,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: _deleteStudentDetail,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
-            const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                // Handle Export action
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Button color
-              ),
-              child: const Text('Export'),
+              onPressed: _viewReport, // View the filtered student report
+              child: Text('View Report'),
             ),
           ],
         ),
@@ -431,29 +373,74 @@ class StudentCardReportScreen extends StatefulWidget {
   const StudentCardReportScreen({super.key});
 
   @override
-  _StudentCardReportScreenState createState() =>
-      _StudentCardReportScreenState();
+  _StudentCardReportScreenState createState() => _StudentCardReportScreenState();
 }
 
 class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
-  DateTime? _fromDate;
-  DateTime? _toDate;
+  String? _selectedClassBatch;
+  List<dynamic> _classBatches = [];
+  List<dynamic> _studentReports = [];
+  List<dynamic> _filteredReports = [];
+  final TextEditingController _searchController = TextEditingController();
 
-  Future<void> _selectDate(BuildContext context, bool isFromDate) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != (isFromDate ? _fromDate : _toDate)) {
+  @override
+  void initState() {
+    super.initState();
+    _fetchClassBatches();
+  }
+
+  Future<void> _fetchClassBatches() async {
+    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch/classbatch'));
+    if (response.statusCode == 200) {
       setState(() {
-        if (isFromDate) {
-          _fromDate = picked;
-        } else {
-          _toDate = picked;
-        }
+        _classBatches = json.decode(response.body);
       });
+    } else {
+      // Handle error
+    }
+  }
+
+  Future<void> _fetchStudentReports() async {
+    if (_selectedClassBatch != null) {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/cardReport/card-report${_selectedClassBatch}'));
+      if (response.statusCode == 200) {
+        setState(() {
+          _studentReports = json.decode(response.body);
+          _filteredReports = _studentReports; // Initialize filtered reports
+        });
+      } else {
+        // Handle error
+      }
+    }
+  }
+
+  void _searchStudents(String query) {
+    final filtered = _studentReports.where((student) {
+      final name = '${student['firstName']} ${student['lastName']}';
+      return name.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+
+    setState(() {
+      _filteredReports = filtered;
+    });
+  }
+
+  void _editStudent(String studentId) {
+    // Implement your edit functionality here
+    // Example: Navigate to Edit Student screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EditStudentScreen(studentId: studentId)),
+    );
+  }
+
+  Future<void> _deleteStudent(String studentId) async {
+    final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/api/student/students/$studentId'));
+    if (response.statusCode == 200) {
+      // Refresh the reports after deletion
+      _fetchStudentReports();
+    } else {
+      // Handle error
     }
   }
 
@@ -468,78 +455,56 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Class Batch Dropdown
+            DropdownButton<String>(
+              value: _selectedClassBatch,
+              hint: const Text('Select Class Batch'),
+              isExpanded: true,
+              items: _classBatches.map((batch) {
+                return DropdownMenuItem<String>(
+                  value: batch['classBatchName'],
+                  child: Text(batch['classBatchName']),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedClassBatch = value;
+                  _studentReports.clear(); // Clear previous reports
+                  _filteredReports.clear();
+                });
+                _fetchStudentReports();
+              },
+            ),
+            const SizedBox(height: 16.0),
+
             // Search Bar
             TextField(
+              controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search',
+                hintText: 'Search by name',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: () {
-                    // Implement search functionality here
+                    _searchStudents(_searchController.text);
                   },
                 ),
               ),
             ),
             const SizedBox(height: 16.0),
 
-            // From Date and To Date
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectDate(context, true),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'From Date',
-                        border: OutlineInputBorder(),
-                      ),
-                      child: Text(
-                        _fromDate != null
-                            ? "${_fromDate!.toLocal()}".split(' ')[0]
-                            : 'Select Date',
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16.0),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectDate(context, false),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'To Date',
-                        border: OutlineInputBorder(),
-                      ),
-                      child: Text(
-                        _toDate != null
-                            ? "${_toDate!.toLocal()}".split(' ')[0]
-                            : 'Select Date',
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16.0),
-
             // Student Card List
             Expanded(
               child: ListView.builder(
-                itemCount: 2, // Replace with actual number of students
+                itemCount: _filteredReports.length,
                 itemBuilder: (context, index) {
-                  return const StudentCard(
-                    // Pass student data here
+                  final student = _filteredReports[index];
+                  return StudentCard(
+                    student: student,
+                    onEdit: _editStudent,
+                    onDelete: _deleteStudent,
                   );
                 },
               ),
-            ),
-
-            // Export Button
-            ElevatedButton(
-              onPressed: () {
-                // Implement export functionality here
-              },
-              child: const Text('Export'),
             ),
           ],
         ),
@@ -550,9 +515,16 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
 
 // Custom widget for each student card
 class StudentCard extends StatelessWidget {
-  const StudentCard({super.key});
+  final dynamic student;
+  final Function(String) onEdit;
+  final Function(String) onDelete;
 
-  // Add necessary properties for student data
+  const StudentCard({
+    required this.student,
+    required this.onEdit,
+    required this.onDelete,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -562,33 +534,51 @@ class StudentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Student Name, Standard, Batch, etc.
-            const Text('Student Name: XXXXXX'),
-            const Text('Standard: XX'),
-            const Text('Batch: XX'),
-            const Text('Attendance: XX%'),
-            const Text('Join Date: XX/XX/XX'),
+            Text('Student Name: ${student['firstName']} ${student['lastName']}'),
+            Text('Standard: ${student['standard']}'),
+            Text('Class Batch: ${student['classBatch']}'),
+            Text('Join Date: ${student['joinDate']?.split('T')[0]}'),
+            Text('Attendance: ${_calculateAttendance(student['attendanceRecords'])}%'),
 
             // Edit and Delete buttons
             Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
                   icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    // Implement edit functionality
-                  },
+                  onPressed: () => onEdit(student['_id']),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    // Implement delete functionality
-                  },
+                  onPressed: () => onDelete(student['_id']),
                 ),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  double _calculateAttendance(List<dynamic> attendanceRecords) {
+    if (attendanceRecords.isEmpty) return 0.0;
+    int presentCount = attendanceRecords.where((record) => record['status'] == 'Present').length;
+    return (presentCount / attendanceRecords.length) * 100;
+  }
+}
+
+// Edit Student Screen Placeholder
+class EditStudentScreen extends StatelessWidget {
+  final String studentId;
+
+  const EditStudentScreen({required this.studentId, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Implement your Edit Student UI here
+    return Scaffold(
+      appBar: AppBar(title: const Text('Edit Student')),
+      body: Center(child: Text('Edit Student ID: $studentId')),
     );
   }
 }
@@ -603,12 +593,51 @@ class StudentAttendanceReportScreen extends StatefulWidget {
 
 class _StudentAttendanceReportScreenState
     extends State<StudentAttendanceReportScreen> {
-  DateTime? fromDate;
-  DateTime? toDate;
+  DateTime? selectedDate;
+  List<Map<String, dynamic>> allAttendanceData = [];
+  List<Map<String, dynamic>> filteredAttendanceData = [];
+  TextEditingController searchController = TextEditingController();
+
+  // Method to fetch attendance data from API
+  Future<void> _fetchAttendance(
+      {String? searchQuery, DateTime? selectedDate}) async {
+    try {
+      String apiUrl = '${AppConfig.baseUrl}/api/attendance';
+
+      // Build query parameters based on inputs (search query, date)
+      Map<String, String> queryParams = {};
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        queryParams['name'] = searchQuery;
+      }
+      if (selectedDate != null) {
+        queryParams['date'] =
+            selectedDate.toIso8601String(); // Convert to ISO string
+      }
+
+      Uri uri = Uri.parse(apiUrl).replace(queryParameters: queryParams);
+
+      // Make the HTTP GET request
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        List<Map<String, dynamic>> fetchedData =
+        List<Map<String, dynamic>>.from(json.decode(response.body));
+
+        setState(() {
+          allAttendanceData = fetchedData;
+          filteredAttendanceData = fetchedData; // Initially display all data
+        });
+      } else {
+        throw Exception('Failed to load attendance data');
+      }
+    } catch (e) {
+      print('Error fetching attendance data: $e');
+      // Handle error (e.g., show a snackbar or message to user)
+    }
+  }
 
   // Method to select a date
-  Future<void> _selectDate(BuildContext context, DateTime? initialDate,
-      Function(DateTime) onDateSelected) async {
+  Future<void> _selectDate(BuildContext context, DateTime? initialDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -616,23 +645,43 @@ class _StudentAttendanceReportScreenState
       lastDate: DateTime(2100),
     );
     if (picked != null && picked != initialDate) {
-      onDateSelected(picked);
+      setState(() {
+        selectedDate = picked;
+      });
     }
+  }
+
+  // Method to handle search
+  void _handleSearch(String searchQuery) {
+    setState(() {
+      filteredAttendanceData = allAttendanceData.where((attendance) {
+        final name = attendance['name'].toLowerCase();
+        return name.contains(searchQuery.toLowerCase());
+      }).toList();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAttendance(); // Fetch all data when screen loads
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Student Attendance Report'),
       ),
-      drawer: const Drawer(), // Add your drawer here
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextFormField(
+              controller: searchController,
+              onChanged: _handleSearch,
               decoration: const InputDecoration(
                 labelText: 'Search',
                 prefixIcon: Icon(Icons.search),
@@ -644,11 +693,7 @@ class _StudentAttendanceReportScreenState
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => _selectDate(context, fromDate, (date) {
-                      setState(() {
-                        fromDate = date;
-                      });
-                    }),
+                    onTap: () => _selectDate(context, selectedDate),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 16, horizontal: 12),
@@ -657,33 +702,9 @@ class _StudentAttendanceReportScreenState
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        fromDate != null
-                            ? DateFormat.yMMMd().format(fromDate!)
-                            : 'From Date',
-                        style: const TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDate(context, toDate, (date) {
-                      setState(() {
-                        toDate = date;
-                      });
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        toDate != null
-                            ? DateFormat.yMMMd().format(toDate!)
-                            : 'To Date',
+                        selectedDate != null
+                            ? DateFormat.yMMMd().format(selectedDate!)
+                            : 'Select Date',
                         style: const TextStyle(color: Colors.black87),
                       ),
                     ),
@@ -692,9 +713,12 @@ class _StudentAttendanceReportScreenState
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () {
-                    // Handle Get Data action
+                    _fetchAttendance(
+                      searchQuery: searchController.text,
+                      selectedDate: selectedDate,
+                    );
                   },
-                  child: const Text('Get Data'),
+                  child: const Text('View Report'),
                 ),
               ],
             ),
@@ -711,30 +735,21 @@ class _StudentAttendanceReportScreenState
                     DataColumn(label: Text('Attendance')),
                   ],
                   rows: List<DataRow>.generate(
-                    5, // Adjust the number based on your data
+                    filteredAttendanceData.length,
                         (index) => DataRow(
                       cells: [
                         DataCell(Text((index + 1).toString())),
-                        DataCell(Text('Name $index')),
-                        DataCell(Text('STD $index')),
-                        DataCell(Text('Batch $index')),
-                        DataCell(Text('Attendance $index')),
+                        DataCell(Text(filteredAttendanceData[index]['name'])),
+                        DataCell(Text(filteredAttendanceData[index]['std'])),
+                        DataCell(Text(filteredAttendanceData[index]['batch'])),
+                        DataCell(
+                            Text(filteredAttendanceData[index]['attendance'])),
                       ],
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Handle Export action
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Button color
-              ),
-              child: const Text('Export'),
-            ),
           ],
         ),
       ),
@@ -742,476 +757,4 @@ class _StudentAttendanceReportScreenState
   }
 }
 
-class PendingFeeReportScreen extends StatefulWidget {
-  const PendingFeeReportScreen({super.key});
 
-  @override
-  _PendingFeeReportScreenState createState() => _PendingFeeReportScreenState();
-}
-
-class _PendingFeeReportScreenState extends State<PendingFeeReportScreen> {
-  DateTime? fromDate;
-  DateTime? toDate;
-
-  // Method to select a date
-  Future<void> _selectDate(BuildContext context, DateTime? initialDate,
-      Function(DateTime) onDateSelected) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: initialDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null && picked != initialDate) {
-      onDateSelected(picked);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pending Installment Fee Report'),
-      ),
-      drawer: const Drawer(), // Add your drawer here
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Search',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDate(context, fromDate, (date) {
-                      setState(() {
-                        fromDate = date;
-                      });
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        fromDate != null
-                            ? DateFormat.yMMMd().format(fromDate!)
-                            : 'From Date',
-                        style: const TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDate(context, toDate, (date) {
-                      setState(() {
-                        toDate = date;
-                      });
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        toDate != null
-                            ? DateFormat.yMMMd().format(toDate!)
-                            : 'To Date',
-                        style: const TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handle Get Data action
-                  },
-                  child: const Text('Get Data'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: const [
-                    DataColumn(label: Text('')),
-                    DataColumn(label: Text('Name')),
-                    DataColumn(label: Text('STD')),
-                    DataColumn(label: Text('Batch')),
-                    DataColumn(label: Text('Amt')),
-                  ],
-                  rows: List<DataRow>.generate(
-                    5, // Adjust the number based on your data
-                        (index) => DataRow(
-                      cells: [
-                        DataCell(Text((index + 1).toString())),
-                        DataCell(Text('Name $index')),
-                        DataCell(Text('STD $index')),
-                        DataCell(Text('Batch $index')),
-                        DataCell(Text('Amt $index')),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Handle Export action
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Button color
-              ),
-              child: const Text('Export'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class FeeStatusReportScreen extends StatelessWidget {
-  const FeeStatusReportScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // Variable to hold the selected date
-    DateTime? selectedDate;
-
-    // Function to show the date picker and update the selected date
-    Future<void> selectDate(BuildContext context) async {
-      final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: selectedDate ?? DateTime.now(),
-        firstDate: DateTime(2000),
-        lastDate: DateTime(2101),
-      );
-      if (picked != null && picked != selectedDate) {
-        selectedDate = picked;
-      }
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fee Status Report'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Student Name
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Student Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Standard
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Standard',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Course Type
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Course Type',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Roll No
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Roll No',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Attendance Date
-            GestureDetector(
-              onTap: () => selectDate(context),
-              child: AbsorbPointer(
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Attendance Date',
-                    hintText: selectedDate != null
-                        ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
-                        : 'Select Date',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: const Icon(Icons.calendar_today),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // GR. No
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'GR. No',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Category
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Group
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Group',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 32.0),
-
-            // Search Button
-            ElevatedButton(
-              onPressed: () {
-                // Implement search functionality here
-              },
-              child: const Text('Search'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class FeeCollectionScreen extends StatefulWidget {
-  const FeeCollectionScreen({super.key});
-
-  @override
-  _FeeCollectionReportScreenState createState() =>
-      _FeeCollectionReportScreenState();
-}
-
-class _FeeCollectionReportScreenState extends State<FeeCollectionScreen> {
-  DateTime? fromDate;
-  DateTime? toDate;
-
-  // Method to select a date
-  Future<void> _selectDate(BuildContext context, DateTime? initialDate,
-      Function(DateTime) onDateSelected) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: initialDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null && picked != initialDate) {
-      onDateSelected(picked);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fee Collection Report'),
-      ),
-      drawer: const Drawer(), // Add your drawer here
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Search',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDate(context, fromDate, (date) {
-                      setState(() {
-                        fromDate = date;
-                      });
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        fromDate != null
-                            ? DateFormat.yMMMd().format(fromDate!)
-                            : 'From Date',
-                        style: const TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDate(context, toDate, (date) {
-                      setState(() {
-                        toDate = date;
-                      });
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        toDate != null
-                            ? DateFormat.yMMMd().format(toDate!)
-                            : 'To Date',
-                        style: const TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handle Get Data action
-                  },
-                  child: const Text('Get Data'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: const [
-                    DataColumn(label: Text('')),
-                    DataColumn(label: Text('Name')),
-                    DataColumn(label: Text('STD')),
-                    DataColumn(label: Text('Batch')),
-                    DataColumn(label: Text('Amt')),
-                  ],
-                  rows: List<DataRow>.generate(
-                    5, // Adjust the number based on your data
-                        (index) => DataRow(
-                      cells: [
-                        DataCell(Text((index + 1).toString())),
-                        DataCell(Text('Name $index')),
-                        DataCell(Text('STD $index')),
-                        DataCell(Text('Batch $index')),
-                        DataCell(Text('Amt $index')),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Handle Export action
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Button color
-              ),
-              child: const Text('Export'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ExpenseReportScreen extends StatelessWidget {
-  const ExpenseReportScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Expense Report Screen'));
-  }
-}
-
-class IncomeReportScreen extends StatelessWidget {
-  const IncomeReportScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Income Report Screen'));
-  }
-}
-
-class ProfitLossReportScreen extends StatelessWidget {
-  const ProfitLossReportScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Profit/Loss Report Screen'));
-  }
-}
-
-class StudentInquiryAnalysisReportScreen extends StatelessWidget {
-  const StudentInquiryAnalysisReportScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Student Inquiry Analysis Report Screen'));
-  }
-}
-
-class FeeAnalysisReportScreen extends StatelessWidget {
-  const FeeAnalysisReportScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Fee Analysis Report Screen'));
-  }
-}
-
-class AppAccessRightsScreen extends StatelessWidget {
-  const AppAccessRightsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('App Access Rights Screen'));
-  }
-}
