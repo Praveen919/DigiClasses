@@ -38,6 +38,9 @@ const messageStudentRoutes = require('./routes/messageStudentRoutes');
 const feedbacksRoutes = require('./routes/feedbacksRoutes');
 const studentRightsRoutes = require('./routes/studentRightsRoutes');
 const feeCollectionRoutes = require('./routes/feeCollectionRoutes');
+const messageStudentIdPassRoutes = require('./routes/messageStudentIdPassRoutes');
+const inquiriesStudentRoutes = require('./routes/inquiriesStudentRoutes');
+const absenceMessageRoutes = require ('./routes/absenceMessageRoutes');
 
 // Middleware setup
 app.use(cors()); // Enable CORS if needed
@@ -56,13 +59,10 @@ app.use('/api/password', passwordRoutes);
 app.use('/api/years', yearRoutes);
 app.use('/api/timetable', manageTimeTableRoutes);
 app.use('/api/attendance', attendanceRoutes);
-
 // Use updated/new routes
 app.use('/api/profile-settings', profileSettingRoutes); // Updated route for profile settings
 app.use('/api/expenses', expenseIncomeRoutes);
-app.use('/api/incomes', expenseIncomeRoutes);
 app.use('/api/messageStudent', messageStudentRoutes);
-
 // Use other new routes
 app.use('/api/mcq-exams', mcqExamRoutes);
 app.use('/api/exams', examRoutes); // Ensure this route is correctly defined
@@ -80,7 +80,10 @@ app.use('/api/assignClassBatch', assignClassBatchRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/feedbacks', feedbacksRoutes);
 app.use('/api/assign-rights', studentRightsRoutes);
-app.use('/api/feeCollection', feeCollectionRoutes);
+app.use('./api/feeCollection', feeCollectionRoutes);
+app.use('/api/messageStudentIdPass', messageStudentIdPassRoutes);
+app.use('/api/inquiriesStudent', inquiriesStudentRoutes);
+app.use('/api/absenceMessage', absenceMessageRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
