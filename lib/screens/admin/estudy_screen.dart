@@ -8,13 +8,13 @@ import 'package:testing_app/screens/config.dart';
 class EstudyScreen extends StatelessWidget {
   final String option;
 
-  const EstudyScreen({this.option = 'createStudyMaterial'});
+  const EstudyScreen({super.key, this.option = 'createStudyMaterial'});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('EStudy'),
+        title: const Text('EStudy'),
       ),
       body: _buildContent(),
     );
@@ -29,12 +29,14 @@ class EstudyScreen extends StatelessWidget {
       case 'manageSharedStudyMaterial':
         return ManageSharedStudyMaterialScreen();
       default:
-        return Center(child: Text('Unknown Option'));
+        return const Center(child: Text('Unknown Option'));
     }
   }
 }
 
 class CreateStudyMaterialScreen extends StatefulWidget {
+  const CreateStudyMaterialScreen({super.key});
+
   @override
   _CreateStudyMaterialScreenState createState() =>
       _CreateStudyMaterialScreenState();
@@ -68,7 +70,7 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
 
       if (courseName.isEmpty || standard.isEmpty || subject.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please fill in all required fields.')),
+          const SnackBar(content: Text('Please fill in all required fields.')),
         );
         return;
       }
@@ -88,7 +90,8 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
         final response = await request.send();
         if (response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Study material created successfully')),
+            const SnackBar(
+                content: Text('Study material created successfully')),
           );
           _resetForm();
           Navigator.pop(context, true); // Pass true to indicate success
@@ -124,19 +127,19 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Create Study Material',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField('Course Name *', _courseNameController),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildDropdownField('Standard *', _standardController),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildDropdownField('Subject *', _subjectController),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildFileUploader(),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
@@ -145,17 +148,17 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                       ),
-                      child: Text('SAVE'),
+                      child: const Text('SAVE'),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _resetForm,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.deepPurple,
                       ),
-                      child: Text('RESET'),
+                      child: const Text('RESET'),
                     ),
                   ),
                 ],
@@ -173,12 +176,12 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         TextFormField(
           controller: controller,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             border: OutlineInputBorder(),
           ),
           validator: (value) {
@@ -198,14 +201,14 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             border: OutlineInputBorder(),
           ),
-          items: [
+          items: const [
             DropdownMenuItem(
               value: 'option1',
               child: Text('Option 1'),
@@ -226,7 +229,7 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
             }
             return null;
           },
-          hint: Text('-- Select --'),
+          hint: const Text('-- Select --'),
         ),
       ],
     );
@@ -236,15 +239,16 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Upload File *',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         InkWell(
           onTap: _pickFile,
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 10.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 10.0),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(5.0),
@@ -269,6 +273,8 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
 }
 
 class ManageStudyMaterialScreen extends StatefulWidget {
+  const ManageStudyMaterialScreen({super.key});
+
   @override
   _ManageStudyMaterialScreenState createState() =>
       _ManageStudyMaterialScreenState();
@@ -314,41 +320,41 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
   }
 
   Future<void> _showEditDialog(Map<String, dynamic> material) async {
-    final _formKey = GlobalKey<FormState>();
-    String _courseName = material['courseName'];
-    String _standard = material['standard'];
-    String _subject = material['subject'];
+    final formKey = GlobalKey<FormState>();
+    String courseName = material['courseName'];
+    String standard = material['standard'];
+    String subject = material['subject'];
 
     await showDialog(
       context: context,
       barrierDismissible: false, // Prevent dismissal by tapping outside
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit Study Material'),
+          title: const Text('Edit Study Material'),
           content: SingleChildScrollView(
             child: Form(
-              key: _formKey,
+              key: formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   TextFormField(
-                    initialValue: _courseName,
-                    decoration: InputDecoration(labelText: 'Course Name'),
-                    onChanged: (value) => _courseName = value,
+                    initialValue: courseName,
+                    decoration: const InputDecoration(labelText: 'Course Name'),
+                    onChanged: (value) => courseName = value,
                     validator: (value) =>
                         value!.isEmpty ? 'Please enter course name' : null,
                   ),
                   TextFormField(
-                    initialValue: _standard,
-                    decoration: InputDecoration(labelText: 'Standard'),
-                    onChanged: (value) => _standard = value,
+                    initialValue: standard,
+                    decoration: const InputDecoration(labelText: 'Standard'),
+                    onChanged: (value) => standard = value,
                     validator: (value) =>
                         value!.isEmpty ? 'Please enter standard' : null,
                   ),
                   TextFormField(
-                    initialValue: _subject,
-                    decoration: InputDecoration(labelText: 'Subject'),
-                    onChanged: (value) => _subject = value,
+                    initialValue: subject,
+                    decoration: const InputDecoration(labelText: 'Subject'),
+                    onChanged: (value) => subject = value,
                     validator: (value) =>
                         value!.isEmpty ? 'Please enter subject' : null,
                   ),
@@ -358,24 +364,24 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Save'),
+              child: const Text('Save'),
               onPressed: () async {
-                if (_formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate()) {
                   try {
                     final response = await http.put(
                       Uri.parse(
                           '${AppConfig.baseUrl}/api/study-material/${material['_id']}'),
                       headers: {'Content-Type': 'application/json'},
                       body: json.encode({
-                        'courseName': _courseName,
-                        'standard': _standard,
-                        'subject': _subject,
+                        'courseName': courseName,
+                        'standard': standard,
+                        'subject': subject,
                       }),
                     );
 
@@ -388,7 +394,8 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
                   } catch (e) {
                     print('Error updating study material: $e');
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error updating study material')),
+                      const SnackBar(
+                          content: Text('Error updating study material')),
                     );
                   }
                 }
@@ -422,26 +429,26 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text('Manage Study Materials'),
+        title: const Text('Manage Study Materials'),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh),
             onPressed: _fetchStudyMaterials, // Add a refresh button
           ),
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
+            const TextField(
               decoration: InputDecoration(
                 hintText: 'Search',
                 prefixIcon: Icon(Icons.search),
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Expanded(
               child: ListView.builder(
                 itemCount: _studyMaterials.length,
@@ -460,13 +467,13 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit),
+                          icon: const Icon(Icons.edit),
                           onPressed: () {
                             _showEditDialog(material);
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                           onPressed: () {
                             _deleteStudyMaterial(material['_id']);
                           },
@@ -485,6 +492,8 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
 }
 
 class ManageSharedStudyMaterialScreen extends StatefulWidget {
+  const ManageSharedStudyMaterialScreen({super.key});
+
   @override
   _ManageSharedStudyMaterialScreenState createState() =>
       _ManageSharedStudyMaterialScreenState();
@@ -531,41 +540,41 @@ class _ManageSharedStudyMaterialScreenState
   }
 
   Future<void> _showEditDialog(Map<String, dynamic> material) async {
-    final _formKey = GlobalKey<FormState>();
-    String _courseName = material['courseName'];
-    String _standard = material['standard'];
-    String _subject = material['subject'];
+    final formKey = GlobalKey<FormState>();
+    String courseName = material['courseName'];
+    String standard = material['standard'];
+    String subject = material['subject'];
 
     await showDialog(
       context: context,
       barrierDismissible: false, // Prevent dismissal by tapping outside
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit Study Material'),
+          title: const Text('Edit Study Material'),
           content: SingleChildScrollView(
             child: Form(
-              key: _formKey,
+              key: formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   TextFormField(
-                    initialValue: _courseName,
-                    decoration: InputDecoration(labelText: 'Course Name'),
-                    onChanged: (value) => _courseName = value,
+                    initialValue: courseName,
+                    decoration: const InputDecoration(labelText: 'Course Name'),
+                    onChanged: (value) => courseName = value,
                     validator: (value) =>
                         value!.isEmpty ? 'Please enter course name' : null,
                   ),
                   TextFormField(
-                    initialValue: _standard,
-                    decoration: InputDecoration(labelText: 'Standard'),
-                    onChanged: (value) => _standard = value,
+                    initialValue: standard,
+                    decoration: const InputDecoration(labelText: 'Standard'),
+                    onChanged: (value) => standard = value,
                     validator: (value) =>
                         value!.isEmpty ? 'Please enter standard' : null,
                   ),
                   TextFormField(
-                    initialValue: _subject,
-                    decoration: InputDecoration(labelText: 'Subject'),
-                    onChanged: (value) => _subject = value,
+                    initialValue: subject,
+                    decoration: const InputDecoration(labelText: 'Subject'),
+                    onChanged: (value) => subject = value,
                     validator: (value) =>
                         value!.isEmpty ? 'Please enter subject' : null,
                   ),
@@ -575,24 +584,24 @@ class _ManageSharedStudyMaterialScreenState
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Save'),
+              child: const Text('Save'),
               onPressed: () async {
-                if (_formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate()) {
                   try {
                     final response = await http.put(
                       Uri.parse(
                           '${AppConfig.baseUrl}/api/study-material/${material['_id']}'),
                       headers: {'Content-Type': 'application/json'},
                       body: json.encode({
-                        'courseName': _courseName,
-                        'standard': _standard,
-                        'subject': _subject,
+                        'courseName': courseName,
+                        'standard': standard,
+                        'subject': subject,
                       }),
                     );
 
@@ -605,7 +614,8 @@ class _ManageSharedStudyMaterialScreenState
                   } catch (e) {
                     print('Error updating study material: $e');
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error updating study material')),
+                      const SnackBar(
+                          content: Text('Error updating study material')),
                     );
                   }
                 }
@@ -639,26 +649,26 @@ class _ManageSharedStudyMaterialScreenState
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text('Manage Shared Study Materials'),
+        title: const Text('Manage Shared Study Materials'),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh),
             onPressed: _fetchStudyMaterials, // Add a refresh button
           ),
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
+            const TextField(
               decoration: InputDecoration(
                 hintText: 'Search',
                 prefixIcon: Icon(Icons.search),
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Expanded(
               child: ListView.builder(
                 itemCount: _studyMaterials.length,
@@ -677,13 +687,13 @@ class _ManageSharedStudyMaterialScreenState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit),
+                          icon: const Icon(Icons.edit),
                           onPressed: () {
                             _showEditDialog(material);
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                           onPressed: () {
                             _deleteStudyMaterial(material['_id']);
                           },

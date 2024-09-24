@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:testing_app/screens/config.dart';
 
-
 class StudentScreen extends StatelessWidget {
   const StudentScreen({super.key});
 
@@ -21,7 +20,10 @@ class StudentScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ViewMyAttendanceScreen(classBatchId: '',)),
+                MaterialPageRoute(
+                    builder: (context) => ViewMyAttendanceScreen(
+                          classBatchId: '',
+                        )),
               );
             },
           ),
@@ -30,7 +32,8 @@ class StudentScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ViewSharedDocumentsScreen()),
+                MaterialPageRoute(
+                    builder: (context) => ViewSharedDocumentsScreen()),
               );
             },
           ),
@@ -50,12 +53,10 @@ class StudentScreen extends StatelessWidget {
   }
 }
 
-
-
 class ViewMyAttendanceScreen extends StatefulWidget {
   final String classBatchId; // Pass classBatchId from login or state management
 
-  ViewMyAttendanceScreen({required this.classBatchId});
+  const ViewMyAttendanceScreen({super.key, required this.classBatchId});
 
   @override
   _ViewMyAttendanceScreenState createState() => _ViewMyAttendanceScreenState();
@@ -77,7 +78,8 @@ class _ViewMyAttendanceScreenState extends State<ViewMyAttendanceScreen> {
         Uri.parse('${AppConfig.baseUrl}/api/attendance-data'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'classBatchId': widget.classBatchId, // Use the classBatchId passed to the widget
+          'classBatchId':
+              widget.classBatchId, // Use the classBatchId passed to the widget
           'date': DateTime.now().toIso8601String(), // Adjust date as needed
         }),
       );
@@ -87,7 +89,8 @@ class _ViewMyAttendanceScreenState extends State<ViewMyAttendanceScreen> {
         setState(() {
           attendanceData = data.map((item) {
             return {
-              'subject': item['classBatchName'], // Adjust based on your response structure
+              'subject': item[
+                  'classBatchName'], // Adjust based on your response structure
               'date': item['date'], // Adjust based on your response structure
               'status': item['status'],
             };
@@ -118,58 +121,65 @@ class _ViewMyAttendanceScreenState extends State<ViewMyAttendanceScreen> {
         ],
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Attendance Summary
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Attendance Summary',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Attendance Summary
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Attendance Summary',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8.0),
+                          Text('Total Classes: ${attendanceData.length}'),
+                          Text(
+                              'Classes Attended: ${attendanceData.where((a) => a['status'] == 'Present').length}'),
+                          Text(
+                              'Classes Missed: ${attendanceData.where((a) => a['status'] == 'Absent').length}'),
+                          Text(
+                              'Attendance Percentage: ${((attendanceData.where((a) => a['status'] == 'Present').length / attendanceData.length) * 100).toStringAsFixed(2)}%'),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8.0),
-                    Text('Total Classes: ${attendanceData.length}'),
-                    Text('Classes Attended: ${attendanceData.where((a) => a['status'] == 'Present').length}'),
-                    Text('Classes Missed: ${attendanceData.where((a) => a['status'] == 'Absent').length}'),
-                    Text('Attendance Percentage: ${((attendanceData.where((a) => a['status'] == 'Present').length / attendanceData.length) * 100).toStringAsFixed(2)}%'),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16.0),
+                  ),
+                  const SizedBox(height: 16.0),
 
-            // Detailed Attendance Data
-            Expanded(
-              child: ListView.builder(
-                itemCount: attendanceData.length,
-                itemBuilder: (context, index) {
-                  final attendance = attendanceData[index];
-                  return ListTile(
-                    title: Text(attendance['subject'] ?? 'No Subject'),
-                    subtitle: Text('Date: ${attendance['date']}'),
-                    trailing: Text(attendance['status'] ?? 'Unknown'),
-                  );
-                },
+                  // Detailed Attendance Data
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: attendanceData.length,
+                      itemBuilder: (context, index) {
+                        final attendance = attendanceData[index];
+                        return ListTile(
+                          title: Text(attendance['subject'] ?? 'No Subject'),
+                          subtitle: Text('Date: ${attendance['date']}'),
+                          trailing: Text(attendance['status'] ?? 'Unknown'),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }
 
 class ViewSharedDocumentsScreen extends StatefulWidget {
+  const ViewSharedDocumentsScreen({super.key});
+
   @override
-  _ViewSharedDocumentsScreenState createState() => _ViewSharedDocumentsScreenState();
+  _ViewSharedDocumentsScreenState createState() =>
+      _ViewSharedDocumentsScreenState();
 }
 
 class _ViewSharedDocumentsScreenState extends State<ViewSharedDocumentsScreen> {
@@ -183,7 +193,8 @@ class _ViewSharedDocumentsScreenState extends State<ViewSharedDocumentsScreen> {
   }
 
   Future<void> fetchSharedDocuments() async {
-    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/documents'));
+    final response =
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/documents'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -192,7 +203,8 @@ class _ViewSharedDocumentsScreenState extends State<ViewSharedDocumentsScreen> {
           return {
             'id': item['_id'],
             'title': item['documentName'],
-            'type': item['documentPath'].split('.').last, // Extracting file type
+            'type':
+                item['documentPath'].split('.').last, // Extracting file type
             'url': item['documentPath'],
             'message': item['message'],
             'dateAdded': item['uploadedAt'],
@@ -221,40 +233,43 @@ class _ViewSharedDocumentsScreenState extends State<ViewSharedDocumentsScreen> {
         ],
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Document List
-            Expanded(
-              child: ListView.builder(
-                itemCount: sharedDocuments.length,
-                itemBuilder: (context, index) {
-                  final document = sharedDocuments[index];
-                  return ListTile(
-                    title: Text(document['title'] ?? 'No Title'),
-                    subtitle: Text('Type: ${document['type'] ?? 'Unknown'}'),
-                    trailing: IconButton(
-                      icon: Icon(Icons.download),
-                      onPressed: () {
-                        // Handle document download or view action
-                        // Use document['url'] for the download link
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Document List
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: sharedDocuments.length,
+                      itemBuilder: (context, index) {
+                        final document = sharedDocuments[index];
+                        return ListTile(
+                          title: Text(document['title'] ?? 'No Title'),
+                          subtitle:
+                              Text('Type: ${document['type'] ?? 'Unknown'}'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.download),
+                            onPressed: () {
+                              // Handle document download or view action
+                              // Use document['url'] for the download link
+                            },
+                          ),
+                        );
                       },
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }
 
 class GiveFeedbackScreen extends StatefulWidget {
+  const GiveFeedbackScreen({super.key});
+
   @override
   _GiveFeedbackScreenState createState() => _GiveFeedbackScreenState();
 }
@@ -287,7 +302,7 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
             TextField(
               controller: _feedbackController,
               maxLines: 5,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter your feedback here...',
                 border: OutlineInputBorder(),
                 labelText: 'Feedback',
@@ -296,7 +311,7 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
             const SizedBox(height: 16.0),
 
             // Rating System
-            Text('Rate Your Experience:'),
+            const Text('Rate Your Experience:'),
             Row(
               children: List.generate(5, (index) {
                 return IconButton(
@@ -315,7 +330,7 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
             const SizedBox(height: 16.0),
 
             // Feedback Category
-            Text('Feedback Category:'),
+            const Text('Feedback Category:'),
             DropdownButton<String>(
               value: selectedCategory,
               onChanged: (String? newValue) {
@@ -346,7 +361,8 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Error'),
-                      content: const Text('Please enter your feedback before submitting.'),
+                      content: const Text(
+                          'Please enter your feedback before submitting.'),
                       actions: <Widget>[
                         TextButton(
                           onPressed: () {
@@ -384,36 +400,36 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-            title: const Text('Feedback Submitted'),
-            content: const Text('Thank you for your feedback!'),
-            actions: <Widget>[
+          title: const Text('Feedback Submitted'),
+          content: const Text('Thank you for your feedback!'),
+          actions: <Widget>[
             TextButton(
-            onPressed: () {
-      Navigator.of(context).pop();
-      Navigator.of(context).pop(); // Optionally navigate back
-      },
-        child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Optionally navigate back
+              },
+              child: const Text('OK'),
             ),
-        ],
-      ),
-    );
-  } else {
-  // Show an error message
-  showDialog(
-  context: context,
-  builder: (context) => AlertDialog(
-  title: const Text('Error'),
-  content: const Text('Failed to submit feedback. Please try again.'),
-  actions: <Widget>[
-  TextButton(
-  onPressed: () {
-  Navigator.of(context).pop();
-  },
-  child: const Text('OK'),
-  ),
-  ],
-  ),
-  );
-}
-}
+          ],
+        ),
+      );
+    } else {
+      // Show an error message
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: const Text('Failed to submit feedback. Please try again.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
 }

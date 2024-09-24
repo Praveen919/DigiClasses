@@ -36,11 +36,14 @@ const studentRoutes = require('./routes/studentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const messageStudentRoutes = require('./routes/messageStudentRoutes');
 const feedbacksRoutes = require('./routes/feedbacksRoutes');
-const studentRightsRoutes = require('./routes/studentRightsRoutes');
+const studentRightsRoutes = require('./routes/studentRightsRoutes'); // Updated to reflect new routes
 const feeCollectionRoutes = require('./routes/feeCollectionRoutes');
 const messageStudentIdPassRoutes = require('./routes/messageStudentIdPassRoutes');
 const inquiriesStudentRoutes = require('./routes/inquiriesStudentRoutes');
-const absenceMessageRoutes = require ('./routes/absenceMessageRoutes');
+const absenceMessageRoutes = require('./routes/absenceMessageRoutes');
+
+// Import new routes for staff rights
+const staffRightsRoutes = require('./routes/staffRightsRoutes'); // Import the new staff rights routes
 
 // Middleware setup
 app.use(cors()); // Enable CORS if needed
@@ -80,7 +83,8 @@ app.use('/api/assignClassBatch', assignClassBatchRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/feedbacks', feedbacksRoutes);
 app.use('/api/assign-rights', studentRightsRoutes);
-app.use('./api/feeCollection', feeCollectionRoutes);
+app.use('/api/staff-rights', staffRightsRoutes); // Add this line for the staff rights routes
+app.use('/api/feeCollection', feeCollectionRoutes);
 app.use('/api/messageStudentIdPass', messageStudentIdPassRoutes);
 app.use('/api/inquiriesStudent', inquiriesStudentRoutes);
 app.use('/api/absenceMessage', absenceMessageRoutes);

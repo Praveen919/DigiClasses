@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:testing_app/screens/config.dart';
 
-
 class ReportT extends StatefulWidget {
   final String option;
 
@@ -39,7 +38,6 @@ class _ReportScreenState extends State<ReportT> {
   }
 }
 
-
 class StudentDetailReportScreen extends StatefulWidget {
   const StudentDetailReportScreen({super.key});
 
@@ -63,7 +61,7 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
 
   Future<void> fetchStudents() async {
     final response =
-    await http.get(Uri.parse('${AppConfig.baseUrl}/api/student/students'));
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/student/students'));
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       setState(() {
@@ -94,7 +92,7 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
     setState(() {
       filteredStudents = students.where((student) {
         bool matchesSearchQuery =
-        student['name'].toLowerCase().contains(searchQuery.toLowerCase());
+            student['name'].toLowerCase().contains(searchQuery.toLowerCase());
 
         bool matchesFromDate = fromDate == null ||
             DateTime.parse(student['joinDate']).isAfter(fromDate!);
@@ -119,7 +117,7 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
       setState(() {
         // Update the local students list with the new data
         final index =
-        students.indexWhere((student) => student['id'] == studentId);
+            students.indexWhere((student) => student['id'] == studentId);
         if (index != -1) {
           students[index] = updatedData;
           _filterStudents(); // Re-filter the list with updated data
@@ -131,8 +129,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
   }
 
   Future<void> _deleteStudentDetail(int studentId) async {
-    final response = await http
-        .delete(Uri.parse('${AppConfig.baseUrl}/api/student/students/$studentId'));
+    final response = await http.delete(
+        Uri.parse('${AppConfig.baseUrl}/api/student/students/$studentId'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -146,37 +144,37 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
 
   void _showEditDialog(dynamic student) {
     TextEditingController nameController =
-    TextEditingController(text: student['name']);
+        TextEditingController(text: student['name']);
     TextEditingController standardController =
-    TextEditingController(text: student['standard']);
+        TextEditingController(text: student['standard']);
     TextEditingController courseController =
-    TextEditingController(text: student['course']);
+        TextEditingController(text: student['course']);
     TextEditingController batchController =
-    TextEditingController(text: student['batch']);
+        TextEditingController(text: student['batch']);
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit Student'),
+          title: const Text('Edit Student'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: 'Student Name'),
+                decoration: const InputDecoration(labelText: 'Student Name'),
               ),
               TextField(
                 controller: standardController,
-                decoration: InputDecoration(labelText: 'Standard'),
+                decoration: const InputDecoration(labelText: 'Standard'),
               ),
               TextField(
                 controller: courseController,
-                decoration: InputDecoration(labelText: 'Course'),
+                decoration: const InputDecoration(labelText: 'Course'),
               ),
               TextField(
                 controller: batchController,
-                decoration: InputDecoration(labelText: 'Batch'),
+                decoration: const InputDecoration(labelText: 'Batch'),
               ),
             ],
           ),
@@ -194,13 +192,13 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                 _editStudentDetail(student['id'], updatedData);
                 Navigator.of(context).pop();
               },
-              child: Text('Save'),
+              child: const Text('Save'),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
           ],
         );
@@ -214,8 +212,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Filtered Student Report'),
-          content: Container(
+          title: const Text('Filtered Student Report'),
+          content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
               itemCount: filteredStudents.length,
@@ -234,7 +232,7 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Close'),
+              child: const Text('Close'),
             ),
           ],
         );
@@ -322,7 +320,7 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed:
-                  _filterStudents, // Filter data based on selected dates and search query
+                      _filterStudents, // Filter data based on selected dates and search query
                   child: const Text('Get Data'),
                 ),
               ],
@@ -341,13 +339,13 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue),
+                          icon: const Icon(Icons.edit, color: Colors.blue),
                           onPressed: () {
                             _showEditDialog(student);
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () {
                             _deleteStudentDetail(student['id']);
                           },
@@ -360,7 +358,7 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
             ),
             ElevatedButton(
               onPressed: _viewReport, // View the filtered student report
-              child: Text('View Report'),
+              child: const Text('View Report'),
             ),
           ],
         ),
@@ -373,7 +371,8 @@ class StudentCardReportScreen extends StatefulWidget {
   const StudentCardReportScreen({super.key});
 
   @override
-  _StudentCardReportScreenState createState() => _StudentCardReportScreenState();
+  _StudentCardReportScreenState createState() =>
+      _StudentCardReportScreenState();
 }
 
 class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
@@ -390,7 +389,8 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
   }
 
   Future<void> _fetchClassBatches() async {
-    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch/classbatch'));
+    final response = await http
+        .get(Uri.parse('${AppConfig.baseUrl}/api/class-batch/classbatch'));
     if (response.statusCode == 200) {
       setState(() {
         _classBatches = json.decode(response.body);
@@ -402,7 +402,8 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
 
   Future<void> _fetchStudentReports() async {
     if (_selectedClassBatch != null) {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/cardReport/card-report${_selectedClassBatch}'));
+      final response = await http.get(Uri.parse(
+          '${AppConfig.baseUrl}/api/cardReport/card-report$_selectedClassBatch'));
       if (response.statusCode == 200) {
         setState(() {
           _studentReports = json.decode(response.body);
@@ -430,12 +431,14 @@ class _StudentCardReportScreenState extends State<StudentCardReportScreen> {
     // Example: Navigate to Edit Student screen
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => EditStudentScreen(studentId: studentId)),
+      MaterialPageRoute(
+          builder: (context) => EditStudentScreen(studentId: studentId)),
     );
   }
 
   Future<void> _deleteStudent(String studentId) async {
-    final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/api/student/students/$studentId'));
+    final response = await http.delete(
+        Uri.parse('${AppConfig.baseUrl}/api/student/students/$studentId'));
     if (response.statusCode == 200) {
       // Refresh the reports after deletion
       _fetchStudentReports();
@@ -534,11 +537,13 @@ class StudentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Student Name: ${student['firstName']} ${student['lastName']}'),
+            Text(
+                'Student Name: ${student['firstName']} ${student['lastName']}'),
             Text('Standard: ${student['standard']}'),
             Text('Class Batch: ${student['classBatch']}'),
             Text('Join Date: ${student['joinDate']?.split('T')[0]}'),
-            Text('Attendance: ${_calculateAttendance(student['attendanceRecords'])}%'),
+            Text(
+                'Attendance: ${_calculateAttendance(student['attendanceRecords'])}%'),
 
             // Edit and Delete buttons
             Row(
@@ -562,7 +567,9 @@ class StudentCard extends StatelessWidget {
 
   double _calculateAttendance(List<dynamic> attendanceRecords) {
     if (attendanceRecords.isEmpty) return 0.0;
-    int presentCount = attendanceRecords.where((record) => record['status'] == 'Present').length;
+    int presentCount = attendanceRecords
+        .where((record) => record['status'] == 'Present')
+        .length;
     return (presentCount / attendanceRecords.length) * 100;
   }
 }
@@ -621,7 +628,7 @@ class _StudentAttendanceReportScreenState
 
       if (response.statusCode == 200) {
         List<Map<String, dynamic>> fetchedData =
-        List<Map<String, dynamic>>.from(json.decode(response.body));
+            List<Map<String, dynamic>>.from(json.decode(response.body));
 
         setState(() {
           allAttendanceData = fetchedData;
@@ -736,7 +743,7 @@ class _StudentAttendanceReportScreenState
                   ],
                   rows: List<DataRow>.generate(
                     filteredAttendanceData.length,
-                        (index) => DataRow(
+                    (index) => DataRow(
                       cells: [
                         DataCell(Text((index + 1).toString())),
                         DataCell(Text(filteredAttendanceData[index]['name'])),
@@ -756,5 +763,3 @@ class _StudentAttendanceReportScreenState
     );
   }
 }
-
-

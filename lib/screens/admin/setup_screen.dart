@@ -48,13 +48,13 @@ class AddYearScreen extends StatefulWidget {
   final String? remarks;
 
   const AddYearScreen({
-    Key? key,
+    super.key,
     this.yearId,
     this.yearName,
     this.fromDate,
     this.toDate,
     this.remarks,
-  }) : super(key: key);
+  });
 
   @override
   _AddYearScreenState createState() => _AddYearScreenState();
@@ -1478,7 +1478,7 @@ class ClassBatch {
 class EditClassBatchDialog extends StatefulWidget {
   final ClassBatch batch;
 
-  const EditClassBatchDialog({Key? key, required this.batch}) : super(key: key);
+  const EditClassBatchDialog({super.key, required this.batch});
 
   @override
   _EditClassBatchDialogState createState() => _EditClassBatchDialogState();
@@ -1734,7 +1734,7 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
             int day = item['day'] ?? 0; // Default to 0 if null
             int timeSlot = item['timeSlot'] ?? 0; // Default to 0 if null
             if (timeSlot >= 0 && timeSlot < 5 && day >= 0 && day < 6) {
-              _timeTable[timeSlot][day] = item['subject'] ?? null; // Allow null
+              _timeTable[timeSlot][day] = item['subject']; // Allow null
             }
           }
           isEditable = false;
@@ -1800,7 +1800,7 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
         .expand((row) => row.asMap().entries.map((e) => {
               'day': e.key,
               'timeSlot': _timeTable.indexOf(row),
-              'subject': e.value ?? null, // Allow null
+              'subject': e.value, // Allow null
             }))
         .toList();
 
@@ -1976,7 +1976,7 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
                 for (var day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'])
                   Expanded(
                       child: Text(day,
-                          style: TextStyle(fontWeight: FontWeight.bold))),
+                          style: const TextStyle(fontWeight: FontWeight.bold))),
               ],
             ),
             const SizedBox(height: 10),

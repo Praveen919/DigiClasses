@@ -143,7 +143,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         }
       }
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Attendance updated successfully')));
+          const SnackBar(content: Text('Attendance updated successfully')));
     } catch (e) {
       print('Error updating attendance: $e');
     }
@@ -310,7 +310,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         Table(
           border: TableBorder.all(),
           children: [
-            TableRow(
+            const TableRow(
               children: [
                 TableCell(child: Center(child: Text('Sr. No'))),
                 TableCell(child: Center(child: Text('Date'))),
@@ -532,6 +532,7 @@ class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
     );
   }
 }
+
 class ManageSharedDocumentsScreen extends StatefulWidget {
   const ManageSharedDocumentsScreen({super.key});
 
@@ -544,7 +545,7 @@ class _ManageSharedDocumentsScreenState
     extends State<ManageSharedDocumentsScreen> {
   List<Map<String, dynamic>> _sharedDocuments = [];
   List<Map<String, dynamic>> _filteredDocuments = [];
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -591,13 +592,13 @@ class _ManageSharedDocumentsScreenState
   }
 
   void _editDocument(int index) {
-    TextEditingController _messageController = TextEditingController();
-    TextEditingController _standardController = TextEditingController();
-    TextEditingController _documentController = TextEditingController();
+    TextEditingController messageController = TextEditingController();
+    TextEditingController standardController = TextEditingController();
+    TextEditingController documentController = TextEditingController();
 
-    _messageController.text = _filteredDocuments[index]['message'] ?? '';
-    _standardController.text = _filteredDocuments[index]['standard'];
-    _documentController.text = _filteredDocuments[index]['document'];
+    messageController.text = _filteredDocuments[index]['message'] ?? '';
+    standardController.text = _filteredDocuments[index]['standard'];
+    documentController.text = _filteredDocuments[index]['document'];
 
     showDialog(
       context: context,
@@ -608,15 +609,15 @@ class _ManageSharedDocumentsScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: _standardController,
+                controller: standardController,
                 decoration: const InputDecoration(labelText: 'Class/Batch'),
               ),
               TextField(
-                controller: _documentController,
+                controller: documentController,
                 decoration: const InputDecoration(labelText: 'Document Name'),
               ),
               TextField(
-                controller: _messageController,
+                controller: messageController,
                 decoration: const InputDecoration(labelText: 'Message'),
               ),
             ],
@@ -626,9 +627,9 @@ class _ManageSharedDocumentsScreenState
               onPressed: () async {
                 await _updateDocument(
                   _filteredDocuments[index]['id'],
-                  _standardController.text,
-                  _documentController.text,
-                  _messageController.text,
+                  standardController.text,
+                  documentController.text,
+                  messageController.text,
                 );
                 Navigator.of(context).pop();
               },
@@ -758,7 +759,6 @@ class _ManageSharedDocumentsScreenState
   }
 }
 
-
 class SharedDocumentCard extends StatelessWidget {
   final Map<String, dynamic> documentData;
   final VoidCallback onEdit;
@@ -766,6 +766,7 @@ class SharedDocumentCard extends StatelessWidget {
   final VoidCallback onView;
 
   const SharedDocumentCard({
+    super.key,
     required this.documentData,
     required this.onEdit,
     required this.onDelete,
@@ -812,9 +813,9 @@ class _ChatWithStudentsScreenState extends State<ChatWithStudentsScreen> {
   List<Map<String, dynamic>> _students = [];
   List<Map<String, dynamic>> _filteredStudents = [];
   String? _selectedStudent;
-  TextEditingController _searchController = TextEditingController();
-  TextEditingController _subjectController = TextEditingController();
-  TextEditingController _messageController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _subjectController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
 
   @override
   void initState() {
@@ -1022,7 +1023,6 @@ class _ChatWithStudentsScreenState extends State<ChatWithStudentsScreen> {
   }
 }
 
-
 class StudentsFeedbackScreen extends StatefulWidget {
   const StudentsFeedbackScreen({super.key});
 
@@ -1129,7 +1129,6 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
   }
 }
 
-
 // Custom widget for each student feedback
 class StudentFeedbackCard extends StatelessWidget {
   final Map<String, dynamic> feedback;
@@ -1187,6 +1186,7 @@ class StudentFeedbackCard extends StatelessWidget {
     );
   }
 }
+
 // Dummy feedback detail screen
 class FeedbackDetailScreen extends StatelessWidget {
   final Map<String, dynamic> feedback;

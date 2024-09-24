@@ -66,8 +66,7 @@ class CreateStaffScreen extends StatefulWidget {
   final Map<String, dynamic>? staff; // Optional parameter for editing staff
   final void Function(Map<String, dynamic>) onSave;
 
-  const CreateStaffScreen({Key? key, this.staff, required this.onSave})
-      : super(key: key);
+  const CreateStaffScreen({super.key, this.staff, required this.onSave});
 
   @override
   _CreateStaffScreenState createState() => _CreateStaffScreenState();
@@ -156,7 +155,7 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
           'role': 'staff', // Define role as staff
         };
 
-        final usersUrl = '${AppConfig.baseUrl}/api/auth/register';
+        const usersUrl = '${AppConfig.baseUrl}/api/auth/register';
 
         final usersResponse = await http.post(
           Uri.parse(usersUrl),
@@ -237,8 +236,9 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
   }
 
   Widget _buildPasswordField() {
-    if (widget.staff != null)
+    if (widget.staff != null) {
       return Container(); // Don't show password field for existing staff
+    }
     return TextFormField(
       controller: _passwordController,
       obscureText: true,
@@ -343,6 +343,8 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
 }
 
 class ManageStaffScreen extends StatefulWidget {
+  const ManageStaffScreen({super.key});
+
   @override
   _ManageStaffScreenState createState() => _ManageStaffScreenState();
 }
@@ -366,7 +368,7 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
   }
 
   Future<void> _fetchStaffList() async {
-    final url = '${AppConfig.baseUrl}/api/staff';
+    const url = '${AppConfig.baseUrl}/api/staff';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -446,11 +448,10 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
 
     // Get the staff ID from the staffList
     final staffId = staffList[_editingIndex!]['id'];
-    print('Updating staff with ID: $staffId'); // Debug print
 
     if (staffId == null) {
       print('Error: Staff ID is null');
-      return; // Exit if ID is null
+      return;
     }
 
     final url = '${AppConfig.baseUrl}/api/staff/$staffId';
@@ -469,6 +470,7 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
       if (response.statusCode == 200) {
         final responseData = await http.Response.fromStream(response);
         setState(() {
+          // Update the specific staff in the list
           staffList[_editingIndex!] = json.decode(responseData.body)['staff'];
           _editingIndex = null;
           _clearControllers();
@@ -476,6 +478,7 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Staff updated successfully')),
         );
+        _fetchStaffList(); // Refetch staff list after update
       } else {
         print('Failed to update staff: ${response.reasonPhrase}');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -522,6 +525,7 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Staff deleted successfully')),
         );
+        _fetchStaffList(); // Refetch staff list after deletion
       } else {
         print('Failed to delete staff: ${response.reasonPhrase}');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -638,6 +642,8 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
 }
 
 class ManageStaffRightsScreen extends StatefulWidget {
+  const ManageStaffRightsScreen({super.key});
+
   @override
   _ManageStaffRightsScreenState createState() =>
       _ManageStaffRightsScreenState();
@@ -645,18 +651,21 @@ class ManageStaffRightsScreen extends StatefulWidget {
 
 class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
   List<Map<String, dynamic>> staffList = [];
+  List<Map<String, dynamic>> adminList = [];
+  List<Map<String, dynamic>> teacherList = [];
+  List<Map<String, dynamic>> studentList = [];
   String? _selectedStaff;
   String? _selectedRight;
 
   @override
   void initState() {
     super.initState();
-    _fetchTeachers(); // Fetch teachers on initialization
+    _fetchStaff(); // Fetch staff members on initialization
+    _fetchStaffRights(); // Fetch rights on initialization
   }
 
-  Future<void> _fetchTeachers() async {
-    final url =
-        '${AppConfig.baseUrl}/api/users/teachers'; // Replace with your backend URL
+  Future<void> _fetchStaff() async {
+    const url = '${AppConfig.baseUrl}/api/staff'; // Corrected API URL
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -667,17 +676,65 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
           staffList = data
               .map((staff) => {
                     'id': staff['_id'],
-                    'firstName': staff['firstName'],
-                    'middleName': staff['middleName'],
-                    'lastName': staff['lastName'],
+                    'firstName': staff['firstName'] ?? '',
+                    'middleName': staff['middleName'] ?? '',
+                    'lastName': staff['lastName'] ?? '',
                   })
               .toList();
         });
       } else {
-        print('Failed to load staff');
+        print('Failed to load staff: ${response.statusCode}'); // Debug print
       }
     } catch (e) {
-      print('Error fetching staff list: $e');
+      print('Error fetching staff list: $e'); // Debug print
+    }
+  }
+
+  Future<void> _fetchStaffRights() async {
+    const url = '${AppConfig.baseUrl}/api/staff-rights/rights';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          adminList = data
+              .where((staff) => staff['role'] == 'Admin')
+              .map((staff) => {
+                    'id': staff['staffId']['_id'],
+                    'firstName': staff['staffId']['firstName'] ?? '',
+                    'middleName': staff['staffId']['middleName'] ?? '',
+                    'lastName': staff['staffId']['lastName'] ?? '',
+                  })
+              .toList();
+
+          teacherList = data
+              .where((staff) => staff['role'] == 'Teacher')
+              .map((staff) => {
+                    'id': staff['staffId']['_id'],
+                    'firstName': staff['staffId']['firstName'] ?? '',
+                    'middleName': staff['staffId']['middleName'] ?? '',
+                    'lastName': staff['staffId']['lastName'] ?? '',
+                  })
+              .toList();
+
+          studentList = data
+              .where((staff) => staff['role'] == 'Student')
+              .map((staff) => {
+                    'id': staff['staffId']['_id'],
+                    'firstName': staff['staffId']['firstName'] ?? '',
+                    'middleName': staff['staffId']['middleName'] ?? '',
+                    'lastName': staff['staffId']['lastName'] ?? '',
+                  })
+              .toList();
+        });
+      } else {
+        print(
+            'Failed to load staff rights: ${response.statusCode}'); // Debug print
+      }
+    } catch (e) {
+      print('Error fetching staff rights: $e'); // Debug print
     }
   }
 
@@ -702,13 +759,13 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
 
       // Send the request to update the user role
       final url =
-          '${AppConfig.baseUrl}/api/users/updateRole/$selectedStaffId'; // Replace with your backend URL
+          '${AppConfig.baseUrl}/api/staff-rights/assignRights'; // Corrected API URL
 
       try {
-        final response = await http.put(
+        final response = await http.post(
           Uri.parse(url),
           headers: {"Content-Type": "application/json"},
-          body: json.encode({'role': newRole}),
+          body: json.encode({'staffId': selectedStaffId, 'role': newRole}),
         );
 
         if (response.statusCode == 200) {
@@ -716,14 +773,18 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
             content: Text(
                 '$_selectedRight granted to ${staffList.firstWhere((staff) => staff['id'] == _selectedStaff)['firstName']}'),
           ));
+          // Refresh the staff list and rights after granting rights
+          _fetchStaff();
+          _fetchStaffRights();
         } else {
-          print('Failed to update role');
+          print('Failed to update role: ${response.statusCode}');
+          print('Response body: ${response.body}');
         }
       } catch (e) {
         print('Error updating user role: $e');
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Please select both staff and rights'),
       ));
     }
@@ -732,18 +793,21 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+      appBar: AppBar(
+        title: const Text('Manage Staff Rights'),
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Assign Staff Action Rights',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             DropdownButtonFormField<String>(
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Staff Name*',
                 border: OutlineInputBorder(),
               ),
@@ -751,13 +815,21 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
               items: staffList.map((staff) {
                 return DropdownMenuItem<String>(
                   value: staff['id'],
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.grey,
-                      child: Icon(Icons.person),
-                    ),
-                    title: Text(
-                        '${staff['firstName']} ${staff['middleName']} ${staff['lastName']}'),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircleAvatar(
+                        backgroundColor: Colors.grey,
+                        child: Icon(Icons.person),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          '${staff['firstName']} ${staff['middleName']} ${staff['lastName']}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }).toList(),
@@ -773,22 +845,26 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
                 return null;
               },
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Grant Rights:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             _buildRightsRadioButton('Grant Admin Rights'),
             _buildRightsRadioButton('Grant Teacher Rights'),
             _buildRightsRadioButton('Grant Student Rights'),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Center(
               child: ElevatedButton(
                 onPressed: _grantRights,
-                child: Text('Grant Rights'),
+                child: const Text('Grant Rights'),
               ),
             ),
+            const SizedBox(height: 20),
+            _buildRightsList('Admin Rights granted to:', adminList),
+            _buildRightsList('Teacher Rights granted to:', teacherList),
+            _buildRightsList('Student Rights granted to:', studentList),
           ],
         ),
       ),
@@ -805,6 +881,34 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
           _selectedRight = value;
         });
       },
+    );
+  }
+
+  Widget _buildRightsList(String title, List<Map<String, dynamic>> rightsList) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        if (rightsList.isEmpty)
+          const Text('No rights granted yet.')
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(), // Prevent scrolling
+            itemCount: rightsList.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(
+                    '${rightsList[index]['firstName']} ${rightsList[index]['middleName']} ${rightsList[index]['lastName']}'),
+              );
+            },
+          ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 }
@@ -829,7 +933,7 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   Future<void> fetchTeachers() async {
     try {
       final response =
-          await http.get(Uri.parse('http://192.168.0.104/api/users/teachers'));
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/users/teachers'));
       if (response.statusCode == 200) {
         setState(() {
           attendanceData =
@@ -851,7 +955,7 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   Future<void> updateAttendance() async {
     try {
       final response = await http.put(
-        Uri.parse('http://your-server-address/api/users/attendance'),
+        Uri.parse('${AppConfig.baseUrl}/api/users/attendance'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'attendance': attendanceData}),
       );

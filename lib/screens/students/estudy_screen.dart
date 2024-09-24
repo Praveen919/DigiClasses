@@ -97,7 +97,7 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
     } catch (e) {
       print('Download failed: $e');
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Download failed')));
+          .showSnackBar(const SnackBar(content: Text('Download failed')));
     }
   }
 
@@ -211,7 +211,7 @@ class _ViewSharedStudyMaterialScreenState
     } catch (e) {
       print('Download failed: $e');
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Download failed')));
+          .showSnackBar(const SnackBar(content: Text('Download failed')));
     }
   }
 

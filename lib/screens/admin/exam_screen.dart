@@ -17,7 +17,7 @@ class ExamScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Exam'),
+        title: const Text('Exam'),
       ),
       body: _buildContent(),
     );
@@ -30,16 +30,16 @@ class ExamScreen extends StatelessWidget {
       case 'manageManualExam':
         return ManageManualExamScreen();
       case 'createMCQExam':
-        return CreateMCQExamScreen();
+        return const CreateMCQExamScreen();
       case 'manageMCQExam':
-        return ManageMCQExamScreen();
+        return const ManageMCQExamScreen();
       case 'createAssignments':
         return CreateAssignmentsScreen();
       case 'manageAssignments':
-        return ManageAssignmentsScreen();
+        return const ManageAssignmentsScreen();
 
       default:
-        return Center(child: Text('Unknown Option'));
+        return const Center(child: Text('Unknown Option'));
     }
   }
 }
@@ -47,7 +47,7 @@ class ExamScreen extends StatelessWidget {
 class CreateManualExamScreen extends StatefulWidget {
   final Map<String, dynamic>? examData;
 
-  CreateManualExamScreen({this.examData});
+  const CreateManualExamScreen({super.key, this.examData});
 
   @override
   _CreateManualExamScreenState createState() => _CreateManualExamScreenState();
@@ -207,7 +207,7 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Exam saved successfully'),
               backgroundColor: Colors.green,
             ),
@@ -215,7 +215,7 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
           Navigator.pop(context, true);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Failed to save exam'),
               backgroundColor: Colors.red,
             ),
@@ -247,7 +247,7 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
             : 'Create Manual Exam'),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -257,7 +257,7 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
                 // Standard
                 TextFormField(
                   controller: _standardController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Standard',
                     hintText: 'e.g. 10th',
                     border: OutlineInputBorder(),
@@ -269,12 +269,12 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
 
                 // Subject
                 TextFormField(
                   controller: _subjectController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Subject',
                     hintText: 'e.g. English',
                     border: OutlineInputBorder(),
@@ -286,12 +286,12 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
 
                 // Exam Name
                 TextFormField(
                   controller: _examNameController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Exam Name',
                     hintText: 'e.g. English-Sem-1',
                     border: OutlineInputBorder(),
@@ -303,12 +303,12 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
 
                 // Total Marks
                 TextFormField(
                   controller: _totalMarksController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Total Marks',
                     hintText: 'e.g. 100',
                     border: OutlineInputBorder(),
@@ -321,7 +321,7 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
 
                 // Exam Date
                 Row(
@@ -331,14 +331,14 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
                           ? 'Select Exam Date'
                           : DateFormat('dd-MM-yyyy').format(_examDate!),
                     ),
-                    SizedBox(width: 16.0),
+                    const SizedBox(width: 16.0),
                     ElevatedButton(
                       onPressed: () => _selectExamDate(context),
-                      child: Text('Pick Date'),
+                      child: const Text('Pick Date'),
                     ),
                   ],
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
 
                 // From Time
                 Row(
@@ -346,14 +346,14 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
                     Text(_fromTime == null
                         ? 'Select From Time'
                         : _fromTime!.format(context)),
-                    SizedBox(width: 16.0),
+                    const SizedBox(width: 16.0),
                     ElevatedButton(
                       onPressed: () => _selectFromTime(context),
-                      child: Text('Pick From Time'),
+                      child: const Text('Pick From Time'),
                     ),
                   ],
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
 
                 // To Time
                 Row(
@@ -361,41 +361,41 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
                     Text(_toTime == null
                         ? 'Select To Time'
                         : _toTime!.format(context)),
-                    SizedBox(width: 16.0),
+                    const SizedBox(width: 16.0),
                     ElevatedButton(
                       onPressed: () => _selectToTime(context),
-                      child: Text('Pick To Time'),
+                      child: const Text('Pick To Time'),
                     ),
                   ],
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
 
                 // File Upload
                 Row(
                   children: [
                     _selectedFile != null
                         ? Text(_selectedFile!.path.split('/').last)
-                        : Text('No file selected'),
-                    SizedBox(width: 16.0),
+                        : const Text('No file selected'),
+                    const SizedBox(width: 16.0),
                     ElevatedButton(
                       onPressed: _pickFile,
-                      child: Text('Select File'),
+                      child: const Text('Select File'),
                     ),
                   ],
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
 
                 // Save Button
                 Row(
                   children: [
                     ElevatedButton(
                       onPressed: _saveExam,
-                      child: Text('Save Exam'),
+                      child: const Text('Save Exam'),
                     ),
-                    SizedBox(width: 16.0),
+                    const SizedBox(width: 16.0),
                     ElevatedButton(
                       onPressed: _resetForm,
-                      child: Text('Reset'),
+                      child: const Text('Reset'),
                     ),
                   ],
                 ),
@@ -409,6 +409,8 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
 }
 
 class ManageManualExamScreen extends StatefulWidget {
+  const ManageManualExamScreen({super.key});
+
   @override
   _ManageManualExamScreenState createState() => _ManageManualExamScreenState();
 }
@@ -492,7 +494,7 @@ class _ManageManualExamScreenState extends State<ManageManualExamScreen> {
           _filteredExams = _exams;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Exam deleted successfully')),
+          const SnackBar(content: Text('Exam deleted successfully')),
         );
       } else {
         throw Exception('Failed to delete exam');
@@ -508,17 +510,17 @@ class _ManageManualExamScreenState extends State<ManageManualExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Manage Manual Exams'),
+        title: const Text('Manage Manual Exams'),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: TextField(
                     controller: _searchController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Search Exams',
                       border: OutlineInputBorder(),
                     ),
@@ -526,7 +528,7 @@ class _ManageManualExamScreenState extends State<ManageManualExamScreen> {
                 ),
                 Expanded(
                   child: _filteredExams.isEmpty
-                      ? Center(child: Text('No exams found'))
+                      ? const Center(child: Text('No exams found'))
                       : ListView.builder(
                           itemCount: _filteredExams.length,
                           itemBuilder: (context, index) {
@@ -539,7 +541,7 @@ class _ManageManualExamScreenState extends State<ManageManualExamScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
-                                    icon: Icon(Icons.edit),
+                                    icon: const Icon(Icons.edit),
                                     onPressed: () async {
                                       final result = await Navigator.push(
                                         context,
@@ -556,28 +558,28 @@ class _ManageManualExamScreenState extends State<ManageManualExamScreen> {
                                     },
                                   ),
                                   IconButton(
-                                    icon: Icon(Icons.delete),
+                                    icon: const Icon(Icons.delete),
                                     onPressed: () {
                                       showDialog(
                                         context: context,
                                         builder: (context) {
                                           return AlertDialog(
-                                            title: Text('Delete Exam'),
-                                            content: Text(
+                                            title: const Text('Delete Exam'),
+                                            content: const Text(
                                                 'Are you sure you want to delete this exam?'),
                                             actions: [
                                               TextButton(
                                                 onPressed: () {
                                                   Navigator.of(context).pop();
                                                 },
-                                                child: Text('Cancel'),
+                                                child: const Text('Cancel'),
                                               ),
                                               TextButton(
                                                 onPressed: () {
                                                   Navigator.of(context).pop();
                                                   _deleteExam(exam['_id']);
                                                 },
-                                                child: Text('Delete'),
+                                                child: const Text('Delete'),
                                               ),
                                             ],
                                           );
@@ -586,7 +588,7 @@ class _ManageManualExamScreenState extends State<ManageManualExamScreen> {
                                     },
                                   ),
                                   IconButton(
-                                    icon: Icon(Icons.picture_as_pdf),
+                                    icon: const Icon(Icons.picture_as_pdf),
                                     onPressed: () {
                                       final documentUrl = exam['documentUrl'];
                                       if (documentUrl != null) {
@@ -594,7 +596,7 @@ class _ManageManualExamScreenState extends State<ManageManualExamScreen> {
                                       } else {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
-                                          SnackBar(
+                                          const SnackBar(
                                               content: Text(
                                                   'No document available')),
                                         );
@@ -697,21 +699,21 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                child: const Text('SAVE'),
                 onPressed: _submitForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.teal,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
+                child: const Text('SAVE'),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                child: const Text('RESET'),
                 onPressed: _resetForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
+                child: const Text('RESET'),
               ),
             ],
           ),
@@ -757,13 +759,13 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to create MCQ exam')),
+            const SnackBar(content: Text('Failed to create MCQ exam')),
           );
         }
       } catch (error) {
         print('Error creating MCQ exam: $error');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating MCQ exam')),
+          const SnackBar(content: Text('Error creating MCQ exam')),
         );
       }
     }
@@ -784,7 +786,8 @@ class AddMCQQuestionsScreen extends StatefulWidget {
   final String paperId;
   final String paperName;
 
-  AddMCQQuestionsScreen({required this.paperId, required this.paperName});
+  const AddMCQQuestionsScreen(
+      {super.key, required this.paperId, required this.paperName});
 
   @override
   _AddMCQQuestionsScreenState createState() => _AddMCQQuestionsScreenState();
@@ -833,7 +836,7 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('MCQ Questions saved successfully'),
               backgroundColor: Colors.green,
             ),
@@ -886,15 +889,15 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                     children: [
                       Text(
                         'Add MCQ Questions for ${widget.paperName}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(height: 16.0),
+                      const SizedBox(height: 16.0),
                       TextFormField(
                         controller: _numberOfQuestionsController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Number of Questions',
                           border: OutlineInputBorder(),
                         ),
@@ -915,12 +918,12 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                           });
                         },
                       ),
-                      SizedBox(height: 16.0),
+                      const SizedBox(height: 16.0),
                       ElevatedButton(
                         onPressed: _generateQuestions,
-                        child: Text('Generate Questions'),
+                        child: const Text('Generate Questions'),
                       ),
-                      SizedBox(height: 16.0),
+                      const SizedBox(height: 16.0),
                       if (_questions.isNotEmpty)
                         for (int i = 0; i < _questions.length; i++)
                           Column(
@@ -928,14 +931,14 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                             children: [
                               Text(
                                 'Question ${i + 1}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
                               ),
                               TextFormField(
-                                decoration:
-                                    InputDecoration(labelText: 'Question'),
+                                decoration: const InputDecoration(
+                                    labelText: 'Question'),
                                 onChanged: (value) {
                                   _questions[i]['question'] = value;
                                 },
@@ -946,7 +949,7 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                                   return null;
                                 },
                               ),
-                              SizedBox(height: 12.0),
+                              const SizedBox(height: 12.0),
                               for (int j = 0; j < 4; j++)
                                 Row(
                                   children: [
@@ -979,7 +982,7 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                                     ),
                                   ],
                                 ),
-                              SizedBox(height: 16.0),
+                              const SizedBox(height: 16.0),
                             ],
                           ),
                     ],
@@ -994,18 +997,20 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
               children: [
                 ElevatedButton(
                   onPressed: _saveQuestions,
-                  child: Text('Save Questions'),
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50), // Full-width button
+                    minimumSize:
+                        const Size(double.infinity, 50), // Full-width button
                   ),
+                  child: Text('Save Questions'),
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
                 ElevatedButton(
                   onPressed: _resetForm,
-                  child: Text('Reset'),
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50), // Full-width button
+                    minimumSize:
+                        const Size(double.infinity, 50), // Full-width button
                   ),
+                  child: Text('Reset'),
                 ),
               ],
             ),
@@ -1243,7 +1248,7 @@ class _ManageMCQExamScreenState extends State<ManageMCQExamScreen> {
 class EditMCQPaperScreen extends StatefulWidget {
   final String paperId;
 
-  EditMCQPaperScreen({required this.paperId});
+  const EditMCQPaperScreen({super.key, required this.paperId});
 
   @override
   _EditMCQPaperScreenState createState() => _EditMCQPaperScreenState();
@@ -1289,7 +1294,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
       }
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching paper details')),
+        const SnackBar(content: Text('Error fetching paper details')),
       );
     }
   }
@@ -1314,17 +1319,17 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
 
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('MCQ Paper updated successfully')),
+            const SnackBar(content: Text('MCQ Paper updated successfully')),
           );
           Navigator.pop(context, true);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update MCQ paper')),
+            const SnackBar(content: Text('Failed to update MCQ paper')),
           );
         }
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating paper')),
+          const SnackBar(content: Text('Error updating paper')),
         );
       }
     }
@@ -1361,7 +1366,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit MCQ Paper'),
+        title: const Text('Edit MCQ Paper'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -1372,40 +1377,40 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
             children: [
               TextFormField(
                 controller: _paperNameController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Paper Name',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
                     value!.isEmpty ? 'Please enter paper name' : null,
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               TextFormField(
                 controller: _standardController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Standard',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
                     value!.isEmpty ? 'Please enter standard' : null,
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               TextFormField(
                 controller: _subjectController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Subject',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
                     value!.isEmpty ? 'Please enter subject' : null,
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _fromTimeController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'From Time',
                         border: OutlineInputBorder(),
                       ),
@@ -1415,20 +1420,20 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
                           value!.isEmpty ? 'Please select from time' : null,
                     ),
                   ),
-                  SizedBox(width: 8.0),
+                  const SizedBox(width: 8.0),
                   ElevatedButton(
                     onPressed: () => _selectTime(context, _fromTimeController),
-                    child: Text('Pick From Time'),
+                    child: const Text('Pick From Time'),
                   ),
                 ],
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _toTimeController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'To Time',
                         border: OutlineInputBorder(),
                       ),
@@ -1438,20 +1443,20 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
                           value!.isEmpty ? 'Please select to time' : null,
                     ),
                   ),
-                  SizedBox(width: 8.0),
+                  const SizedBox(width: 8.0),
                   ElevatedButton(
                     onPressed: () => _selectTime(context, _toTimeController),
-                    child: Text('Pick To Time'),
+                    child: const Text('Pick To Time'),
                   ),
                 ],
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _examDateController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Exam Date',
                         border: OutlineInputBorder(),
                       ),
@@ -1461,17 +1466,17 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
                           value!.isEmpty ? 'Please select exam date' : null,
                     ),
                   ),
-                  SizedBox(width: 8.0),
+                  const SizedBox(width: 8.0),
                   ElevatedButton(
                     onPressed: () => _selectDate(context),
-                    child: Text('Pick Date'),
+                    child: const Text('Pick Date'),
                   ),
                 ],
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: _updatePaper,
-                child: Text('Update Paper'),
+                child: const Text('Update Paper'),
               ),
             ],
           ),
@@ -1485,7 +1490,8 @@ class EditMCQsScreen extends StatefulWidget {
   final String paperId;
   final String paperName; // Include paperName
 
-  EditMCQsScreen({required this.paperId, required this.paperName});
+  const EditMCQsScreen(
+      {super.key, required this.paperId, required this.paperName});
 
   @override
   _EditMCQsScreenState createState() => _EditMCQsScreenState();
@@ -1513,13 +1519,13 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load questions')),
+          const SnackBar(content: Text('Failed to load questions')),
         );
       }
     } catch (error) {
       print('Error fetching questions: $error');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching questions')),
+        const SnackBar(content: Text('Error fetching questions')),
       );
     }
   }
@@ -1540,18 +1546,18 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Question updated successfully')),
+          const SnackBar(content: Text('Question updated successfully')),
         );
         _fetchQuestions(); // Refresh the questions list
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update question')),
+          const SnackBar(content: Text('Failed to update question')),
         );
       }
     } catch (error) {
       print('Error updating question: $error');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating question')),
+        const SnackBar(content: Text('Error updating question')),
       );
     }
   }
@@ -1561,16 +1567,16 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirm Delete'),
-          content: Text('Are you sure you want to delete this question?'),
+          title: const Text('Confirm Delete'),
+          content: const Text('Are you sure you want to delete this question?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Delete'),
+              child: const Text('Delete'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
           ],
         );
@@ -1586,7 +1592,7 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
 
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Question deleted successfully')),
+            const SnackBar(content: Text('Question deleted successfully')),
           );
           _fetchQuestions(); // Refresh the questions list
         } else {
@@ -1600,7 +1606,7 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
       } catch (error) {
         print('Error deleting question: $error');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting question')),
+          const SnackBar(content: Text('Error deleting question')),
         );
       }
     }
@@ -1617,11 +1623,11 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     'No questions found',
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
@@ -1634,7 +1640,7 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
                         ),
                       );
                     },
-                    child: Text('Add MCQs'),
+                    child: const Text('Add MCQs'),
                   ),
                 ],
               ),
@@ -1644,7 +1650,7 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
               itemBuilder: (context, index) {
                 final question = _questions[index];
                 return Card(
-                  margin: EdgeInsets.all(8.0),
+                  margin: const EdgeInsets.all(8.0),
                   child: ListTile(
                     title: Text(question['question'] ?? 'Untitled Question'),
                     subtitle: Column(
@@ -1660,7 +1666,7 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit),
+                          icon: const Icon(Icons.edit),
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -1674,7 +1680,7 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                           onPressed: () {
                             _deleteQuestion(question['_id']);
                           },
@@ -1692,7 +1698,7 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
 class CreateAssignmentsScreen extends StatefulWidget {
   final Map? assignment; // Optional assignment data for editing
 
-  CreateAssignmentsScreen({super.key, this.assignment});
+  const CreateAssignmentsScreen({super.key, this.assignment});
 
   @override
   _CreateAssignmentsScreenState createState() =>
@@ -1705,7 +1711,7 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
   String? fileName;
   File? file;
   DateTime? dueDate;
-  TextEditingController _dueDateController =
+  final TextEditingController _dueDateController =
       TextEditingController(); // Controller for the due date field
 
   @override
@@ -1851,14 +1857,14 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
         backgroundColor: Colors.teal,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextFormField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Standard *',
                   hintText: 'e.g. 10th',
                   border: OutlineInputBorder(),
@@ -1868,9 +1874,9 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
                     value?.isEmpty ?? true ? 'Required' : null,
                 onSaved: (value) => standard = value,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Subject *',
                   hintText: 'e.g. English',
                   border: OutlineInputBorder(),
@@ -1880,9 +1886,9 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
                     value?.isEmpty ?? true ? 'Required' : null,
                 onSaved: (value) => subject = value,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Assignment Name *',
                   hintText: 'e.g. English Assignment 1',
                   border: OutlineInputBorder(),
@@ -1892,13 +1898,13 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
                     value?.isEmpty ?? true ? 'Required' : null,
                 onSaved: (value) => assignmentName = value,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               GestureDetector(
                 onTap: _pickDueDate,
                 child: AbsorbPointer(
                   child: TextFormField(
                     controller: _dueDateController, // Attach the controller
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Due Date *',
                       hintText: 'Select Due Date',
                       border: OutlineInputBorder(),
@@ -1907,14 +1913,14 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   ElevatedButton(
                     onPressed: _pickFile,
-                    child: Text('Choose File'),
+                    child: const Text('Choose File'),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       fileName ?? 'No File Chosen',
@@ -1923,14 +1929,14 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               ElevatedButton(
-                child: Text(widget.assignment == null ? 'SAVE' : 'UPDATE'),
                 onPressed: _saveAssignment,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
+                child: Text(widget.assignment == null ? 'SAVE' : 'UPDATE'),
               ),
             ],
           ),
@@ -1968,7 +1974,7 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load assignments')),
+        const SnackBar(content: Text('Failed to load assignments')),
       );
     }
   }
@@ -1981,12 +1987,12 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Assignment deleted successfully')),
+          const SnackBar(content: Text('Assignment deleted successfully')),
         );
         _fetchAssignments(); // Refresh the list of assignments
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete assignment')),
+          const SnackBar(content: Text('Failed to delete assignment')),
         );
       }
     }
@@ -1998,16 +2004,17 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
           context: context,
           builder: (context) {
             return AlertDialog(
-              title: Text('Confirm Deletion'),
-              content: Text('Are you sure you want to delete this assignment?'),
+              title: const Text('Confirm Deletion'),
+              content: const Text(
+                  'Are you sure you want to delete this assignment?'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: Text('Delete'),
+                  child: const Text('Delete'),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                 ),
               ],
             );
@@ -2020,11 +2027,11 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Manage Assignments'),
+        title: const Text('Manage Assignments'),
         backgroundColor: Colors.teal,
       ),
       body: assignments.isEmpty
-          ? Center(
+          ? const Center(
               child: Text('No Assignments Found'),
             )
           : ListView.builder(
@@ -2034,7 +2041,7 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
 
                 return Card(
                   elevation: 4,
-                  margin: EdgeInsets.all(8),
+                  margin: const EdgeInsets.all(8),
                   child: ListTile(
                     title: Text(assignment['assignmentName'] ?? 'No Name'),
                     subtitle: Text(
@@ -2044,7 +2051,7 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit),
+                          icon: const Icon(Icons.edit),
                           onPressed: () async {
                             await Navigator.push(
                               context,
@@ -2057,7 +2064,7 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                           onPressed: () => _deleteAssignment(assignment['_id']),
                         ),
                       ],

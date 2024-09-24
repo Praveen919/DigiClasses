@@ -8,16 +8,17 @@ import 'package:testing_app/screens/config.dart';
 class ExamScreen extends StatelessWidget {
   final String option;
 
-  ExamScreen({this.option = 'viewManualExam'});
+  const ExamScreen({super.key, this.option = 'viewManualExam'});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Exam'),
+        title: const Text('Exam'),
       ),
       body: _buildContent(),
     );
   }
+
   Widget _buildContent() {
     switch (option) {
       case 'viewManualExam':
@@ -27,7 +28,7 @@ class ExamScreen extends StatelessWidget {
       case 'viewAssignments':
         return ViewAssignmentsScreen();
       default:
-        return Center(child: Text('Unknown Option'));
+        return const Center(child: Text('Unknown Option'));
     }
   }
 }
@@ -75,7 +76,8 @@ class Exam {
 
 class ExamService {
   Future<List<Exam>> fetchExams() async {
-    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/exams'));
+    final response =
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/exams'));
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
@@ -87,6 +89,8 @@ class ExamService {
 }
 
 class ViewManualExamScreen extends StatefulWidget {
+  const ViewManualExamScreen({super.key});
+
   @override
   _ViewManualExamScreenState createState() => _ViewManualExamScreenState();
 }
@@ -104,17 +108,17 @@ class _ViewManualExamScreenState extends State<ViewManualExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Manual Exams'),
+        title: const Text('Manual Exams'),
       ),
       body: FutureBuilder<List<Exam>>(
         future: futureExams,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No exams found'));
+            return const Center(child: Text('No exams found'));
           }
 
           List<Exam> exams = snapshot.data!;
@@ -125,7 +129,8 @@ class _ViewManualExamScreenState extends State<ViewManualExamScreen> {
               Exam exam = exams[index];
               return ListTile(
                 title: Text(exam.examName),
-                subtitle: Text('Subject: ${exam.subject} | Standard: ${exam.standard}'),
+                subtitle: Text(
+                    'Subject: ${exam.subject} | Standard: ${exam.standard}'),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -146,7 +151,7 @@ class _ViewManualExamScreenState extends State<ViewManualExamScreen> {
 class ExamDetailsScreen extends StatelessWidget {
   final Exam exam;
 
-  ExamDetailsScreen({required this.exam});
+  const ExamDetailsScreen({super.key, required this.exam});
 
   @override
   Widget build(BuildContext context) {
@@ -160,33 +165,44 @@ class ExamDetailsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Standard: ${exam.standard}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 8),
-              Text('Subject: ${exam.subject}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 8),
-              Text('Total Marks: ${exam.totalMarks}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 8),
-              Text('Exam Date: ${exam.examDate.toLocal().toIso8601String()}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 8),
-              Text('Time: ${exam.fromTime} - ${exam.toTime}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 16),
+              Text('Standard: ${exam.standard}',
+                  style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Subject: ${exam.subject}',
+                  style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Total Marks: ${exam.totalMarks}',
+                  style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Exam Date: ${exam.examDate.toLocal().toIso8601String()}',
+                  style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Time: ${exam.fromTime} - ${exam.toTime}',
+                  style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 16),
               if (exam.note != null) ...[
-                Text('Note:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(exam.note!, style: TextStyle(fontSize: 16)),
-                SizedBox(height: 16),
+                const Text('Note:',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(exam.note!, style: const TextStyle(fontSize: 16)),
+                const SizedBox(height: 16),
               ],
               if (exam.remark != null) ...[
-                Text('Remark:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(exam.remark!, style: TextStyle(fontSize: 16)),
-                SizedBox(height: 16),
+                const Text('Remark:',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(exam.remark!, style: const TextStyle(fontSize: 16)),
+                const SizedBox(height: 16),
               ],
               if (exam.documentPath != null) ...[
-                Text('Document:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text('Document:',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ElevatedButton(
                   onPressed: () {
                     // Handle document view or download
                   },
-                  child: Text('View Document'),
+                  child: const Text('View Document'),
                 ),
               ],
             ],
@@ -197,15 +213,17 @@ class ExamDetailsScreen extends StatelessWidget {
   }
 }
 
-
 class ViewMCQExamScreen extends StatefulWidget {
+  const ViewMCQExamScreen({super.key});
+
   @override
   _ViewMCQExamScreenState createState() => _ViewMCQExamScreenState();
 }
 
 class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   int currentQuestionIndex = 0;
-  Map<int, String?> selectedAnswers = {}; // Stores selected answers for each question
+  Map<int, String?> selectedAnswers =
+      {}; // Stores selected answers for each question
   List<String> questions = [];
   List<List<String>> options = [];
   String paperName = '';
@@ -214,7 +232,7 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   bool isLoading = true;
 
   // Timer and Exam Duration
-  Duration examDuration = Duration(minutes: 30);
+  Duration examDuration = const Duration(minutes: 30);
   late DateTime examEndTime;
   late Duration timeRemaining;
   late String timerDisplay = '';
@@ -228,14 +246,17 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   // Fetch the exam from the server
   Future<void> fetchMCQExam() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/EXAM_ID')); // Update EXAM_ID dynamically
+      final response = await http.get(Uri.parse(
+          '${AppConfig.baseUrl}/api/mcq-exams/EXAM_ID')); // Update EXAM_ID dynamically
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
           paperName = data['paperName'];
           subject = data['subject'];
-          questions = List<String>.from(data['questions'].map((q) => q['question']));
-          options = List<List<String>>.from(data['questions'].map((q) => List<String>.from(q['options'])));
+          questions =
+              List<String>.from(data['questions'].map((q) => q['question']));
+          options = List<List<String>>.from(
+              data['questions'].map((q) => List<String>.from(q['options'])));
           examId = data['_id']; // Store exam ID for submitting later
           examEndTime = DateTime.now().add(examDuration); // Set exam timer
           updateTimer();
@@ -257,7 +278,7 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
         timeRemaining = examEndTime.difference(now);
         timerDisplay = formatDuration(timeRemaining);
       });
-      Future.delayed(Duration(seconds: 1), updateTimer);
+      Future.delayed(const Duration(seconds: 1), updateTimer);
     } else {
       setState(() {
         timerDisplay = "Time's up!";
@@ -297,15 +318,16 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   void submitExam() async {
     final submissionData = {
       'examId': examId,
-      'answers': selectedAnswers.entries.map((e) => {'questionIndex': e.key, 'answer': e.value}).toList(),
+      'answers': selectedAnswers.entries
+          .map((e) => {'questionIndex': e.key, 'answer': e.value})
+          .toList(),
     };
 
     try {
       final response = await http.post(
           Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/submit'),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode(submissionData)
-      );
+          body: json.encode(submissionData));
 
       if (response.statusCode == 200) {
         print('Exam submitted successfully');
@@ -321,90 +343,96 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('MCQ Exam'),
+        title: const Text('MCQ Exam'),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator()) // Show a loader while fetching data
+          ? const Center(
+              child:
+                  CircularProgressIndicator()) // Show a loader while fetching data
           : Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Exam Information
-            Text(
-              'Exam: $paperName',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              'Subject: $subject',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              'Time Remaining: $timerDisplay',
-              style: TextStyle(fontSize: 16, color: Colors.red),
-            ),
-            SizedBox(height: 16.0),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Exam Information
+                  Text(
+                    'Exam: $paperName',
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8.0),
+                  Text(
+                    'Subject: $subject',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 8.0),
+                  Text(
+                    'Time Remaining: $timerDisplay',
+                    style: const TextStyle(fontSize: 16, color: Colors.red),
+                  ),
+                  const SizedBox(height: 16.0),
 
-            // Question Progress
-            Text(
-              'Question ${currentQuestionIndex + 1} of ${questions.length}',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 16.0),
+                  // Question Progress
+                  Text(
+                    'Question ${currentQuestionIndex + 1} of ${questions.length}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 16.0),
 
-            // Question Display
-            Text(
-              questions[currentQuestionIndex],
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.0),
+                  // Question Display
+                  Text(
+                    questions[currentQuestionIndex],
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16.0),
 
-            // Answer Choices
-            ...options[currentQuestionIndex].map((option) {
-              return RadioListTile<String>(
-                title: Text(option),
-                value: option,
-                groupValue: selectedAnswers[currentQuestionIndex],
-                onChanged: (value) {
-                  selectAnswer(currentQuestionIndex, value!);
-                },
-              );
-            }).toList(),
+                  // Answer Choices
+                  ...options[currentQuestionIndex].map((option) {
+                    return RadioListTile<String>(
+                      title: Text(option),
+                      value: option,
+                      groupValue: selectedAnswers[currentQuestionIndex],
+                      onChanged: (value) {
+                        selectAnswer(currentQuestionIndex, value!);
+                      },
+                    );
+                  }),
 
-            // Navigation Buttons
-            SizedBox(height: 16.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: goToPreviousQuestion,
-                  child: Text('Previous'),
-                ),
-                ElevatedButton(
-                  onPressed: goToNextQuestion,
-                  child: Text('Next'),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.0),
+                  // Navigation Buttons
+                  const SizedBox(height: 16.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton(
+                        onPressed: goToPreviousQuestion,
+                        child: const Text('Previous'),
+                      ),
+                      ElevatedButton(
+                        onPressed: goToNextQuestion,
+                        child: const Text('Next'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16.0),
 
-            // Submit Button
-            Center(
-              child: ElevatedButton(
-                onPressed: submitExam,
-                child: Text('Submit'),
+                  // Submit Button
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: submitExam,
+                      child: const Text('Submit'),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }
 
 class ViewAssignmentsScreen extends StatefulWidget {
+  const ViewAssignmentsScreen({super.key});
+
   @override
   _ViewAssignmentsScreenState createState() => _ViewAssignmentsScreenState();
 }
@@ -422,11 +450,13 @@ class _ViewAssignmentsScreenState extends State<ViewAssignmentsScreen> {
 
   Future<void> fetchAssignments() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/assignments'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/assignments'));
 
       if (response.statusCode == 200) {
         setState(() {
-          assignments = List<Map<String, dynamic>>.from(json.decode(response.body));
+          assignments =
+              List<Map<String, dynamic>>.from(json.decode(response.body));
           filteredAssignments = assignments; // Initialize filtered list
         });
       } else {
@@ -441,7 +471,8 @@ class _ViewAssignmentsScreenState extends State<ViewAssignmentsScreen> {
     setState(() {
       searchQuery = query;
       filteredAssignments = assignments.where((assignment) {
-        final assignmentName = assignment['assignmentName']?.toLowerCase() ?? '';
+        final assignmentName =
+            assignment['assignmentName']?.toLowerCase() ?? '';
         return assignmentName.contains(query.toLowerCase());
       }).toList();
     });
@@ -453,12 +484,12 @@ class _ViewAssignmentsScreenState extends State<ViewAssignmentsScreen> {
       builder: (context) {
         String tempQuery = searchQuery; // Temporary variable for dialog
         return AlertDialog(
-          title: Text('Search Assignments'),
+          title: const Text('Search Assignments'),
           content: TextField(
             onChanged: (value) {
               tempQuery = value;
             },
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               hintText: 'Type to search...',
             ),
           ),
@@ -468,11 +499,11 @@ class _ViewAssignmentsScreenState extends State<ViewAssignmentsScreen> {
                 filterAssignments(tempQuery);
                 Navigator.of(context).pop();
               },
-              child: Text('Search'),
+              child: const Text('Search'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
           ],
         );
@@ -484,29 +515,29 @@ class _ViewAssignmentsScreenState extends State<ViewAssignmentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Assignments'),
+        title: const Text('Assignments'),
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: showSearchDialog, // Call the search dialog function
           ),
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Search Bar
             TextField(
               onChanged: filterAssignments,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Search assignments',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
 
             // Assignment List
             Expanded(
@@ -521,16 +552,18 @@ class _ViewAssignmentsScreenState extends State<ViewAssignmentsScreen> {
                       children: [
                         Text('Standard: ${assignment['standard'] ?? 'N/A'}'),
                         Text('Subject: ${assignment['subject'] ?? 'N/A'}'),
-                        Text('Due Date: ${assignment['dueDate'] ?? 'No Due Date'}'),
+                        Text(
+                            'Due Date: ${assignment['dueDate'] ?? 'No Due Date'}'),
                       ],
                     ),
                     trailing: IconButton(
-                      icon: Icon(Icons.arrow_forward),
+                      icon: const Icon(Icons.arrow_forward),
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => AssignmentDetailsScreen(assignment: assignment),
+                            builder: (context) =>
+                                AssignmentDetailsScreen(assignment: assignment),
                           ),
                         );
                       },
@@ -549,33 +582,31 @@ class _ViewAssignmentsScreenState extends State<ViewAssignmentsScreen> {
 class AssignmentDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> assignment;
 
-  AssignmentDetailsScreen({required this.assignment});
+  const AssignmentDetailsScreen({super.key, required this.assignment});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Assignment Details'),
+        title: const Text('Assignment Details'),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Title: ${assignment['assignmentName'] ?? 'No Title'}',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Text('Standard: ${assignment['standard'] ?? 'N/A'}'),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Text('Subject: ${assignment['subject'] ?? 'N/A'}'),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Text('Due Date: ${assignment['dueDate'] ?? 'No Due Date'}'),
-            SizedBox(height: 16.0),
-
-            ],
-
+            const SizedBox(height: 16.0),
+          ],
         ),
       ),
     );

@@ -26,7 +26,8 @@ class MyApp extends StatelessWidget {
         '/createAccount': (context) => const CreateAccountScreen(),
         // Adjusted routes to handle parameters via arguments
         '/branchYearSelection': (context) {
-          final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
+          final arguments = ModalRoute.of(context)?.settings.arguments
+              as Map<String, String>?;
           return BranchYearSelectionScreen(
             userRole: arguments?['userRole'] ?? '',
             name: arguments?['name'] ?? '',
@@ -35,7 +36,8 @@ class MyApp extends StatelessWidget {
           );
         },
         '/adminDashboard': (context) {
-          final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
+          final arguments = ModalRoute.of(context)?.settings.arguments
+              as Map<String, String>?;
           return DashboardScreen(
             name: arguments?['name'] ?? '',
             branch: arguments?['branch'] ?? '',
@@ -43,7 +45,8 @@ class MyApp extends StatelessWidget {
           );
         },
         '/teacherDashboard': (context) {
-          final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
+          final arguments = ModalRoute.of(context)?.settings.arguments
+              as Map<String, String>?;
           return DashboardT(
             name: arguments?['name'] ?? '',
             branch: arguments?['branch'] ?? '',
@@ -51,7 +54,8 @@ class MyApp extends StatelessWidget {
           );
         },
         '/studentDashboard': (context) {
-          final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
+          final arguments = ModalRoute.of(context)?.settings.arguments
+              as Map<String, String>?;
           return Dashboard1Screen(
             name: arguments?['name'] ?? '',
             branch: arguments?['branch'] ?? '',

@@ -384,25 +384,25 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit Student'),
+          title: const Text('Edit Student'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: 'Student Name'),
+                decoration: const InputDecoration(labelText: 'Student Name'),
               ),
               TextField(
                 controller: standardController,
-                decoration: InputDecoration(labelText: 'Standard'),
+                decoration: const InputDecoration(labelText: 'Standard'),
               ),
               TextField(
                 controller: courseController,
-                decoration: InputDecoration(labelText: 'Course'),
+                decoration: const InputDecoration(labelText: 'Course'),
               ),
               TextField(
                 controller: batchController,
-                decoration: InputDecoration(labelText: 'Batch'),
+                decoration: const InputDecoration(labelText: 'Batch'),
               ),
             ],
           ),
@@ -420,13 +420,13 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                 _editStudentDetail(student['id'], updatedData);
                 Navigator.of(context).pop();
               },
-              child: Text('Save'),
+              child: const Text('Save'),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
           ],
         );
@@ -440,8 +440,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Filtered Student Report'),
-          content: Container(
+          title: const Text('Filtered Student Report'),
+          content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
               itemCount: filteredStudents.length,
@@ -460,7 +460,7 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Close'),
+              child: const Text('Close'),
             ),
           ],
         );
@@ -567,13 +567,13 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue),
+                          icon: const Icon(Icons.edit, color: Colors.blue),
                           onPressed: () {
                             _showEditDialog(student);
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () {
                             _deleteStudentDetail(student['id']);
                           },
@@ -586,7 +586,7 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
             ),
             ElevatedButton(
               onPressed: _viewReport, // View the filtered student report
-              child: Text('View Report'),
+              child: const Text('View Report'),
             ),
           ],
         ),
@@ -1773,7 +1773,7 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
 }
 
 class ProfitLossReportScreen extends StatefulWidget {
-  const ProfitLossReportScreen({Key? key}) : super(key: key);
+  const ProfitLossReportScreen({super.key});
 
   @override
   _ProfitLossReportScreenState createState() => _ProfitLossReportScreenState();
@@ -1950,7 +1950,7 @@ class _ProfitLossReportScreenState extends State<ProfitLossReportScreen> {
 }
 
 class AppAccessRightsScreen extends StatefulWidget {
-  const AppAccessRightsScreen({Key? key}) : super(key: key);
+  const AppAccessRightsScreen({super.key});
 
   @override
   _AppAccessRightsScreenState createState() => _AppAccessRightsScreenState();
@@ -2024,9 +2024,9 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
               onPressed: () {
                 _fetchUsers();
               },
-              child: const Text('Check App Access Rights'),
               style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.black, backgroundColor: Colors.white),
+              child: const Text('Check App Access Rights'),
             ),
             const SizedBox(height: 16),
             const Text('Check Rights:',
@@ -2102,8 +2102,8 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
               onPressed: () {
                 // Implement any additional functionality here
               },
-              child: const Text('Update'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+              child: const Text('Update'),
             ),
           ],
         ),

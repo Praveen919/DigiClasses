@@ -51,7 +51,8 @@ class ReportScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ViewDetailReportScreen(studentId: studentId),
+                  builder: (context) =>
+                      ViewDetailReportScreen(studentId: studentId),
                 ),
               );
             },
@@ -88,7 +89,7 @@ class ReportScreen extends StatelessWidget {
 class ViewDetailReportScreen extends StatefulWidget {
   final String studentId;
 
-  const ViewDetailReportScreen({required this.studentId});
+  const ViewDetailReportScreen({super.key, required this.studentId});
 
   @override
   _ViewDetailReportScreenState createState() => _ViewDetailReportScreenState();
@@ -105,7 +106,8 @@ class _ViewDetailReportScreenState extends State<ViewDetailReportScreen> {
   }
 
   Future<void> fetchStudentReport() async {
-    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/students/${widget.studentId}'));
+    final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/students/${widget.studentId}'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -159,14 +161,14 @@ class _ViewDetailReportScreenState extends State<ViewDetailReportScreen> {
             Text('Batch: ${_report!.classBatch}'),
             Text('Course: ${_report!.courseName}'),
             Text('Join Date: ${_report!.joinDate}'),
-
             const SizedBox(height: 16.0),
-
             TextButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const HelpScreen()), // Navigate to your existing HelpScreen
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const HelpScreen()), // Navigate to your existing HelpScreen
                 );
               },
               child: const Text('Need Help? Contact Support'),
@@ -204,7 +206,6 @@ class StudentReport {
     );
   }
 }
-
 
 /*class ViewMyCardReport extends StatelessWidget {
   const ViewMyCardReport({super.key});
@@ -337,7 +338,8 @@ class ViewMyAttendanceReport extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No attendance records available.'));
+            return const Center(
+                child: Text('No attendance records available.'));
           }
 
           final attendanceRecords = snapshot.data!;
@@ -353,10 +355,11 @@ class ViewMyAttendanceReport extends StatelessWidget {
                 ),
                 const SizedBox(height: 8.0),
                 Text('Total Classes Held: ${attendanceRecords.length}'),
-                Text('Total Classes Attended: ${attendanceRecords.where((record) => record.status == 'Present').length}'),
-                Text('Total Absences: ${attendanceRecords.where((record) => record.status == 'Absent').length}'),
+                Text(
+                    'Total Classes Attended: ${attendanceRecords.where((record) => record.status == 'Present').length}'),
+                Text(
+                    'Total Absences: ${attendanceRecords.where((record) => record.status == 'Absent').length}'),
                 const SizedBox(height: 16.0),
-
                 Text(
                   'Detailed Attendance Records',
                   style: Theme.of(context).textTheme.headlineSmall,
@@ -375,12 +378,12 @@ class ViewMyAttendanceReport extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16.0),
-
                 TextButton(
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const HelpScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const HelpScreen()),
                     );
                   },
                   child: const Text('Need Help? Contact Support'),
@@ -393,12 +396,16 @@ class ViewMyAttendanceReport extends StatelessWidget {
     );
   }
 
-  Future<List<StudentAttendanceRecord>> fetchAttendanceReport(String studentId) async {
-    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/attendance/student-attendance/$studentId'));
+  Future<List<StudentAttendanceRecord>> fetchAttendanceReport(
+      String studentId) async {
+    final response = await http.get(Uri.parse(
+        '${AppConfig.baseUrl}/api/attendance/student-attendance/$studentId'));
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonResponse = json.decode(response.body);
-      return jsonResponse.map((data) => StudentAttendanceRecord.fromJson(data)).toList();
+      return jsonResponse
+          .map((data) => StudentAttendanceRecord.fromJson(data))
+          .toList();
     } else {
       throw Exception('Failed to load attendance data');
     }

@@ -69,8 +69,8 @@ class ExpensesIncomeScreen extends StatefulWidget {
 
   const ExpensesIncomeScreen({
     required this.option,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _ExpensesIncomeScreenState createState() => _ExpensesIncomeScreenState();
@@ -177,8 +177,7 @@ class _ExpensesIncomeScreenState extends State<ExpensesIncomeScreen> {
 class AddExpenseScreen extends StatefulWidget {
   final Function(Expense) onAddExpense;
 
-  const AddExpenseScreen({Key? key, required this.onAddExpense})
-      : super(key: key);
+  const AddExpenseScreen({super.key, required this.onAddExpense});
 
   @override
   _AddExpenseScreenState createState() => _AddExpenseScreenState();
@@ -238,7 +237,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   Future<void> _saveExpenseToBackend(Expense expense) async {
-    final url = '${AppConfig.baseUrl}/api/expenses';
+    const url = '${AppConfig.baseUrl}/api/expenses';
 
     try {
       // Format the date as needed, for example: 'yyyy-MM-dd'
@@ -401,20 +400,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: _resetForm,
-                  child: const Text('Reset'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.teal,
                   ),
+                  child: const Text('Reset'),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
                   onPressed: _submitForm,
-                  child: const Text('Submit'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.indigo,
                   ),
+                  child: const Text('Submit'),
                 ),
               ),
             ],
@@ -432,9 +431,9 @@ class ManageExpenseScreen extends StatefulWidget {
   const ManageExpenseScreen({
     required this.onDeleteExpense,
     required this.onUpdateExpense,
-    Key? key,
+    super.key,
     required List<Expense> expenses,
-  }) : super(key: key);
+  });
 
   @override
   _ManageExpenseScreenState createState() => _ManageExpenseScreenState();
@@ -452,7 +451,7 @@ class _ManageExpenseScreenState extends State<ManageExpenseScreen> {
   }
 
   Future<void> fetchExpenses() async {
-    final url = '${AppConfig.baseUrl}/api/expenses';
+    const url = '${AppConfig.baseUrl}/api/expenses';
     try {
       final response = await http.get(Uri.parse(url));
 
@@ -583,6 +582,8 @@ class _ManageExpenseScreenState extends State<ManageExpenseScreen> {
 }
 
 class AddExpenseTypeScreen extends StatefulWidget {
+  const AddExpenseTypeScreen({super.key});
+
   @override
   _AddExpenseTypeScreenState createState() => _AddExpenseTypeScreenState();
 }
@@ -595,7 +596,7 @@ class _AddExpenseTypeScreenState extends State<AddExpenseTypeScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       final expenseType = _expenseTypeController.text;
       // Replace with your backend URL
-      final url = '${AppConfig.baseUrl}:3000/expense-types';
+      const url = '${AppConfig.baseUrl}:3000/expense-types';
 
       try {
         final response = await http.post(
@@ -689,6 +690,8 @@ class _AddExpenseTypeScreenState extends State<AddExpenseTypeScreen> {
 }
 
 class ManageExpenseTypeScreen extends StatefulWidget {
+  const ManageExpenseTypeScreen({super.key});
+
   @override
   _ManageExpenseTypeScreenState createState() =>
       _ManageExpenseTypeScreenState();
@@ -705,7 +708,7 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
 
   Future<void> _fetchExpenseTypes() async {
     // Replace with your backend URL
-    final url = '${AppConfig.baseUrl}/expense-types';
+    const url = '${AppConfig.baseUrl}/expense-types';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -811,6 +814,8 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
 }
 
 class AddIncomeScreen extends StatefulWidget {
+  const AddIncomeScreen({super.key});
+
   @override
   _AddIncomeScreenState createState() => _AddIncomeScreenState();
 }
@@ -1029,6 +1034,8 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
 }
 
 class ManageIncomeScreen extends StatefulWidget {
+  const ManageIncomeScreen({super.key});
+
   @override
   _ManageIncomeScreenState createState() => _ManageIncomeScreenState();
 }

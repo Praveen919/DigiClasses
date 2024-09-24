@@ -8,7 +8,6 @@ import 'package:http_parser/http_parser.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:testing_app/screens/config.dart';
 
-
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -25,7 +24,8 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ProfileSettings()),
+                MaterialPageRoute(
+                    builder: (context) => const ProfileSettings()),
               );
             },
           ),
@@ -43,7 +43,9 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AutoNotificationSettingsScreen()),
+                MaterialPageRoute(
+                    builder: (context) =>
+                        const AutoNotificationSettingsScreen()),
               );
             },
           ),
@@ -52,7 +54,8 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AutoWhatsappSettingScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const AutoWhatsappSettingScreen()),
               );
             },
           ),
@@ -62,6 +65,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
+
 // Screen for Profile Settings
 class ProfileSettings extends StatefulWidget {
   const ProfileSettings({super.key});
@@ -105,8 +109,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
             _buildTextField('Country', countryController, true),
             _buildTextField('City', cityController, true),
             _buildTextField('Branch Name', branchNameController, true),
-           _buildTextField('Branch Address', branchAddressController, true),
-            
+            _buildTextField('Branch Address', branchAddressController, true),
             const SizedBox(height: 20),
             const Text(
               'Profile Logo',
@@ -189,17 +192,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile settings updated successfully!')),
+          const SnackBar(
+              content: Text('Profile settings updated successfully!')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update profile settings.')),
+          const SnackBar(content: Text('Failed to update profile settings.')),
         );
       }
     } catch (error) {
       print('Error: $error');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred. Please try again.')),
+        const SnackBar(content: Text('An error occurred. Please try again.')),
       );
     }
   }
@@ -290,7 +294,7 @@ class _ChangePasswordState extends State<ChangePassword> {
       final currentPassword = currentPasswordController.text;
       final newPassword = newPasswordController.text;
       // Simulated token from authentication system (replace this with actual token retrieval logic)
-      final token = 'user_jwt_token';
+      const token = 'user_jwt_token';
       try {
         final response = await http.post(
           Uri.parse('${AppConfig.baseUrl}/api/password'),
@@ -518,8 +522,7 @@ class _AutoNotificationSettingsState
           body: json.encode({
             'studentAbsentAttendanceNotification':
                 notificationSettings['Student Absent Attendance Notification'],
-            'attendancePerformanceStatusNotification':
-                notificationSettings[
+            'attendancePerformanceStatusNotification': notificationSettings[
                 'Attendance Performance Status Notification'],
             'feeReminderNotification':
                 notificationSettings['Fee Reminder Notification'],
@@ -595,7 +598,7 @@ class _AutoNotificationSettingsState
 class NoteSection extends StatelessWidget {
   final String noteText;
 
-  const NoteSection({required this.noteText});
+  const NoteSection({super.key, required this.noteText});
 
   @override
   Widget build(BuildContext context) {
@@ -762,10 +765,10 @@ class _AutoWhatsappSettingScreenState extends State<AutoWhatsappSettingScreen> {
         );
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Settings saved successfully')));
+              const SnackBar(content: Text('Settings saved successfully')));
         } else {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Failed to save settings')));
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to save settings')));
         }
       } catch (error) {
         print('Error saving WhatsApp settings: $error');

@@ -29,7 +29,8 @@ class MessagingScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => RequestCredentialsScreen()),
+                MaterialPageRoute(
+                    builder: (context) => RequestCredentialsScreen()),
               );
             },
           ),
@@ -38,7 +39,8 @@ class MessagingScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SendInquiryMessageScreen()),
+                MaterialPageRoute(
+                    builder: (context) => SendInquiryMessageScreen()),
               );
             },
           ),
@@ -47,7 +49,8 @@ class MessagingScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TodaysAbsenceMessageScreen()),
+                MaterialPageRoute(
+                    builder: (context) => TodaysAbsenceMessageScreen()),
               );
             },
           ),
@@ -58,15 +61,17 @@ class MessagingScreen extends StatelessWidget {
   }
 }
 
-
-
 class SendMessageScreen extends StatelessWidget {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
-  final TextEditingController _recipientController = TextEditingController(); // To enter recipient ID
+  final TextEditingController _recipientController =
+      TextEditingController(); // To enter recipient ID
 
   // URL for your API (change it to your server address)
-  final String apiUrl = '${AppConfig.baseUrl}/api/messageStudent/student/messages';
+  final String apiUrl =
+      '${AppConfig.baseUrl}/api/messageStudent/student/messages';
+
+  SendMessageScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +126,9 @@ class SendMessageScreen extends StatelessWidget {
                 String recipientId = _recipientController.text;
 
                 // Validate inputs
-                if (subject.isNotEmpty && message.isNotEmpty && recipientId.isNotEmpty) {
+                if (subject.isNotEmpty &&
+                    message.isNotEmpty &&
+                    recipientId.isNotEmpty) {
                   // Call sendMessage() to send the data to the server
                   sendMessage(subject, message, recipientId).then((response) {
                     if (response['success'] == true) {
@@ -130,12 +137,14 @@ class SendMessageScreen extends StatelessWidget {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Message Sent'),
-                          content: const Text('Your message has been sent successfully!'),
+                          content: const Text(
+                              'Your message has been sent successfully!'),
                           actions: <Widget>[
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop();
-                                Navigator.of(context).pop(); // Close the dialog and navigate back
+                                Navigator.of(context)
+                                    .pop(); // Close the dialog and navigate back
                               },
                               child: const Text('OK'),
                             ),
@@ -148,7 +157,8 @@ class SendMessageScreen extends StatelessWidget {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Error'),
-                          content: const Text('Failed to send the message. Try again later.'),
+                          content: const Text(
+                              'Failed to send the message. Try again later.'),
                           actions: <Widget>[
                             TextButton(
                               onPressed: () {
@@ -189,13 +199,15 @@ class SendMessageScreen extends StatelessWidget {
   }
 
   // Function to send the message to the server
-  Future<Map<String, dynamic>> sendMessage(String subject, String message, String recipientId) async {
+  Future<Map<String, dynamic>> sendMessage(
+      String subject, String message, String recipientId) async {
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'senderStudentId': 'studentId', // Set student ID (replace with actual student ID logic)
+          'senderStudentId':
+              'studentId', // Set student ID (replace with actual student ID logic)
           'recipientId': recipientId,
           'subject': subject,
           'message': message,
@@ -220,7 +232,10 @@ class RequestCredentialsScreen extends StatelessWidget {
   final TextEditingController _messageController = TextEditingController();
 
   // URL for your API (change it to your server address)
-  final String apiUrl = '${AppConfig.baseUrl}/api/messageStudentIdPass/student/messages';
+  final String apiUrl =
+      '${AppConfig.baseUrl}/api/messageStudentIdPass/student/messages';
+
+  RequestCredentialsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -234,10 +249,10 @@ class RequestCredentialsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Instructions
-            Text(
+            const Text(
               'If you have forgotten your student ID or password, please enter your email address below. '
-                  'If you have a student ID, you can also enter it to expedite the process. '
-                  'You can also add a message to notify the admin or teacher.',
+              'If you have a student ID, you can also enter it to expedite the process. '
+              'You can also add a message to notify the admin or teacher.',
               style: TextStyle(fontSize: 16.0),
             ),
             const SizedBox(height: 16.0),
@@ -245,7 +260,7 @@ class RequestCredentialsScreen extends StatelessWidget {
             // Email Field
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter your email address',
                 border: OutlineInputBorder(),
                 labelText: 'Email Address',
@@ -257,7 +272,7 @@ class RequestCredentialsScreen extends StatelessWidget {
             // Student ID Field (Optional)
             TextField(
               controller: _studentIdController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter your student ID (optional)',
                 border: OutlineInputBorder(),
                 labelText: 'Student ID',
@@ -269,7 +284,7 @@ class RequestCredentialsScreen extends StatelessWidget {
             TextField(
               controller: _messageController,
               maxLines: 5,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Type your message here...',
                 border: OutlineInputBorder(),
                 labelText: 'Message',
@@ -287,19 +302,22 @@ class RequestCredentialsScreen extends StatelessWidget {
                 // Validate email
                 if (email.isNotEmpty) {
                   // Process the request
-                  requestCredentials(email, studentId, message).then((response) {
+                  requestCredentials(email, studentId, message)
+                      .then((response) {
                     if (response['success']) {
                       // Show confirmation message
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Request Submitted'),
-                          content: const Text('Your request has been submitted. Please check your email for further instructions.'),
+                          content: const Text(
+                              'Your request has been submitted. Please check your email for further instructions.'),
                           actions: <Widget>[
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop();
-                                Navigator.of(context).pop(); // Optionally navigate back
+                                Navigator.of(context)
+                                    .pop(); // Optionally navigate back
                               },
                               child: const Text('OK'),
                             ),
@@ -312,7 +330,8 @@ class RequestCredentialsScreen extends StatelessWidget {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Error'),
-                          content: const Text('Failed to submit your request. Please try again later.'),
+                          content: const Text(
+                              'Failed to submit your request. Please try again later.'),
                           actions: <Widget>[
                             TextButton(
                               onPressed: () {
@@ -353,7 +372,8 @@ class RequestCredentialsScreen extends StatelessWidget {
   }
 
   // Function to send the request to the server
-  Future<Map<String, dynamic>> requestCredentials(String email, String studentId, String message) async {
+  Future<Map<String, dynamic>> requestCredentials(
+      String email, String studentId, String message) async {
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -381,8 +401,11 @@ class SendInquiryMessageScreen extends StatelessWidget {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
 
+  SendInquiryMessageScreen({super.key});
+
   Future<void> sendInquiry(String subject, String message) async {
-    const url = '${AppConfig.baseUrl}/api/inquiriesStudent/inquiries'; // Replace with your backend URL
+    const url =
+        '${AppConfig.baseUrl}/api/inquiriesStudent/inquiries'; // Replace with your backend URL
 
     try {
       final response = await http.post(
@@ -415,15 +438,15 @@ class SendInquiryMessageScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'If you have any questions or need assistance, please enter the subject and your message below. '
-                  'Our support team will get back to you as soon as possible.',
+              'Our support team will get back to you as soon as possible.',
               style: TextStyle(fontSize: 16.0),
             ),
             const SizedBox(height: 16.0),
             TextField(
               controller: _subjectController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter subject of your inquiry',
                 border: OutlineInputBorder(),
                 labelText: 'Subject',
@@ -432,7 +455,7 @@ class SendInquiryMessageScreen extends StatelessWidget {
             const SizedBox(height: 16.0),
             TextField(
               controller: _messageController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter your message',
                 border: OutlineInputBorder(),
                 labelText: 'Message',
@@ -452,12 +475,14 @@ class SendInquiryMessageScreen extends StatelessWidget {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Inquiry Sent'),
-                      content: const Text('Your inquiry has been sent successfully. We will get back to you shortly.'),
+                      content: const Text(
+                          'Your inquiry has been sent successfully. We will get back to you shortly.'),
                       actions: <Widget>[
                         TextButton(
                           onPressed: () {
                             Navigator.of(context).pop();
-                            Navigator.of(context).pop(); // Optionally navigate back
+                            Navigator.of(context)
+                                .pop(); // Optionally navigate back
                           },
                           child: const Text('OK'),
                         ),
@@ -469,7 +494,8 @@ class SendInquiryMessageScreen extends StatelessWidget {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Error'),
-                      content: const Text('Please fill in both the subject and the message.'),
+                      content: const Text(
+                          'Please fill in both the subject and the message.'),
                       actions: <Widget>[
                         TextButton(
                           onPressed: () {
@@ -493,11 +519,15 @@ class SendInquiryMessageScreen extends StatelessWidget {
 
 // Example of SendInquiryMessage widget
 class TodaysAbsenceMessageScreen extends StatefulWidget {
+  const TodaysAbsenceMessageScreen({super.key});
+
   @override
-  _TodaysAbsenceMessageScreenState createState() => _TodaysAbsenceMessageScreenState();
+  _TodaysAbsenceMessageScreenState createState() =>
+      _TodaysAbsenceMessageScreenState();
 }
 
-class _TodaysAbsenceMessageScreenState extends State<TodaysAbsenceMessageScreen> {
+class _TodaysAbsenceMessageScreenState
+    extends State<TodaysAbsenceMessageScreen> {
   final TextEditingController _reasonController = TextEditingController();
   String? _filePath;
 
@@ -513,9 +543,9 @@ class _TodaysAbsenceMessageScreenState extends State<TodaysAbsenceMessageScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Instructions
-            Text(
+            const Text(
               'If you are absent today, please provide the reason for your absence below. '
-                  'You may also upload any supporting documents if needed.',
+              'You may also upload any supporting documents if needed.',
               style: TextStyle(fontSize: 16.0),
             ),
             const SizedBox(height: 16.0),
@@ -523,7 +553,7 @@ class _TodaysAbsenceMessageScreenState extends State<TodaysAbsenceMessageScreen>
             // Reason Field
             TextField(
               controller: _reasonController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter reason for absence',
                 border: OutlineInputBorder(),
                 labelText: 'Reason',
@@ -547,7 +577,9 @@ class _TodaysAbsenceMessageScreenState extends State<TodaysAbsenceMessageScreen>
                   child: const Text('Upload Supporting Document'),
                 ),
                 const SizedBox(width: 10.0),
-                Text(_filePath != null ? 'File: ${_filePath!.split('/').last}' : 'No file selected'),
+                Text(_filePath != null
+                    ? 'File: ${_filePath!.split('/').last}'
+                    : 'No file selected'),
               ],
             ),
             const SizedBox(height: 16.0),
@@ -567,12 +599,14 @@ class _TodaysAbsenceMessageScreenState extends State<TodaysAbsenceMessageScreen>
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Absence Notification Sent'),
-                      content: const Text('Your absence notification has been sent successfully.'),
+                      content: const Text(
+                          'Your absence notification has been sent successfully.'),
                       actions: <Widget>[
                         TextButton(
                           onPressed: () {
                             Navigator.of(context).pop();
-                            Navigator.of(context).pop(); // Optionally navigate back
+                            Navigator.of(context)
+                                .pop(); // Optionally navigate back
                           },
                           child: const Text('OK'),
                         ),
@@ -585,7 +619,8 @@ class _TodaysAbsenceMessageScreenState extends State<TodaysAbsenceMessageScreen>
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text('Error'),
-                      content: const Text('Please provide a reason for your absence.'),
+                      content: const Text(
+                          'Please provide a reason for your absence.'),
                       actions: <Widget>[
                         TextButton(
                           onPressed: () {
@@ -610,13 +645,15 @@ class _TodaysAbsenceMessageScreenState extends State<TodaysAbsenceMessageScreen>
   void sendAbsenceNotification(String reason, String? filePath) async {
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('${AppConfig.baseUrl}/api/absenceMessage/absence'), // Replace with your backend URL
+      Uri.parse(
+          '${AppConfig.baseUrl}/api/absenceMessage/absence'), // Replace with your backend URL
     );
 
     request.fields['reason'] = reason;
 
     if (filePath != null) {
-      request.files.add(await http.MultipartFile.fromPath('document', filePath));
+      request.files
+          .add(await http.MultipartFile.fromPath('document', filePath));
     }
 
     var response = await request.send();
