@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:testing_app/screens/config.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_web_browser/flutter_web_browser.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HelpScreen extends StatelessWidget {
   final String option;
@@ -30,30 +33,134 @@ class HelpScreen extends StatelessWidget {
   }
 }
 
+void _openInstagram() async {
+  const String instagramUrl = 'https://www.instagram.com/digi.class2024/';
+  await FlutterWebBrowser.openWebPage(url: instagramUrl);
+}
+
+
+// Function to open the Facebook page
+void _openFacebook() async {
+  const facebookUrl = 'https://www.facebook.com/yourProfileLink'; // Replace with your Facebook profile link
+  if (await canLaunchUrl(Uri.parse(facebookUrl))) {
+    await launchUrl(Uri.parse(facebookUrl));
+  } else {
+    throw 'Could not launch $facebookUrl';
+  }
+}
+
 class ContactUsScreen extends StatelessWidget {
   const ContactUsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(16.0),
-      child: Center(
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text('Contact Us'),
+        backgroundColor: Colors.blueAccent,
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            // Icon and heading
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.blueAccent,
+              child: Icon(
+                Icons.support_agent,
+                size: 60,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
               'Contact Us',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueAccent,
+              ),
             ),
-            SizedBox(height: 16),
-            Text(
-              'Email us at: xyzemail@gmail.com',
-              style: TextStyle(fontSize: 18),
+            const SizedBox(height: 24),
+
+            // Email section
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                leading: const Icon(
+                  Icons.email,
+                  color: Colors.blueAccent,
+                  size: 30,
+                ),
+                title: const Text(
+                  'Email Us',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text(
+                  'digiclass737@gmail.com',
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                ),
+              ),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Call us: +91 81695 56700',
-              style: TextStyle(fontSize: 18),
+            const SizedBox(height: 16),
+
+            // Call section
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                leading: const Icon(
+                  Icons.phone,
+                  color: Colors.green,
+                  size: 30,
+                ),
+                title: const Text(
+                  'Call Us',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text(
+                  '+91 81695 56700',
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Social media links section
+            const Text(
+              'Follow Us',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.blueAccent,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const FaIcon(FontAwesomeIcons.facebook),
+                  color: Colors.blue,
+                  iconSize: 30,
+                  onPressed: _openFacebook, // Link to your Facebook page
+                ),
+                IconButton(
+                  icon: const FaIcon(FontAwesomeIcons.instagram),
+                  color: Colors.pinkAccent,
+                  iconSize: 30,
+                  onPressed: _openInstagram, // Link to your Instagram page
+                ),
+              ],
             ),
           ],
         ),
@@ -84,7 +191,7 @@ class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
 
   Future<void> _fetchFeedbacks() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/feedbacks'));
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/feedbacks/admin/feedbacks'));
       if (response.statusCode == 200) {
         setState(() {
           _feedbacks = jsonDecode(response.body);
