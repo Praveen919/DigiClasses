@@ -24,7 +24,10 @@ const verifyJWT = (req, res, next) => {
 // Fetch all feedbacks
 router.get('/', verifyJWT, async (req, res) => {
     try {
-        const feedbacks = await Feedback.find().populate('studentId', 'name');
+        const feedbacks = await Feedback.find()
+            .populate('studentId', 'name')
+            .populate('teacherId', 'name');
+
         res.status(200).json(feedbacks);
     } catch (error) {
         console.error('Error fetching feedbacks:', error.message);
@@ -34,20 +37,53 @@ router.get('/', verifyJWT, async (req, res) => {
 
 // Add feedback
 router.post('/', verifyJWT, async (req, res) => {
-    const { studentId, subject, feedback } = req.body;
+    const { studentId, teacherId, staffId, subject, feedback } = req.body;
 
-    if (!studentId || !subject || !feedback) {
+    if (!subject || !feedback || (!studentId && !teacherId && !staffId)) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
     try {
-        const newFeedback = new Feedback({ studentId, subject, feedback });
+        const newFeedback = new Feedback({ studentId, teacherId, staffId, subject, feedback });
         await newFeedback.save();
         res.status(201).json({ message: 'Feedback submitted successfully' });
     } catch (error) {
         console.error('Error submitting feedback:', error.message);
         res.status(500).json({ message: 'Error submitting feedback' });
     }
+});
+
+router.post('/feedbacks', async (req, res) => {
+    const { studentId, teacherId, staffId, subject, feedback } = req.body;
+
+    // Validate and store feedback
+    try {
+        const newFeedback = new Feedback({
+            studentId,
+            teacherId,
+            subject,
+            feedback,
+            createdAt: new Date(),
+        });
+
+        await newFeedback.save();
+        res.status(201).json({ message: 'Feedback submitted successfully', feedback: newFeedback });
+    } catch (error) {
+        res.status(500).json({ message: 'Error saving feedback', error });
+    }
+});
+
+router.get('/admin/feedbacks', verifyJWT, async (req, res) => {
+  if (req.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+
+  try {
+    const feedbacks = await Feedback.find(); // Fetch all feedback from DB
+    res.status(200).json(feedbacks);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching feedbacks', error });
+  }
 });
 
 module.exports = router;
