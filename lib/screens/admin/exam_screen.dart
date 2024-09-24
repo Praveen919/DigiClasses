@@ -737,7 +737,7 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
       try {
         // Send POST request to create an MCQ exam
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/mcq-exams'),
+          Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/'),
           headers: {"Content-Type": "application/json"},
           body: json.encode(data),
         );
@@ -1045,7 +1045,7 @@ class _ManageMCQExamScreenState extends State<ManageMCQExamScreen> {
     });
     try {
       final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/api/mcq-exams'),
+        Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/'),
       );
 
       if (response.statusCode == 200) {
