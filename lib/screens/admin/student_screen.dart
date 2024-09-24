@@ -111,7 +111,7 @@ class _AddStudentInquiryScreenState extends State<AddStudentInquiryScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
-      final uri = Uri.parse('${AppConfig.baseUrl}/api/inquiries');
+      final uri = Uri.parse('${AppConfig.baseUrl}/api/inquiries/');
       final request = http.MultipartRequest('POST', uri)
         ..fields['studentName'] = _formData['name'] ?? ''
         ..fields['gender'] = _formData['gender'] ?? ''
@@ -150,7 +150,7 @@ class _AddStudentInquiryScreenState extends State<AddStudentInquiryScreen> {
 
         if (response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Inquiry saved successfully')),
+            SnackBar(content: Text('Inquiry saved successfully')),
           );
           Navigator.pop(context);
         } else {
@@ -392,7 +392,8 @@ class _AddStudentInquiryScreenState extends State<AddStudentInquiryScreen> {
 class InquiryDetailScreen extends StatelessWidget {
   final Inquiry inquiry;
 
-  const InquiryDetailScreen({super.key, required this.inquiry});
+  const InquiryDetailScreen({Key? key, required this.inquiry})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -409,7 +410,7 @@ class InquiryDetailScreen extends StatelessWidget {
           children: [
             Text(
               'Student Name: ${inquiry.studentName.isNotEmpty ? inquiry.studentName : 'Not Provided'}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20.0,
                 fontWeight: FontWeight.bold,
               ),
@@ -417,7 +418,7 @@ class InquiryDetailScreen extends StatelessWidget {
             const SizedBox(height: 8.0),
             Text(
               'Standard: ${inquiry.standard.isNotEmpty ? inquiry.standard : 'Not Provided'}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16.0,
                 color: Colors.black87,
               ),
@@ -425,7 +426,7 @@ class InquiryDetailScreen extends StatelessWidget {
             const SizedBox(height: 8.0),
             Text(
               'Inquiry Date: ${inquiry.inquiryDate != null ? dateFormat.format(inquiry.inquiryDate!) : 'Not Provided'}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16.0,
                 color: Colors.black87,
               ),
@@ -433,7 +434,7 @@ class InquiryDetailScreen extends StatelessWidget {
             const SizedBox(height: 8.0),
             Text(
               'Inquiry Source: ${inquiry.inquirySource.isNotEmpty ? inquiry.inquirySource : 'Not Provided'}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16.0,
                 color: Colors.black87,
               ),
@@ -441,7 +442,7 @@ class InquiryDetailScreen extends StatelessWidget {
             const SizedBox(height: 8.0),
             Text(
               'Solved: ${inquiry.isSolved ? 'Yes' : 'No'}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16.0,
                 color: Colors.black87,
               ),
@@ -449,7 +450,7 @@ class InquiryDetailScreen extends StatelessWidget {
             const SizedBox(height: 8.0),
             Text(
               'Inquiry Details: ${inquiry.inquiry ?? 'Not Provided'}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16.0,
                 color: Colors.black87,
               ),
@@ -487,7 +488,7 @@ class _ManageStudentInquiryScreenState
 
     try {
       final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/api/inquiries'),
+        Uri.parse('${AppConfig.baseUrl}/api/inquiries/'),
       );
 
       if (response.statusCode == 200) {
@@ -988,7 +989,7 @@ class _AddStudentRegistrationScreenState
 
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('${AppConfig.baseUrl}/api/registrationRoutes'),
+      Uri.parse('${AppConfig.baseUrl}/api/registration/students'),
     );
 
     // Add fields to the request
@@ -1296,7 +1297,7 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
 
   Future<void> _fetchStudents() async {
     final response =
-        await http.get(Uri.parse('${AppConfig.baseUrl}/api/registration'));
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/registration/students'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
@@ -1311,7 +1312,7 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
 
   Future<void> _deleteStudent(int id, int index) async {
     final response = await http
-        .delete(Uri.parse('${AppConfig.baseUrl}/api/registration/$id'));
+        .delete(Uri.parse('${AppConfig.baseUrl}/api/registration/students/$id'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -1325,7 +1326,7 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
 
   Future<void> _updateStudent(Student student) async {
     final response = await http.put(
-      Uri.parse('${AppConfig.baseUrl}/api/registration/${student.id}'),
+      Uri.parse('${AppConfig.baseUrl}/api/registration/students/${student.id}'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(student.toJson()),
     );
@@ -1608,7 +1609,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
   // Fetch students from API
   Future<List<dynamic>> getAllStudents() async {
     final response =
-        await http.get(Uri.parse('${AppConfig.baseUrl}/student/all'));
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/student/all'));
 
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -1620,7 +1621,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
   // Fetch class batches from API
   Future<List<dynamic>> getAllClassBatches() async {
     final response =
-        await http.get(Uri.parse('${AppConfig.baseUrl}/class-batch/all'));
+        await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch/'));
 
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -1634,7 +1635,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
     if (selectedStudentId != null && selectedClassBatchId != null) {
       try {
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/student/assign-class'),
+          Uri.parse('${AppConfig.baseUrl}/api/student/assign-class'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -1646,7 +1647,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
 
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
                 content: Text('Student assigned to class/batch successfully.')),
           );
         } else {
@@ -1654,8 +1655,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Failed to assign student to class/batch.')),
+          SnackBar(content: Text('Failed to assign student to class/batch.')),
         );
       }
     }
@@ -1666,7 +1666,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
     if (selectedStudentId != null && selectedClassBatchId != null) {
       try {
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/student/remove-class'),
+          Uri.parse('${AppConfig.baseUrl}/api/student/remove-class'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -1678,7 +1678,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
 
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
                 content:
                     Text('Student removed from class/batch successfully.')),
           );
@@ -1687,8 +1687,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Failed to remove student from class/batch.')),
+          SnackBar(content: Text('Failed to remove student from class/batch.')),
         );
       }
     }
@@ -1698,23 +1697,23 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Assign Class/Batch to Student'),
+        title: Text('Assign Class/Batch to Student'),
         automaticallyImplyLeading: false,
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Text(
                     'Assign Class/Batch to Student',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Select Student',
                       border: OutlineInputBorder(),
                     ),
@@ -1730,9 +1729,9 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                       });
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Select Class/Batch',
                       border: OutlineInputBorder(),
                     ),
@@ -1748,23 +1747,23 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                       });
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: assignStudentToClass,
+                    child: Text('Assign Class/Batch To Student'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: Text('Assign Class/Batch To Student'),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: removeStudentFromClass,
+                    child: Text('Remove Student From Class/Batch'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.indigo,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: Text('Remove Student From Class/Batch'),
                   ),
                 ],
               ),
@@ -1803,7 +1802,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   Future<void> _fetchClassBatches() async {
     try {
       final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch'));
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch/'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -1853,7 +1852,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
     try {
       for (var data in attendanceData) {
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/update-attendance'),
+          Uri.parse('${AppConfig.baseUrl}/api/attendance/update-attendance'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
             'attendanceId': data['id'],
@@ -1865,7 +1864,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         }
       }
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Attendance updated successfully')));
+          SnackBar(content: Text('Attendance updated successfully')));
     } catch (e) {
       print('Error updating attendance: $e');
     }
@@ -2032,7 +2031,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         Table(
           border: TableBorder.all(),
           children: [
-            const TableRow(
+            TableRow(
               children: [
                 TableCell(child: Center(child: Text('Sr. No'))),
                 TableCell(child: Center(child: Text('Date'))),
@@ -2115,7 +2114,7 @@ class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
   Future<void> _fetchClassBatchData() async {
     try {
       final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/class-batch')); // Replace with your backend API URL
+          '${AppConfig.baseUrl}/api/class-batch/')); // Replace with your backend API URL
       if (response.statusCode == 200) {
         List<String> classBatches =
             List<String>.from(jsonDecode(response.body));
@@ -2158,7 +2157,7 @@ class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
     var request = http.MultipartRequest(
         'POST',
         Uri.parse(
-            '${AppConfig.baseUrl}/api/documents')); // Replace with your API URL
+            '${AppConfig.baseUrl}/api/documents/documents')); // Replace with your API URL
     request.fields['class_batch'] = _selectedClassBatch;
     request.fields['message'] = _message;
     request.files
@@ -2267,7 +2266,7 @@ class _ManageSharedDocumentsScreenState
     extends State<ManageSharedDocumentsScreen> {
   List<Map<String, dynamic>> _sharedDocuments = [];
   List<Map<String, dynamic>> _filteredDocuments = [];
-  final TextEditingController _searchController = TextEditingController();
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -2279,7 +2278,7 @@ class _ManageSharedDocumentsScreenState
   Future<void> _fetchDocuments() async {
     try {
       final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/documents'));
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/documents/documents'));
       if (response.statusCode == 200) {
         final List<dynamic> documents = jsonDecode(response.body);
         setState(() {
@@ -2314,13 +2313,13 @@ class _ManageSharedDocumentsScreenState
   }
 
   void _editDocument(int index) {
-    TextEditingController messageController = TextEditingController();
-    TextEditingController standardController = TextEditingController();
-    TextEditingController documentController = TextEditingController();
+    TextEditingController _messageController = TextEditingController();
+    TextEditingController _standardController = TextEditingController();
+    TextEditingController _documentController = TextEditingController();
 
-    messageController.text = _filteredDocuments[index]['message'] ?? '';
-    standardController.text = _filteredDocuments[index]['standard'];
-    documentController.text = _filteredDocuments[index]['document'];
+    _messageController.text = _filteredDocuments[index]['message'] ?? '';
+    _standardController.text = _filteredDocuments[index]['standard'];
+    _documentController.text = _filteredDocuments[index]['document'];
 
     showDialog(
       context: context,
@@ -2331,15 +2330,15 @@ class _ManageSharedDocumentsScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: standardController,
+                controller: _standardController,
                 decoration: const InputDecoration(labelText: 'Class/Batch'),
               ),
               TextField(
-                controller: documentController,
+                controller: _documentController,
                 decoration: const InputDecoration(labelText: 'Document Name'),
               ),
               TextField(
-                controller: messageController,
+                controller: _messageController,
                 decoration: const InputDecoration(labelText: 'Message'),
               ),
             ],
@@ -2349,9 +2348,9 @@ class _ManageSharedDocumentsScreenState
               onPressed: () async {
                 await _updateDocument(
                   _filteredDocuments[index]['id'],
-                  standardController.text,
-                  documentController.text,
-                  messageController.text,
+                  _standardController.text,
+                  _documentController.text,
+                  _messageController.text,
                 );
                 Navigator.of(context).pop();
               },
@@ -2373,7 +2372,7 @@ class _ManageSharedDocumentsScreenState
       String id, String standard, String documentName, String message) async {
     try {
       final response = await http.put(
-        Uri.parse('${AppConfig.baseUrl}/api/documents/$id'),
+        Uri.parse('${AppConfig.baseUrl}/api/documents/documents/$id'),
         body: jsonEncode({
           'standard': standard,
           'documentName': documentName,
@@ -2398,7 +2397,7 @@ class _ManageSharedDocumentsScreenState
     try {
       final response = await http.delete(
         Uri.parse(
-            '${AppConfig.baseUrl}/api/documents/${_filteredDocuments[index]['id']}'),
+            '${AppConfig.baseUrl}/api/documents/documents/${_filteredDocuments[index]['id']}'),
       );
       if (response.statusCode == 200) {
         setState(() {
@@ -2488,7 +2487,6 @@ class SharedDocumentCard extends StatelessWidget {
   final VoidCallback onView;
 
   const SharedDocumentCard({
-    super.key,
     required this.documentData,
     required this.onEdit,
     required this.onDelete,
@@ -2535,9 +2533,9 @@ class _ChatWithStudentsScreenState extends State<ChatWithStudentsScreen> {
   List<Map<String, dynamic>> _students = [];
   List<Map<String, dynamic>> _filteredStudents = [];
   String? _selectedStudent;
-  final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _subjectController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
+  TextEditingController _searchController = TextEditingController();
+  TextEditingController _subjectController = TextEditingController();
+  TextEditingController _messageController = TextEditingController();
 
   @override
   void initState() {
@@ -2549,7 +2547,7 @@ class _ChatWithStudentsScreenState extends State<ChatWithStudentsScreen> {
   Future<void> _fetchStudents() async {
     try {
       final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/students')); //if this not works change it to (Uri.parse('${AppConfig.baseUrl}/api/users?role=Student'));
+          '${AppConfig.baseUrl}/api/students/all')); //if this not works change it to (Uri.parse('${AppConfig.baseUrl}/api/users?role=Student'));
       if (response.statusCode == 200) {
         final List<dynamic> students = jsonDecode(response.body);
         setState(() {
@@ -2594,7 +2592,7 @@ class _ChatWithStudentsScreenState extends State<ChatWithStudentsScreen> {
         final student = _students
             .firstWhere((student) => student['name'] == _selectedStudent);
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/messageStudent'),
+          Uri.parse('${AppConfig.baseUrl}/api/messageStudent/student/messages'),
           body: jsonEncode({
             'studentId': student['id'],
             'subject': _subjectController.text,
@@ -2766,7 +2764,7 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
   Future<void> _fetchFeedbacks() async {
     try {
       final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/feedbacks'));
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/feedbacks/'));
       if (response.statusCode == 200) {
         final List<dynamic> feedbacks = jsonDecode(response.body);
         setState(() {
@@ -2943,7 +2941,7 @@ class StudentRightsScreen extends StatefulWidget {
 
 class _StudentRightsScreenState extends State<StudentRightsScreen> {
   // Maps to hold the checked state for each item
-  final Map<String, bool> _activityChecks = {
+  Map<String, bool> _activityChecks = {
     'Time Table': false,
     'My Document': false,
     'eStudy': false,
@@ -2953,7 +2951,7 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
     'Feedback': false,
   };
 
-  final Map<String, bool> _reportChecks = {
+  Map<String, bool> _reportChecks = {
     'Attendance Report': false,
     'Fee Status Report': false,
   };
@@ -3006,10 +3004,11 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
             const SizedBox(height: 16.0),
 
             // Reports
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Reports', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Reports',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             Column(
@@ -3086,7 +3085,7 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
 
       // Send to backend
       final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/assign-rights'),
+        Uri.parse('${AppConfig.baseUrl}/api/assign-rights/assign-rights'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'role': 'Student', 'rights': selectedRights}),
       );
