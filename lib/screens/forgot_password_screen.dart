@@ -1,9 +1,40 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:testing_app/screens/config.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
   final TextEditingController userIdController = TextEditingController();
 
   ForgotPasswordScreen({super.key});
+
+  Future<void> submitForgotPassword(String email, BuildContext context) async {
+    final String apiUrl = '${AppConfig.baseUrl}/api/forgotPass/forgot-password';
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'email': email}),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password reset link sent to your email')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to send reset link.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occurred. Please try again later.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +55,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                 color: Colors.blue[800],
                 child: const Center(
                   child: Text(
-                    'Submit your User ID or User Name',
+                    'Submit your Email',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -34,7 +65,7 @@ class ForgotPasswordScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               const Text(
-                'User ID / User Name * :',
+                'Email * :',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -44,7 +75,7 @@ class ForgotPasswordScreen extends StatelessWidget {
               TextField(
                 controller: userIdController,
                 decoration: InputDecoration(
-                  hintText: 'User ID / User Name',
+                  hintText: 'example123@gmail.com',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
@@ -53,7 +84,14 @@ class ForgotPasswordScreen extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  // Handle submit logic here
+                  String email = userIdController.text.trim();
+                  if (email.isNotEmpty) {
+                    submitForgotPassword(email, context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter your email')),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue[400],
