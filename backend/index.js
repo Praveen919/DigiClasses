@@ -36,14 +36,14 @@ const studentRoutes = require('./routes/studentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const messageStudentRoutes = require('./routes/messageStudentRoutes');
 const feedbacksRoutes = require('./routes/feedbacksRoutes');
-const studentRightsRoutes = require('./routes/studentRightsRoutes'); // Updated to reflect new routes
+const studentRightsRoutes = require('./routes/studentRightsRoutes');
 const feeCollectionRoutes = require('./routes/feeCollectionRoutes');
 const messageStudentIdPassRoutes = require('./routes/messageStudentIdPassRoutes');
 const inquiriesStudentRoutes = require('./routes/inquiriesStudentRoutes');
-const absenceMessageRoutes = require('./routes/absenceMessageRoutes');
-
-// Import new routes for staff rights
-const staffRightsRoutes = require('./routes/staffRightsRoutes'); // Import the new staff rights routes
+const absenceMessageRoutes = require ('./routes/absenceMessageRoutes');
+const cardReportRoutes = require('./routes/cardReportRoutes');
+const staffRightsRoutes = require('./routes/staffRightsRoutes');
+const forgotPasswordRoutes = require('./routes/forgotPasswordRoutes');
 
 // Middleware setup
 app.use(cors()); // Enable CORS if needed
@@ -83,11 +83,13 @@ app.use('/api/assignClassBatch', assignClassBatchRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/feedbacks', feedbacksRoutes);
 app.use('/api/assign-rights', studentRightsRoutes);
-app.use('/api/staff-rights', staffRightsRoutes); // Add this line for the staff rights routes
-app.use('/api/feeCollection', feeCollectionRoutes);
+app.use('./api/feeCollection', feeCollectionRoutes);
 app.use('/api/messageStudentIdPass', messageStudentIdPassRoutes);
 app.use('/api/inquiriesStudent', inquiriesStudentRoutes);
 app.use('/api/absenceMessage', absenceMessageRoutes);
+app.use('/api/cardReport', cardReportRoutes);
+app.use('/api/staff-rights', staffRightsRoutes);
+app.use ('/api/forgotPass' forgotPasswordRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
