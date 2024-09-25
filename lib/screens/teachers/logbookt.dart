@@ -1,23 +1,53 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:testing_app/screens/config.dart';
 
-class LogbookT extends StatelessWidget {
-  const LogbookT({super.key});
+// LogBookService Class for HTTP Requests
+class LogBookService {
+  final String apiUrl = "${AppConfig.baseUrl}/api/logbook"; // Use HTTP
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Logbook'),
-      ),
-      body: _buildContent(),
-    );
+  // Function to save logbook data to the backend
+  Future<void> saveLogbook(List<Map<String, dynamic>> logbookData) async {
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(logbookData),
+      );
+
+      if (response.statusCode == 200) {
+        print("Logbook saved successfully");
+      } else {
+        print("Failed to save logbook. Status code: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error saving logbook: $e");
+    }
   }
 
-  Widget _buildContent() {
-    return const LogBookScreen();
+  // Function to fetch logbook data from the backend for a specific month
+  Future<List<dynamic>> fetchLogbook(String month) async {
+    try {
+      final response = await http.get(Uri.parse('$apiUrl?month=$month'));
+
+      if (response.statusCode == 200) {
+        List<dynamic> logbook = jsonDecode(response.body);
+        return logbook;
+      } else {
+        print("Failed to fetch logbook. Status code: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      print("Error fetching logbook: $e");
+      return [];
+    }
   }
 }
 
+// LogBookScreen for UI and Data Entry
 class LogBookScreen extends StatefulWidget {
   const LogBookScreen({super.key});
 
@@ -27,40 +57,79 @@ class LogBookScreen extends StatefulWidget {
 
 class _LogBookScreenState extends State<LogBookScreen> {
   final TextEditingController _standardController = TextEditingController();
-
   bool isEditable = false; // Controls whether the grid is editable or not
-
-  // Sample logbook data (normally this would be fetched from a database)
   List<List<String?>> _logbook = List.generate(4, (i) => List.filled(4, null));
 
-  void _viewLogbook() {
+  // View Logbook based on month
+  void _viewLogbook() async {
+    String month = _standardController.text; // Get month from input
+    List<dynamic> fetchedData = await LogBookService().fetchLogbook(month);
+
     setState(() {
-      // Example: Fetch logbook based on standard and batch
-      // This should be replaced with real data fetching logic
-      _logbook = [
-        ['01/01/2024', '9:30-10:30', 'English', 'Lesson 1'],
-        ['01/01/2024', '10:30-11:30', 'Biology', 'Lesson 1'],
-        ['02/01/2024', '9:30-10:30', 'History', 'Lesson 1'],
-        ['02/01/2024', '10:30-11:30', 'Geography', 'Lesson 1'],
-        ['02/01/2024', '11:30-12:30', 'Physics', 'Lesson 1'],
-      ];
+      _logbook = fetchedData.map<List<String?>>((row) {
+        return [row['date'], row['timing'], row['subject'], row['topic']];
+      }).toList();
       isEditable = false;
     });
   }
 
+  // Enable editing mode
   void _resetLogbook() {
     setState(() {
       isEditable = true;
     });
   }
 
-  void _updateLogbook() {
+  // Update and save logbook to backend
+  void _updateLogbook() async {
+    List<Map<String, dynamic>> logbookData = _logbook.map((row) {
+      return {
+        'date': row[0],
+        'timing': row[1],
+        'subject': row[2],
+        'topic': row[3],
+      };
+    }).toList();
+
+    await LogBookService().saveLogbook(logbookData);
+
     setState(() {
-      // Example: Save the updated logbook
-      // This should be replaced with real data saving logic
       isEditable = false;
-      // Save _Logbook to the database or backend
     });
+  }
+
+  // Dialog for editing a specific log entry
+  Future<String?> _editLectureDialog(String? currentLecture) async {
+    String? newLecture = currentLecture;
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Lecture'),
+          content: TextField(
+            controller: TextEditingController(text: newLecture),
+            onChanged: (value) {
+              newLecture = value;
+            },
+            decoration: const InputDecoration(hintText: 'Enter Lecture Name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(null);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(newLecture);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -121,14 +190,14 @@ class _LogBookScreenState extends State<LogBookScreen> {
                   return GestureDetector(
                     onTap: isEditable
                         ? () async {
-                      String? newLecture = await _editLectureDialog(
-                          _logbook[timeSlot][day]);
-                      if (newLecture != null) {
-                        setState(() {
-                          _logbook[timeSlot][day] = newLecture;
-                        });
-                      }
-                    }
+                            String? newLecture = await _editLectureDialog(
+                                _logbook[timeSlot][day]);
+                            if (newLecture != null) {
+                              setState(() {
+                                _logbook[timeSlot][day] = newLecture;
+                              });
+                            }
+                          }
                         : null,
                     child: Container(
                       margin: const EdgeInsets.all(4.0),
@@ -160,37 +229,5 @@ class _LogBookScreenState extends State<LogBookScreen> {
       ),
     );
   }
-
-  Future<String?> _editLectureDialog(String? currentLecture) async {
-    String? newLecture = currentLecture;
-    return showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Lecture'),
-          content: TextField(
-            controller: TextEditingController(text: newLecture),
-            onChanged: (value) {
-              newLecture = value;
-            },
-            decoration: const InputDecoration(hintText: 'Enter Lecture Name'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(null);
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(newLecture);
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
+
