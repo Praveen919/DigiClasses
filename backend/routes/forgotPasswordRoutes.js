@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
-const User = require('../models/forgotPasswordModel'); // Import the User model
+const User = require('../models/userModel'); // Import the User model
 
 const router = express.Router();
 
