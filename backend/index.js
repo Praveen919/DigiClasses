@@ -89,7 +89,7 @@ app.use('/api/inquiriesStudent', inquiriesStudentRoutes);
 app.use('/api/absenceMessage', absenceMessageRoutes);
 app.use('/api/cardReport', cardReportRoutes);
 app.use('/api/staff-rights', staffRightsRoutes);
-app.use ('/api/forgotPass' forgotPasswordRoutes);
+app.use ('/api/forgotPass', forgotPasswordRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
