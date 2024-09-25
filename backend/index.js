@@ -44,6 +44,7 @@ const absenceMessageRoutes = require ('./routes/absenceMessageRoutes');
 const cardReportRoutes = require('./routes/cardReportRoutes');
 const staffRightsRoutes = require('./routes/staffRightsRoutes');
 const forgotPasswordRoutes = require('./routes/forgotPasswordRoutes');
+const logbookTRoutes = require('./routes/logbookTRoutes');
 
 // Middleware setup
 app.use(cors()); // Enable CORS if needed
@@ -90,6 +91,7 @@ app.use('/api/absenceMessage', absenceMessageRoutes);
 app.use('/api/cardReport', cardReportRoutes);
 app.use('/api/staff-rights', staffRightsRoutes);
 app.use ('/api/forgotPass', forgotPasswordRoutes);
+app.use('/api/logbook', logbookTRoutes); 
 
 // Start the server
 const PORT = process.env.PORT || 3000;
