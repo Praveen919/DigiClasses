@@ -48,6 +48,7 @@ const logbookTRoutes = require('./routes/logbookTRoutes');
 
 // Middleware setup
 app.use(cors()); // Enable CORS if needed
+app.use(express.json());
 app.use(bodyParser.json()); // Parse application/json
 app.use(bodyParser.urlencoded({ extended: true })); // Parse application/x-www-form-urlencoded
 
@@ -66,6 +67,7 @@ app.use('/api/attendance', attendanceRoutes);
 // Use updated/new routes
 app.use('/api/profile-settings', profileSettingRoutes); // Updated route for profile settings
 app.use('/api/expenses', expenseIncomeRoutes);
+app.use('/api/incomes', expenseIncomeRoutes);
 app.use('/api/messageStudent', messageStudentRoutes);
 // Use other new routes
 app.use('/api/mcq-exams', mcqExamRoutes);

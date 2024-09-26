@@ -48,6 +48,9 @@ dependencies:
 
   path: any
   provider: ^6.1.2
+  mime: ^1.0.6
+  url_launcher: ^6.3.0
+  flutter_web_browser: ^0.17.1
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
   flutter_test:

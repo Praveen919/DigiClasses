@@ -925,26 +925,37 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   DateTime? selectedDate;
   bool _attendanceTaken = false;
   bool _isEditable = false;
-
-  // Replace dummy data with actual data from the server
   List<Map<String, dynamic>> attendanceData = [];
 
-  // Fetch teacher data from the server
-  Future<void> fetchTeachers() async {
+  // Fetch attendance data for the selected date and class batch
+  Future<void> fetchAttendanceData(String classBatchId, DateTime date) async {
     try {
-      final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/users/teachers'));
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/attendance/attendance-data'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'classBatchId': classBatchId,
+          'date': DateFormat('yyyy-MM-dd').format(date),
+        }),
+      );
+
       if (response.statusCode == 200) {
-        setState(() {
-          attendanceData =
-              List<Map<String, dynamic>>.from(json.decode(response.body));
-          // Add 'attendance' field if not present
-          for (var teacher in attendanceData) {
-            teacher['attendance'] = 'Present'; // Default value
-          }
-        });
+        List<dynamic> data = jsonDecode(response.body);
+        if (data.isEmpty) {
+          // Show snackbar if no attendance records found
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No attendance records currently')),
+          );
+          setState(() {
+            attendanceData = [];
+          });
+        } else {
+          setState(() {
+            attendanceData = List<Map<String, dynamic>>.from(data);
+          });
+        }
       } else {
-        print('Failed to load teachers');
+        print('Failed to fetch attendance');
       }
     } catch (error) {
       print('Error: $error');
@@ -954,13 +965,23 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   // Update attendance on the server
   Future<void> updateAttendance() async {
     try {
-      final response = await http.put(
-        Uri.parse('${AppConfig.baseUrl}/api/users/attendance'),
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/attendance/update-attendance'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'attendance': attendanceData}),
+        body: json.encode({
+          'attendance': attendanceData.map((record) {
+            return {
+              'attendanceId': record['_id'],
+              'status': record['status'],
+            };
+          }).toList(),
+        }),
       );
+
       if (response.statusCode == 200) {
-        print('Attendance updated successfully');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Attendance updated successfully')),
+        );
       } else {
         print('Failed to update attendance');
       }
@@ -972,10 +993,9 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   @override
   void initState() {
     super.initState();
-    fetchTeachers(); // Fetch teacher data when the screen loads
+    // Fetch initial attendance data if required
   }
 
-  // Select the main attendance date
   _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -1051,6 +1071,11 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             setState(() {
               _attendanceTaken = true;
             });
+            if (selectedDate != null) {
+              // Example classBatchId, replace with actual selection logic
+              String classBatchId = 'yourClassBatchId';
+              fetchAttendanceData(classBatchId, selectedDate!);
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).primaryColor,
@@ -1085,33 +1110,36 @@ class _ManageStaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                 DataColumn(label: Text('Staff Name')),
                 DataColumn(label: Text('Attendance')),
               ],
-              rows: attendanceData.asMap().entries.map((entry) {
-                int index = entry.key;
-                var data = entry.value;
+              rows: attendanceData.isNotEmpty
+                  ? attendanceData.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      var data = entry.value;
 
-                return DataRow(cells: [
-                  DataCell(Text('${index + 1}')),
-                  DataCell(Text(data['firstName'] + ' ' + data['lastName'])),
-                  DataCell(
-                    _isEditable
-                        ? DropdownButton<String>(
-                            value: data['attendance'],
-                            items: ['Present', 'Absent'].map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (newValue) {
-                              setState(() {
-                                data['attendance'] = newValue!;
-                              });
-                            },
-                          )
-                        : Text(data['attendance']!),
-                  ),
-                ]);
-              }).toList(),
+                      return DataRow(cells: [
+                        DataCell(Text('${index + 1}')),
+                        DataCell(Text('${data['staffName']}')),
+                        DataCell(
+                          _isEditable
+                              ? DropdownButton<String>(
+                                  value: data['status'],
+                                  items:
+                                      ['Present', 'Absent'].map((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                                  onChanged: (newValue) {
+                                    setState(() {
+                                      data['status'] = newValue!;
+                                    });
+                                  },
+                                )
+                              : Text(data['status'] ?? 'Unknown'),
+                        ),
+                      ]);
+                    }).toList()
+                  : [], // Empty rows if no data
             ),
           ),
         ),

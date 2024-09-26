@@ -596,7 +596,7 @@ class _AddExpenseTypeScreenState extends State<AddExpenseTypeScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       final expenseType = _expenseTypeController.text;
       // Replace with your backend URL
-      const url = '${AppConfig.baseUrl}:3000/expense-types';
+      const url = '${AppConfig.baseUrl}/expense-types';
 
       try {
         final response = await http.post(

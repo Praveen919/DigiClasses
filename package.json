@@ -23,6 +23,7 @@
     "mongodb": "^6.8.0",
     "mongoose": "^8.6.1",
     "multer-gridfs-storage": "^5.0.2",
+    "nodemailer": "^6.9.15",
     "pg": "^8.12.0"
   }
 }

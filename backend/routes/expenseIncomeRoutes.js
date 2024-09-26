@@ -13,9 +13,10 @@ const parseDate = (dateString) => {
 // Create a new expense
 router.post('/', async (req, res) => {
   try {
-    const { name, paymentMode, chequeNo, date, amount, remark } = req.body;
+    const { type, paymentMode, chequeNumber, date, amount, remark } = req.body;
 
-    if (!name || !paymentMode || !date || !amount) {
+    // Check for required fields
+    if (!type || !paymentMode || !date || !amount) {
       return res.status(400).json({ error: 'Required fields are missing' });
     }
 
@@ -26,9 +27,9 @@ router.post('/', async (req, res) => {
     }
 
     const expenseData = {
-      name,
+      type,
       paymentMode,
-      chequeNumber: chequeNo || null,
+      chequeNumber: chequeNumber || null, // Change from chequeNo to chequeNumber
       date: parsedDate,
       amount: parseFloat(amount),
       remark: remark || null,
@@ -88,18 +89,18 @@ router.get('/:id', async (req, res) => {
 // Update an expense by ID
 router.patch('/:id', async (req, res) => {
   try {
-    const { name, paymentMode, chequeNo, date, amount, remark } = req.body;
+    const { type, paymentMode, chequeNumber, date, amount, remark } = req.body;
 
-    const parsedDate = parseDate(date);
+    const parsedDate = new Date(date);
 
     if (isNaN(parsedDate.getTime())) {
       return res.status(400).json({ error: 'Invalid date format' });
     }
 
     const expense = await Expense.findByIdAndUpdate(req.params.id, {
-      name,
+      type, // Match with schema
       paymentMode,
-      chequeNumber: chequeNo || null,
+      chequeNumber: chequeNumber || null,
       date: parsedDate,
       amount: parseFloat(amount),
       remark: remark || null,
@@ -134,7 +135,21 @@ router.delete('/:id', async (req, res) => {
 // Create a new income
 router.post('/', async (req, res) => {
   try {
-    const income = new Income(req.body);
+    const { incomeType, iPaymentType, iChequeNumber, bankName, iDate, iAmount } = req.body;
+
+    // Validate the required fields
+    if (!incomeType || !iPaymentType || !iDate || !iAmount) {
+      return res.status(400).json({ error: 'Required fields are missing' });
+    }
+
+    const income = new Income({
+      incomeType,
+      iPaymentType,
+      iChequeNumber,
+      bankName,
+      iDate,
+      iAmount
+    });
     await income.save();
     res.status(201).json(income);
   } catch (error) {
@@ -189,7 +204,7 @@ router.delete('/:id', async (req, res) => {
     if (!income) {
       return res.status(404).json({ error: 'Income not found' });
     }
-    res.status(200).json(income);
+    res.status(200).json({ message: 'Income deleted successfully', income });
   } catch (error) {
     console.error('Error deleting income:', error.message);
     res.status(500).json({ error: 'Failed to delete income' });
