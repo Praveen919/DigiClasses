@@ -1,5 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:testing_app/screens/admin/estudy_screen.dart';
 import 'package:testing_app/screens/admin/exam_screen.dart';
@@ -12,6 +16,7 @@ import 'package:testing_app/screens/admin/settings_screen.dart';
 import 'package:testing_app/screens/admin/setup_screen.dart';
 import 'package:testing_app/screens/admin/staff_user_screen.dart';
 import 'package:testing_app/screens/admin/student_screen.dart';
+import 'package:testing_app/screens/config.dart';
 
 class DashboardScreen extends StatelessWidget {
   final String name;
@@ -91,7 +96,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                      const SettingsScreen(option: 'profileSetting'),
+                          const SettingsScreen(option: 'profileSetting'),
                     ),
                   );
                   // Navigate to Change Password screen
@@ -106,7 +111,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                      const SettingsScreen(option: 'changePassword'),
+                          const SettingsScreen(option: 'changePassword'),
                     ),
                   );
                   // Navigate to Profile Setting screen
@@ -121,7 +126,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                      const SettingsScreen(option: 'autoWhatsApp'),
+                          const SettingsScreen(option: 'autoWhatsApp'),
                     ),
                   );
                   // Navigate to Change Password screen
@@ -136,7 +141,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                      const SettingsScreen(option: 'autoNotification'),
+                          const SettingsScreen(option: 'autoNotification'),
                     ),
                   );
                   // Navigate to Change Password screen
@@ -151,7 +156,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                      const SettingsScreen(option: 'myReferral'),
+                          const SettingsScreen(option: 'myReferral'),
                     ),
                   );
                   // Navigate to Change Password screen
@@ -173,7 +178,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const SetupScreen(option: 'addYear')),
+                            const SetupScreen(option: 'addYear')),
                   );
                   // Navigate to Change Password screen
                 },
@@ -187,7 +192,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const SetupScreen(option: 'manageYear')),
+                            const SetupScreen(option: 'manageYear')),
                   );
                   // Navigate to Change Password screen
                 },
@@ -201,7 +206,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const SetupScreen(option: 'assignStandard')),
+                            const SetupScreen(option: 'assignStandard')),
                   );
                   // Navigate to Change Password screen
                 },
@@ -215,7 +220,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const SetupScreen(option: 'assignSubject')),
+                            const SetupScreen(option: 'assignSubject')),
                   );
                   // Navigate to Change Password screen
                 },
@@ -229,7 +234,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const SetupScreen(option: 'addClassBatch')),
+                            const SetupScreen(option: 'addClassBatch')),
                   );
                   // Navigate to Change Password screen
                 },
@@ -243,7 +248,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const SetupScreen(option: 'manageClassBatch')),
+                            const SetupScreen(option: 'manageClassBatch')),
                   );
                 },
               ),
@@ -256,7 +261,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const SetupScreen(option: 'manageTimeTable')),
+                            const SetupScreen(option: 'manageTimeTable')),
                   );
                 },
               ),
@@ -275,7 +280,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StaffUserScreen(option: 'createStaff')),
+                            const StaffUserScreen(option: 'createStaff')),
                   );
                   // Navigate to Change Password screen
                 },
@@ -289,7 +294,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StaffUserScreen(option: 'manageStaff')),
+                            const StaffUserScreen(option: 'manageStaff')),
                   );
                 },
               ),
@@ -302,7 +307,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StaffUserScreen(option: 'manageStaffRights')),
+                            const StaffUserScreen(option: 'manageStaffRights')),
                   );
                 },
               ),
@@ -315,7 +320,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StaffUserScreen(option: 'staffAttendance')),
+                            const StaffUserScreen(option: 'staffAttendance')),
                   );
                 },
               ),
@@ -334,7 +339,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentScreen(option: 'addInquiry')),
+                            const StudentScreen(option: 'addInquiry')),
                   );
                   // Navigate to Change Password screen
                 },
@@ -348,7 +353,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentScreen(option: 'manageInquiry')),
+                            const StudentScreen(option: 'manageInquiry')),
                   );
                 },
               ),
@@ -374,7 +379,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentScreen(option: 'addRegistration')),
+                            const StudentScreen(option: 'addRegistration')),
                   );
                 },
               ),
@@ -387,7 +392,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentScreen(option: 'manageStudent')),
+                            const StudentScreen(option: 'manageStudent')),
                   );
                 },
               ),
@@ -400,7 +405,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentScreen(option: 'assignClassBatch')),
+                            const StudentScreen(option: 'assignClassBatch')),
                   );
                 },
               ),
@@ -413,7 +418,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentScreen(option: 'studentAttendance')),
+                            const StudentScreen(option: 'studentAttendance')),
                   );
                 },
               ),
@@ -426,7 +431,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentScreen(option: 'shareDocuments')),
+                            const StudentScreen(option: 'shareDocuments')),
                   );
                 },
               ),
@@ -452,7 +457,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentScreen(option: 'chatWithStudents')),
+                            const StudentScreen(option: 'chatWithStudents')),
                   );
                 },
               ),
@@ -465,7 +470,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentScreen(option: 'studentsFeedback')),
+                            const StudentScreen(option: 'studentsFeedback')),
                   );
                 },
               ),
@@ -478,7 +483,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentScreen(option: 'studentRights')),
+                            const StudentScreen(option: 'studentRights')),
                   );
                 },
               ),
@@ -497,7 +502,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const FeeScreen(option: 'createFeeStructure')),
+                            const FeeScreen(option: 'createFeeStructure')),
                   );
                 },
               ),
@@ -510,7 +515,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const FeeScreen(option: 'manageFeeStructure')),
+                            const FeeScreen(option: 'manageFeeStructure')),
                   );
                 },
               ),
@@ -529,7 +534,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamScreen(option: 'createManualExam')),
+                            const ExamScreen(option: 'createManualExam')),
                   );
                   // Navigate to Student management
                 },
@@ -543,7 +548,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamScreen(option: 'manageManualExam')),
+                            const ExamScreen(option: 'manageManualExam')),
                   );
                 },
               ),
@@ -556,7 +561,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamScreen(option: 'createMCQExam')),
+                            const ExamScreen(option: 'createMCQExam')),
                   );
                 },
               ),
@@ -569,7 +574,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamScreen(option: 'manageMCQExam')),
+                            const ExamScreen(option: 'manageMCQExam')),
                   );
                 },
               ),
@@ -582,7 +587,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamScreen(option: 'createAssignments')),
+                            const ExamScreen(option: 'createAssignments')),
                   );
                 },
               ),
@@ -595,7 +600,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamScreen(option: 'manageAssignments')),
+                            const ExamScreen(option: 'manageAssignments')),
                   );
                 },
               ),
@@ -614,7 +619,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const EstudyScreen(option: 'createStudyMaterial')),
+                            const EstudyScreen(option: 'createStudyMaterial')),
                   );
                   // Navigate to Student management
                 },
@@ -628,7 +633,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const EstudyScreen(option: 'manageStudyMaterial')),
+                            const EstudyScreen(option: 'manageStudyMaterial')),
                   );
                 },
               ),
@@ -651,7 +656,6 @@ class SidePanel extends StatelessWidget {
             leading: const Icon(Icons.message_outlined),
             title: const Text('Messaging'),
             children: <Widget>[
-
               ListTile(
                 leading: const Icon(Icons.person),
                 title: const Text('Send message to Student'),
@@ -661,7 +665,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingScreen(option: 'student')),
+                            const MessagingScreen(option: 'student')),
                   );
                 },
               ),
@@ -674,7 +678,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingScreen(option: 'staff')),
+                            const MessagingScreen(option: 'staff')),
                   );
                 },
               ),
@@ -687,7 +691,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingScreen(option: 'staffIdPassword')),
+                            const MessagingScreen(option: 'staffIdPassword')),
                   );
                 },
               ),
@@ -700,7 +704,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingScreen(option: 'studentIdPassword')),
+                            const MessagingScreen(option: 'studentIdPassword')),
                   );
                 },
               ),
@@ -713,7 +717,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingScreen(option: 'examReminder')),
+                            const MessagingScreen(option: 'examReminder')),
                   );
                 },
               ),
@@ -739,7 +743,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingScreen(option: 'feeStatus')),
+                            const MessagingScreen(option: 'feeStatus')),
                   );
                 },
               ),
@@ -752,7 +756,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingScreen(option: 'feeReminder')),
+                            const MessagingScreen(option: 'feeReminder')),
                   );
                 },
               ),
@@ -765,7 +769,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingScreen(option: 'absentAttendance')),
+                            const MessagingScreen(option: 'absentAttendance')),
                   );
                 },
               ),
@@ -784,7 +788,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExpensesIncomeScreen(option: 'addExpense')),
+                            const ExpensesIncomeScreen(option: 'addExpense')),
                   );
                   // Navigate to Student management
                 },
@@ -837,7 +841,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExpensesIncomeScreen(option: 'addIncome')),
+                            const ExpensesIncomeScreen(option: 'addIncome')),
                   );
                 },
               ),
@@ -850,7 +854,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExpensesIncomeScreen(option: 'manageIncome')),
+                            const ExpensesIncomeScreen(option: 'manageIncome')),
                   );
                 },
               ),
@@ -869,7 +873,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportScreen(option: 'studentInquiry')),
+                            const ReportScreen(option: 'studentInquiry')),
                   );
                   // Navigate to Student management
                 },
@@ -883,7 +887,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportScreen(option: 'studentDetail')),
+                            const ReportScreen(option: 'studentDetail')),
                   );
                 },
               ),
@@ -896,7 +900,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportScreen(option: 'studentCard')),
+                            const ReportScreen(option: 'studentCard')),
                   );
                 },
               ),
@@ -909,7 +913,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportScreen(option: 'studentAttendance')),
+                            const ReportScreen(option: 'studentAttendance')),
                   );
                 },
               ),
@@ -922,7 +926,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportScreen(option: 'feeStatus')),
+                            const ReportScreen(option: 'feeStatus')),
                   );
                 },
               ),
@@ -935,7 +939,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportScreen(option: 'feeCollection')),
+                            const ReportScreen(option: 'feeCollection')),
                   );
                 },
               ),
@@ -948,7 +952,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportScreen(option: 'expense')),
+                            const ReportScreen(option: 'expense')),
                   );
                 },
               ),
@@ -961,7 +965,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportScreen(option: 'income')),
+                            const ReportScreen(option: 'income')),
                   );
                 },
               ),
@@ -974,7 +978,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportScreen(option: 'profitLoss')),
+                            const ReportScreen(option: 'profitLoss')),
                   );
                 },
               ),
@@ -987,7 +991,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportScreen(option: 'appAccessRights')),
+                            const ReportScreen(option: 'appAccessRights')),
                   );
                 },
               ),
@@ -1006,7 +1010,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const HelpScreen(option: 'contactUs')),
+                            const HelpScreen(option: 'contactUs')),
                   );
                   // Navigate to Student management
                 },
@@ -1020,7 +1024,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const HelpScreen(option: 'viewFeedback')),
+                            const HelpScreen(option: 'viewFeedback')),
                   );
                   // Navigate to Student management
                 },
@@ -1034,7 +1038,7 @@ class SidePanel extends StatelessWidget {
   }
 }
 
-class DashboardTab extends StatelessWidget {
+class DashboardTab extends ConsumerStatefulWidget {
   final String name;
   final String branch;
   final String year;
@@ -1047,17 +1051,54 @@ class DashboardTab extends StatelessWidget {
   });
 
   @override
+  _DashboardTabState createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends ConsumerState<DashboardTab>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    ref
+        .read(statisticsProvider.notifier)
+        .fetchStatistics(); // Fetch statistics on init
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref
+          .read(statisticsProvider.notifier)
+          .fetchStatistics(); // Fetch statistics when resumed
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final statistics =
+        ref.watch(statisticsProvider); // Watch the statistics provider
+
     return SingleChildScrollView(
       child: Column(
         children: [
           UserInfoCard(
-            name: name,
-            branch: branch,
-            year: year,
+            name: widget.name,
+            branch: widget.branch,
+            year: widget.year,
           ),
           const NotificationsCard(),
-          const StatisticsCard(),
+          StatisticsCard(
+            inquiriesCount: statistics.inquiriesCount,
+            studentsCount: statistics.studentsCount,
+            absenteesCount: statistics.absenteesCount,
+          ),
           const MonthlyFeeCollectionChart(),
           const FeeStatusCard(),
           const FinancialSummaryCard(),
@@ -1092,10 +1133,10 @@ class UserInfoCard extends StatelessWidget {
     return Card(
       child: ListTile(
         leading:
-        const CircleAvatar(child: Text('Logo')), // Adjust logo as necessary
+            const CircleAvatar(child: Text('Logo')), // Adjust logo as necessary
         title: Text(name), // Display the user's name
         subtitle:
-        Text('Branch: $branch\nYear: $year'), // Display branch and year
+            Text('Branch: $branch\nYear: $year'), // Display branch and year
         trailing: IconButton(
           icon: const Icon(Icons.power_settings_new),
           onPressed: () =>
@@ -1118,7 +1159,7 @@ class NotificationsCard extends StatelessWidget {
             leading: Icon(Icons.notifications),
             title: Text("Today's Notifications"),
             trailing:
-            CircleAvatar(backgroundColor: Colors.orange, child: Text('0')),
+                CircleAvatar(backgroundColor: Colors.orange, child: Text('0')),
           ),
           ListTile(
             leading: Icon(Icons.calendar_today),
@@ -1131,35 +1172,105 @@ class NotificationsCard extends StatelessWidget {
   }
 }
 
+// Create a Statistics model class
+class Statistics {
+  final int inquiriesCount;
+  final int studentsCount;
+  final int absenteesCount;
+
+  Statistics({
+    required this.inquiriesCount,
+    required this.studentsCount,
+    required this.absenteesCount,
+  });
+}
+
+// Create a StateNotifier for managing statistics state
+class StatisticsNotifier extends StateNotifier<Statistics> {
+  StatisticsNotifier()
+      : super(
+            Statistics(inquiriesCount: 0, studentsCount: 0, absenteesCount: 0));
+
+  Future<void> fetchStatistics() async {
+    try {
+      // Fetch inquiries count
+      final inquiriesResponse =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/inquiries/count'));
+      final inquiriesCount = jsonDecode(inquiriesResponse.body)['count'];
+
+      // Fetch total students count
+      final studentsResponse = await http
+          .get(Uri.parse('${AppConfig.baseUrl}/api/statistics/students/count'));
+      final studentsCount = jsonDecode(studentsResponse.body)['count'];
+
+      // Fetch today's absentees count
+      final absenteesResponse = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/statistics/absentees/count'));
+      final absenteesCount = jsonDecode(absenteesResponse.body)['count'];
+
+      // Update the state with the fetched data
+      state = Statistics(
+        inquiriesCount: inquiriesCount,
+        studentsCount: studentsCount,
+        absenteesCount: absenteesCount,
+      );
+    } catch (error) {
+      print('Error fetching statistics: $error');
+      // Handle error appropriately
+    }
+  }
+}
+
+// Define the provider
+final statisticsProvider =
+    StateNotifierProvider<StatisticsNotifier, Statistics>((ref) {
+  return StatisticsNotifier();
+});
+
 class StatisticsCard extends StatelessWidget {
-  const StatisticsCard({super.key});
+  final int inquiriesCount;
+  final int studentsCount;
+  final int absenteesCount;
+
+  const StatisticsCard({
+    Key? key,
+    required this.inquiriesCount,
+    required this.studentsCount,
+    required this.absenteesCount,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
+    return Card(
       child: Column(
         children: [
-          ListTile(
+          const ListTile(
             title: Text('Student Status'),
             trailing: Icon(Icons.arrow_drop_down),
           ),
           ListTile(
-            leading: Icon(Icons.question_answer),
-            title: Text("Today's Inquiries"),
-            trailing:
-            CircleAvatar(backgroundColor: Colors.green, child: Text('0')),
+            leading: const Icon(Icons.question_answer),
+            title: const Text("Today's Inquiries"),
+            trailing: CircleAvatar(
+              backgroundColor: Colors.green,
+              child: Text(inquiriesCount.toString()),
+            ),
           ),
           ListTile(
-            leading: Icon(Icons.group),
-            title: Text('Total Students'),
-            trailing:
-            CircleAvatar(backgroundColor: Colors.blue, child: Text('1')),
+            leading: const Icon(Icons.group),
+            title: const Text('Total Students'),
+            trailing: CircleAvatar(
+              backgroundColor: Colors.blue,
+              child: Text(studentsCount.toString()),
+            ),
           ),
           ListTile(
-            leading: Icon(Icons.person_off),
-            title: Text('Today Absentees'),
-            trailing:
-            CircleAvatar(backgroundColor: Colors.cyan, child: Text('0')),
+            leading: const Icon(Icons.person_off),
+            title: const Text('Today Absentees'),
+            trailing: CircleAvatar(
+              backgroundColor: Colors.cyan,
+              child: Text(absenteesCount.toString()),
+            ),
           ),
         ],
       ),
@@ -1187,8 +1298,8 @@ class MonthlyFeeCollectionChart extends StatelessWidget {
 
   BarChartData mainBarData() {
     return BarChartData(
-      // Implement the bar chart data here
-    );
+        // Implement the bar chart data here
+        );
   }
 }
 
@@ -1237,7 +1348,3 @@ class FinancialSummaryCard extends StatelessWidget {
     );
   }
 }
-
-/*https://www.figma.com/proto/QDv0ZOA5joCftuPL14imWv/Untitled?page-id=0%3A1&node-id=4-3&viewport=538%2C316%2C0.
-56&t=95oB0YAjJGF1CD8L-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=4%3A3&show-proto-sidebar=1
-*/

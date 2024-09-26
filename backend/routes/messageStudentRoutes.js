@@ -4,7 +4,8 @@ const {
   MessageStudent,
   StudentToAdminTeacherMessage,
   TeacherToStudentMessage,
-  TeacherToStaffMessage
+  TeacherToStaffMessage,
+  ExamNotification
 } = require('../models/messageStudentModel'); // Import models
 
 // POST route to send a message from admin to student
@@ -124,10 +125,10 @@ router.post('/teacher/staff/messages', async (req, res) => {
 
 // POST route to send exam notification
 router.post('/exam/notifications', async (req, res) => {
-  const { standard, subject, examName } = req.body;
+  const { standard, subject, examName, date } = req.body;
 
   // Validate input
-  if (!standard || !subject || !examName) {
+  if (!standard || !subject || !examName || !date) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
@@ -137,6 +138,7 @@ router.post('/exam/notifications', async (req, res) => {
       standard,
       subject,
       examName,
+      date,
     });
 
     // Save notification to the database
@@ -149,4 +151,5 @@ router.post('/exam/notifications', async (req, res) => {
     res.status(500).json({ error: 'Server error while sending notification' });
   }
 });
+
 module.exports = router;

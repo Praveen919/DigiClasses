@@ -150,7 +150,7 @@ class _AddStudentInquiryScreenState extends State<AddStudentInquiryScreen> {
 
         if (response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Inquiry saved successfully')),
+            const SnackBar(content: Text('Inquiry saved successfully')),
           );
           Navigator.pop(context);
         } else {
@@ -392,8 +392,7 @@ class _AddStudentInquiryScreenState extends State<AddStudentInquiryScreen> {
 class InquiryDetailScreen extends StatelessWidget {
   final Inquiry inquiry;
 
-  const InquiryDetailScreen({Key? key, required this.inquiry})
-      : super(key: key);
+  const InquiryDetailScreen({super.key, required this.inquiry});
 
   @override
   Widget build(BuildContext context) {
@@ -410,7 +409,7 @@ class InquiryDetailScreen extends StatelessWidget {
           children: [
             Text(
               'Student Name: ${inquiry.studentName.isNotEmpty ? inquiry.studentName : 'Not Provided'}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20.0,
                 fontWeight: FontWeight.bold,
               ),
@@ -418,7 +417,7 @@ class InquiryDetailScreen extends StatelessWidget {
             const SizedBox(height: 8.0),
             Text(
               'Standard: ${inquiry.standard.isNotEmpty ? inquiry.standard : 'Not Provided'}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16.0,
                 color: Colors.black87,
               ),
@@ -426,7 +425,7 @@ class InquiryDetailScreen extends StatelessWidget {
             const SizedBox(height: 8.0),
             Text(
               'Inquiry Date: ${inquiry.inquiryDate != null ? dateFormat.format(inquiry.inquiryDate!) : 'Not Provided'}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16.0,
                 color: Colors.black87,
               ),
@@ -434,7 +433,7 @@ class InquiryDetailScreen extends StatelessWidget {
             const SizedBox(height: 8.0),
             Text(
               'Inquiry Source: ${inquiry.inquirySource.isNotEmpty ? inquiry.inquirySource : 'Not Provided'}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16.0,
                 color: Colors.black87,
               ),
@@ -442,7 +441,7 @@ class InquiryDetailScreen extends StatelessWidget {
             const SizedBox(height: 8.0),
             Text(
               'Solved: ${inquiry.isSolved ? 'Yes' : 'No'}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16.0,
                 color: Colors.black87,
               ),
@@ -450,7 +449,7 @@ class InquiryDetailScreen extends StatelessWidget {
             const SizedBox(height: 8.0),
             Text(
               'Inquiry Details: ${inquiry.inquiry ?? 'Not Provided'}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16.0,
                 color: Colors.black87,
               ),
@@ -1296,8 +1295,8 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
   }
 
   Future<void> _fetchStudents() async {
-    final response =
-        await http.get(Uri.parse('${AppConfig.baseUrl}/api/registration/students'));
+    final response = await http
+        .get(Uri.parse('${AppConfig.baseUrl}/api/registration/students'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
@@ -1311,8 +1310,8 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
   }
 
   Future<void> _deleteStudent(int id, int index) async {
-    final response = await http
-        .delete(Uri.parse('${AppConfig.baseUrl}/api/registration/students/$id'));
+    final response = await http.delete(
+        Uri.parse('${AppConfig.baseUrl}/api/registration/students/$id'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -1647,7 +1646,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
 
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
                 content: Text('Student assigned to class/batch successfully.')),
           );
         } else {
@@ -1655,7 +1654,8 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to assign student to class/batch.')),
+          const SnackBar(
+              content: Text('Failed to assign student to class/batch.')),
         );
       }
     }
@@ -1678,7 +1678,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
 
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
                 content:
                     Text('Student removed from class/batch successfully.')),
           );
@@ -1687,7 +1687,8 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to remove student from class/batch.')),
+          const SnackBar(
+              content: Text('Failed to remove student from class/batch.')),
         );
       }
     }
@@ -1697,23 +1698,23 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Assign Class/Batch to Student'),
+        title: const Text('Assign Class/Batch to Student'),
         automaticallyImplyLeading: false,
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
+                  const Text(
                     'Assign Class/Batch to Student',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Select Student',
                       border: OutlineInputBorder(),
                     ),
@@ -1729,9 +1730,9 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                       });
                     },
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Select Class/Batch',
                       border: OutlineInputBorder(),
                     ),
@@ -1747,23 +1748,23 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                       });
                     },
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: assignStudentToClass,
-                    child: Text('Assign Class/Batch To Student'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal,
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
+                    child: const Text('Assign Class/Batch To Student'),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: removeStudentFromClass,
-                    child: Text('Remove Student From Class/Batch'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.indigo,
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
+                    child: const Text('Remove Student From Class/Batch'),
                   ),
                 ],
               ),
@@ -1788,8 +1789,6 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   String? _selectedClassBatch;
   bool _attendanceTaken = false;
   bool _isEditable = false;
-  DateTime? _fromDate;
-  DateTime? _toDate;
   List<String> _classBatches = [];
   List<Map<String, dynamic>> attendanceData = []; // Updated type
 
@@ -1864,7 +1863,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         }
       }
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Attendance updated successfully')));
+          const SnackBar(content: Text('Attendance updated successfully')));
     } catch (e) {
       print('Error updating attendance: $e');
     }
@@ -2031,7 +2030,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         Table(
           border: TableBorder.all(),
           children: [
-            TableRow(
+            const TableRow(
               children: [
                 TableCell(child: Center(child: Text('Sr. No'))),
                 TableCell(child: Center(child: Text('Date'))),
@@ -2266,7 +2265,7 @@ class _ManageSharedDocumentsScreenState
     extends State<ManageSharedDocumentsScreen> {
   List<Map<String, dynamic>> _sharedDocuments = [];
   List<Map<String, dynamic>> _filteredDocuments = [];
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -2277,8 +2276,8 @@ class _ManageSharedDocumentsScreenState
 
   Future<void> _fetchDocuments() async {
     try {
-      final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/documents/documents'));
+      final response = await http
+          .get(Uri.parse('${AppConfig.baseUrl}/api/documents/documents'));
       if (response.statusCode == 200) {
         final List<dynamic> documents = jsonDecode(response.body);
         setState(() {
@@ -2533,9 +2532,9 @@ class _ChatWithStudentsScreenState extends State<ChatWithStudentsScreen> {
   List<Map<String, dynamic>> _students = [];
   List<Map<String, dynamic>> _filteredStudents = [];
   String? _selectedStudent;
-  TextEditingController _searchController = TextEditingController();
-  TextEditingController _subjectController = TextEditingController();
-  TextEditingController _messageController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _subjectController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
 
   @override
   void initState() {
@@ -2753,7 +2752,6 @@ class StudentsFeedbackScreen extends StatefulWidget {
 class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
   List<dynamic> _feedbacks = [];
   List<dynamic> _filteredFeedbacks = [];
-  String _searchQuery = '';
 
   @override
   void initState() {
@@ -2781,7 +2779,6 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
 
   void _filterFeedbacks(String query) {
     setState(() {
-      _searchQuery = query;
       _filteredFeedbacks = _feedbacks.where((feedback) {
         return feedback['studentName']
                 .toLowerCase()
@@ -2941,7 +2938,7 @@ class StudentRightsScreen extends StatefulWidget {
 
 class _StudentRightsScreenState extends State<StudentRightsScreen> {
   // Maps to hold the checked state for each item
-  Map<String, bool> _activityChecks = {
+  final Map<String, bool> _activityChecks = {
     'Time Table': false,
     'My Document': false,
     'eStudy': false,
@@ -2951,7 +2948,7 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
     'Feedback': false,
   };
 
-  Map<String, bool> _reportChecks = {
+  final Map<String, bool> _reportChecks = {
     'Attendance Report': false,
     'Fee Status Report': false,
   };
@@ -3004,11 +3001,10 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
             const SizedBox(height: 16.0),
 
             // Reports
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Reports',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('Reports', style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             Column(

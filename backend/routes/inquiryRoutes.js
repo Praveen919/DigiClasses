@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
 const Inquiry = require('../models/inquiryModel');
 
 // Set up multer for file uploads
@@ -67,6 +66,29 @@ router.post('/', upload.single('file'), async (req, res) => {
   }
 });
 
+// Get today's inquiries count
+router.get('/count', async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of the day
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1); // Start of the next day
+
+    console.log('Fetching count for dates:', today, tomorrow); // Debug log
+
+    const count = await Inquiry.countDocuments({
+      inquiryDate: {
+        $gte: today,
+        $lt: tomorrow // Up to but not including the start of tomorrow
+      }
+    });
+    res.status(200).json({ count });
+  } catch (err) {
+    console.error('Error fetching inquiry count:', err.message);
+    res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  }
+});
+
 // Get all inquiries
 router.get('/', async (req, res) => {
   try {
@@ -98,11 +120,6 @@ router.put('/:id', async (req, res) => {
   try {
     const inquiryId = req.params.id;
     const updatedData = req.body;
-
-    // Validate that 'isSolved' is a boolean
-    if (updatedData.hasOwnProperty('isSolved') && typeof updatedData.isSolved !== 'boolean') {
-      return res.status(400).json({ message: 'Invalid value for isSolved' });
-    }
 
     const updatedInquiry = await Inquiry.findByIdAndUpdate(inquiryId, updatedData, { new: true });
 

@@ -1,5 +1,6 @@
 require('dotenv').config(); // Load environment variables from .env file
 const express = require('express');
+const mongoose = require('mongoose');
 const app = express();
 const cors = require('cors'); // Include CORS middleware if needed
 const bodyParser = require('body-parser'); // Include body-parser middleware for parsing request bodies
@@ -41,16 +42,18 @@ const feeCollectionRoutes = require('./routes/feeCollectionRoutes');
 const messageStudentIdPassRoutes = require('./routes/messageStudentIdPassRoutes');
 const inquiriesStudentRoutes = require('./routes/inquiriesStudentRoutes');
 const absenceMessageRoutes = require ('./routes/absenceMessageRoutes');
-const cardReportRoutes = require('./routes/cardReportRoutes');
+//const cardReportRoutes = require('./routes/cardReportRoutes');
 const staffRightsRoutes = require('./routes/staffRightsRoutes');
 const forgotPasswordRoutes = require('./routes/forgotPasswordRoutes');
-const logbookTRoutes = require('./routes/logbookTRoutes');
+//const logbookTRoutes = require('./routes/logbookTRoutes');
+const statisticsRoutes = require('./routes/statisticsRoutes');
 
 // Middleware setup
 app.use(cors()); // Enable CORS if needed
 app.use(express.json());
 app.use(bodyParser.json()); // Parse application/json
 app.use(bodyParser.urlencoded({ extended: true })); // Parse application/x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
 app.use('/uploads', express.static('uploads')); // Adjust path if needed
@@ -90,10 +93,11 @@ app.use('./api/feeCollection', feeCollectionRoutes);
 app.use('/api/messageStudentIdPass', messageStudentIdPassRoutes);
 app.use('/api/inquiriesStudent', inquiriesStudentRoutes);
 app.use('/api/absenceMessage', absenceMessageRoutes);
-app.use('/api/cardReport', cardReportRoutes);
+//app.use('/api/cardReport', cardReportRoutes);
 app.use('/api/staff-rights', staffRightsRoutes);
 app.use ('/api/forgotPass', forgotPasswordRoutes);
-app.use('/api/logbook', logbookTRoutes); 
+//app.use('/api/logbook', logbookTRoutes); 
+app.use('/api/statistics', statisticsRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;

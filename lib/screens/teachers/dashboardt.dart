@@ -31,12 +31,12 @@ class DashboardT extends StatelessWidget {
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
             onPressed: () {
-              Scaffold.of(context).openDrawer();  // Open the drawer
+              Scaffold.of(context).openDrawer(); // Open the drawer
             },
           ),
         ),
       ),
-      drawer: const SidePanel(),  // Adding the drawer here
+      drawer: const SidePanel(), // Adding the drawer here
       body: DashboardTab(
         name: name,
         branch: branch,
@@ -45,7 +45,6 @@ class DashboardT extends StatelessWidget {
     );
   }
 }
-
 
 class SidePanel extends StatelessWidget {
   const SidePanel({super.key});
@@ -89,7 +88,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                      const SettingsT(option: 'profileSetting'),
+                          const SettingsT(option: 'profileSetting'),
                     ),
                   );
                   // Navigate to Change Password screen
@@ -104,7 +103,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                      const SettingsT(option: 'changePassword'),
+                          const SettingsT(option: 'changePassword'),
                     ),
                   );
                   // Navigate to Profile Setting screen
@@ -119,7 +118,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                      const SettingsT(option: 'autoWhatsApp'),
+                          const SettingsT(option: 'autoWhatsApp'),
                     ),
                   );
                   // Navigate to Change Password screen
@@ -134,7 +133,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                      const SettingsT(option: 'autoNotification'),
+                          const SettingsT(option: 'autoNotification'),
                     ),
                   );
                   // Navigate to Change Password screen
@@ -168,7 +167,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const SetupT(option: 'addClassBatch')),
+                            const SetupT(option: 'addClassBatch')),
                   );
                   // Navigate to Change Password screen
                 },
@@ -182,7 +181,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const SetupT(option: 'manageTimeTable')),
+                            const SetupT(option: 'manageTimeTable')),
                   );
                 },
               ),
@@ -201,7 +200,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentT(option: 'studentAttendance')),
+                            const StudentT(option: 'studentAttendance')),
                   );
                 },
               ),
@@ -214,7 +213,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentT(option: 'shareDocuments')),
+                            const StudentT(option: 'shareDocuments')),
                   );
                 },
               ),
@@ -227,7 +226,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentT(option: 'manageSharedDocuments')),
+                            const StudentT(option: 'manageSharedDocuments')),
                   );
                 },
               ),
@@ -240,7 +239,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentT(option: 'chatWithStudents')),
+                            const StudentT(option: 'chatWithStudents')),
                   );
                 },
               ),
@@ -253,7 +252,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const StudentT(option: 'studentsFeedback')),
+                            const StudentT(option: 'studentsFeedback')),
                   );
                 },
               ),
@@ -272,7 +271,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamT(option: 'createManualExam')),
+                            const ExamT(option: 'createManualExam')),
                   );
                   // Navigate to Student management
                 },
@@ -286,7 +285,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamT(option: 'manageManualExam')),
+                            const ExamT(option: 'manageManualExam')),
                   );
                 },
               ),
@@ -299,7 +298,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamT(option: 'createMCQExam')),
+                            const ExamT(option: 'createMCQExam')),
                   );
                 },
               ),
@@ -312,7 +311,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamT(option: 'manageMCQExam')),
+                            const ExamT(option: 'manageMCQExam')),
                   );
                 },
               ),
@@ -325,7 +324,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamT(option: 'createAssignments')),
+                            const ExamT(option: 'createAssignments')),
                   );
                 },
               ),
@@ -338,7 +337,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ExamT(option: 'manageAssignments')),
+                            const ExamT(option: 'manageAssignments')),
                   );
                 },
               ),
@@ -357,7 +356,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const EstudyT(option: 'createStudyMaterial')),
+                            const EstudyT(option: 'createStudyMaterial')),
                   );
                   // Navigate to Student management
                 },
@@ -371,7 +370,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const EstudyT(option: 'manageStudyMaterial')),
+                            const EstudyT(option: 'manageStudyMaterial')),
                   );
                 },
               ),
@@ -384,7 +383,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const EstudyT(option: 'manageSharedStudyMaterial')),
+                            const EstudyT(option: 'manageSharedStudyMaterial')),
                   );
                 },
               ),
@@ -401,7 +400,8 @@ class SidePanel extends StatelessWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const LogbookT()),
+                    MaterialPageRoute(
+                        builder: (context) => const LogBookScreen()),
                   );
                 },
               )
@@ -420,7 +420,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingT(option: 'student')),
+                            const MessagingT(option: 'student')),
                   );
                 },
               ),
@@ -433,7 +433,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingT(option: 'staff')),
+                            const MessagingT(option: 'staff')),
                   );
                 },
               ),
@@ -446,7 +446,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingT(option: 'studentIdPassword')),
+                            const MessagingT(option: 'studentIdPassword')),
                   );
                 },
               ),
@@ -459,11 +459,11 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingT(option: 'examReminder')),
+                            const MessagingT(option: 'examReminder')),
                   );
                 },
               ),
-            /*  ListTile(
+              /*  ListTile(
                 leading: const Icon(Icons.score_outlined),
                 title: const Text('Send Exam Marks Message'),
                 onTap: () {
@@ -485,7 +485,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingT(option: 'absentAttendance')),
+                            const MessagingT(option: 'absentAttendance')),
                   );
                 },
               ),
@@ -504,7 +504,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportT(option: 'studentDetail')),
+                            const ReportT(option: 'studentDetail')),
                   );
                 },
               ),
@@ -517,7 +517,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportT(option: 'studentCard')),
+                            const ReportT(option: 'studentCard')),
                   );
                 },
               ),
@@ -530,7 +530,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const ReportT(option: 'studentAttendance')),
+                            const ReportT(option: 'studentAttendance')),
                   );
                 },
               )
@@ -596,7 +596,6 @@ class DashboardTab extends StatelessWidget {
           ),
           const NotificationsCard(),
           const StatisticsCard(),
-
         ],
       ),
     );
@@ -628,10 +627,10 @@ class UserInfoCard extends StatelessWidget {
     return Card(
       child: ListTile(
         leading:
-        const CircleAvatar(child: Text('Logo')), // Adjust logo as necessary
+            const CircleAvatar(child: Text('Logo')), // Adjust logo as necessary
         title: Text(name), // Display the user's name
         subtitle:
-        Text('Branch: $branch\nYear: $year'), // Display branch and year
+            Text('Branch: $branch\nYear: $year'), // Display branch and year
         trailing: IconButton(
           icon: const Icon(Icons.power_settings_new),
           onPressed: () =>
@@ -654,7 +653,7 @@ class NotificationsCard extends StatelessWidget {
             leading: Icon(Icons.notifications),
             title: Text("Today's Notifications"),
             trailing:
-            CircleAvatar(backgroundColor: Colors.orange, child: Text('0')),
+                CircleAvatar(backgroundColor: Colors.orange, child: Text('0')),
           ),
           ListTile(
             leading: Icon(Icons.calendar_today),
@@ -683,19 +682,19 @@ class StatisticsCard extends StatelessWidget {
             leading: Icon(Icons.question_answer),
             title: Text("Today's Inquiries"),
             trailing:
-            CircleAvatar(backgroundColor: Colors.green, child: Text('0')),
+                CircleAvatar(backgroundColor: Colors.green, child: Text('0')),
           ),
           ListTile(
             leading: Icon(Icons.group),
             title: Text('Total Students'),
             trailing:
-            CircleAvatar(backgroundColor: Colors.blue, child: Text('1')),
+                CircleAvatar(backgroundColor: Colors.blue, child: Text('1')),
           ),
           ListTile(
             leading: Icon(Icons.person_off),
             title: Text('Today Absentees'),
             trailing:
-            CircleAvatar(backgroundColor: Colors.cyan, child: Text('0')),
+                CircleAvatar(backgroundColor: Colors.cyan, child: Text('0')),
           ),
         ],
       ),
@@ -710,37 +709,37 @@ class TeacherTools extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Card(
         child: Column(children: [
-          ListTile(title: Text("Teacher Tools")),
-          Row(children: [
-            Expanded(
-                child: ListTile(
-                    leading: Icon(Icons.note_sharp, color: Colors.black),
-                    title: Text("Upload Exams"))),
-            Expanded(
-                child: ListTile(
-                    leading: Icon(Icons.assignment_sharp, color: Colors.black),
-                    title: Text("Upload Assignments"))),
-            Expanded(
-                child: ListTile(
-                    leading:
+      ListTile(title: Text("Teacher Tools")),
+      Row(children: [
+        Expanded(
+            child: ListTile(
+                leading: Icon(Icons.note_sharp, color: Colors.black),
+                title: Text("Upload Exams"))),
+        Expanded(
+            child: ListTile(
+                leading: Icon(Icons.assignment_sharp, color: Colors.black),
+                title: Text("Upload Assignments"))),
+        Expanded(
+            child: ListTile(
+                leading:
                     Icon(Icons.calendar_today_outlined, color: Colors.black),
-                    title: Text("View Timetable")))
-          ]),
-          Row(children: [
-            Expanded(
-                child: ListTile(
-                    leading: Icon(Icons.edit_note_outlined, color: Colors.black),
-                    title: Text("Update Attendance"))),
-            Expanded(
-                child: ListTile(
-                    leading: Icon(Icons.book_sharp, color: Colors.black),
-                    title: Text("Upload Notes"))),
-            Expanded(
-                child: ListTile(
-                    leading: Icon(Icons.message, color: Colors.black),
-                    title: Text("Messages")))
-          ])
-        ]));
+                title: Text("View Timetable")))
+      ]),
+      Row(children: [
+        Expanded(
+            child: ListTile(
+                leading: Icon(Icons.edit_note_outlined, color: Colors.black),
+                title: Text("Update Attendance"))),
+        Expanded(
+            child: ListTile(
+                leading: Icon(Icons.book_sharp, color: Colors.black),
+                title: Text("Upload Notes"))),
+        Expanded(
+            child: ListTile(
+                leading: Icon(Icons.message, color: Colors.black),
+                title: Text("Messages")))
+      ])
+    ]));
   }
 }
 
@@ -755,16 +754,16 @@ class Shortcuts extends StatelessWidget {
             title: Text("Update my Logbook"),
             trailing: CircleAvatar(
                 child: Icon(
-                  Icons.arrow_forward_sharp,
-                  color: Colors.black,
-                ))),
+              Icons.arrow_forward_sharp,
+              color: Colors.black,
+            ))),
         ListTile(
             title: Text("Send Exam/Assignment Reminder"),
             trailing: CircleAvatar(
                 child: Icon(
-                  Icons.arrow_forward_sharp,
-                  color: Colors.black,
-                ))),
+              Icons.arrow_forward_sharp,
+              color: Colors.black,
+            ))),
       ],
     );
   }

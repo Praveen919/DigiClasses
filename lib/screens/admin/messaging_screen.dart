@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:testing_app/screens/config.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MessagingScreen extends StatefulWidget {
   final String option;
@@ -54,7 +55,8 @@ class SendStudentMessageScreen extends StatefulWidget {
   const SendStudentMessageScreen({super.key});
 
   @override
-  _SendStudentMessageScreenState createState() => _SendStudentMessageScreenState();
+  _SendStudentMessageScreenState createState() =>
+      _SendStudentMessageScreenState();
 }
 
 class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
@@ -62,16 +64,35 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
   List<dynamic> _students = [];
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
+  String? _token; // Store the JWT token
 
   @override
   void initState() {
     super.initState();
-    _fetchStudents();
+    _loadToken(); // Load the JWT token
+  }
+
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('token'); // Load saved token
+    });
+    _fetchStudents(); // Fetch students after loading token
   }
 
   Future<void> _fetchStudents() async {
+    if (_token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No token found. Please log in.')),
+      );
+      return;
+    }
+
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth/users?role=Student'));
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/auth/users?role=Student'),
+        headers: {'Authorization': 'Bearer $_token'}, // Include JWT token
+      );
 
       if (response.statusCode == 200) {
         setState(() {
@@ -79,61 +100,71 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
         });
       } else {
         // Handle error response
-        final errorMessage = json.decode(response.body)['error'] ?? 'Failed to fetch students';
+        final errorMessage =
+            json.decode(response.body)['error'] ?? 'Failed to fetch students';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
-      // Handle network error or other exceptions
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching students. Please try again later.')),
+        const SnackBar(
+            content: Text('Error fetching students. Please try again later.')),
       );
     }
   }
 
-
   Future<void> _sendMessage() async {
-    if (_selectedStudentId == null || _titleController.text.isEmpty || _messageController.text.isEmpty) {
+    if (_selectedStudentId == null ||
+        _titleController.text.isEmpty ||
+        _messageController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields.')),
       );
       return;
     }
 
+    if (_token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No token found. Please log in.')),
+      );
+      return;
+    }
+
     try {
       final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/messageStudent'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('${AppConfig.baseUrl}/api/admin/messages'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token', // Include JWT token
+        },
         body: json.encode({
           'studentId': _selectedStudentId,
-          'title': _titleController.text,
+          'subject': _titleController.text,
           'message': _messageController.text,
         }),
       );
 
       if (response.statusCode == 200) {
-        // Message sent successfully
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Message sent successfully!')),
         );
-        // Clear the fields
         _titleController.clear();
         _messageController.clear();
         setState(() {
-          _selectedStudentId = null; // Reset selected student
+          _selectedStudentId = null;
         });
       } else {
-        // Handle error response
-        final errorMessage = json.decode(response.body)['error'] ?? 'Failed to send message';
+        final errorMessage =
+            json.decode(response.body)['error'] ?? 'Failed to send message';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
-      // Handle network error or other exceptions
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error sending message. Please try again later.')),
+        const SnackBar(
+            content: Text('Error sending message. Please try again later.')),
       );
     }
   }
@@ -142,7 +173,6 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         title: const Text('Send Message to Students'),
       ),
       body: Padding(
@@ -151,7 +181,6 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Student Dropdown
               DropdownButton<String>(
                 value: _selectedStudentId,
                 hint: const Text('Select Student*'),
@@ -159,7 +188,8 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
                 items: _students.map((student) {
                   return DropdownMenuItem<String>(
                     value: student['_id'],
-                    child: Text('${student['firstName']} ${student['lastName']}'),
+                    child:
+                        Text('${student['firstName']} ${student['lastName']}'),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -169,8 +199,6 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
                 },
               ),
               const SizedBox(height: 16.0),
-
-              // Title
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
@@ -179,8 +207,6 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
                 ),
               ),
               const SizedBox(height: 16.0),
-
-              // Message
               TextFormField(
                 controller: _messageController,
                 maxLines: 5,
@@ -190,8 +216,6 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
                 ),
               ),
               const SizedBox(height: 32.0),
-
-              // Send Button
               ElevatedButton(
                 onPressed: _sendMessage,
                 child: const Text('Send'),
@@ -203,7 +227,6 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
     );
   }
 }
-
 
 class SendStaffMessageScreen extends StatefulWidget {
   const SendStaffMessageScreen({super.key});
@@ -227,7 +250,8 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
 
   void fetchStaffMembers() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/staff/teachers')); // Replace with your API endpoint
+      final response = await http.get(Uri.parse(
+          '${AppConfig.baseUrl}/api/staff/teachers')); // Replace with your API endpoint
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -251,7 +275,9 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
   }
 
   Future<void> sendMessage() async {
-    if (selectedStaffId == null || titleController.text.isEmpty || messageController.text.isEmpty) {
+    if (selectedStaffId == null ||
+        titleController.text.isEmpty ||
+        messageController.text.isEmpty) {
       setState(() {
         errorMessage = 'Please fill all fields.';
       });
@@ -260,7 +286,8 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/messageStudent'), // Replace with your API endpoint
+        Uri.parse(
+            '${AppConfig.baseUrl}/api/messageStudent'), // Replace with your API endpoint
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'teacherId': selectedStaffId,
@@ -276,10 +303,12 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
           messageController.clear();
           selectedStaffId = null;
         });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Message sent successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Message sent successfully')));
       } else {
         setState(() {
-          errorMessage = 'Failed to send message: ${json.decode(response.body)['error']}';
+          errorMessage =
+              'Failed to send message: ${json.decode(response.body)['error']}';
         });
       }
     } catch (e) {
@@ -309,10 +338,12 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
                   selectedStaffId = newValue;
                 });
               },
-              items: staffList.map<DropdownMenuItem<String>>((Map<String, String> staff) {
+              items: staffList
+                  .map<DropdownMenuItem<String>>((Map<String, String> staff) {
                 return DropdownMenuItem<String>(
                   value: staff['id'], // Use the ID for selection
-                  child: Text(staff['name'] ?? 'Unknown'), // Display the staff name
+                  child: Text(
+                      staff['name'] ?? 'Unknown'), // Display the staff name
                 );
               }).toList(),
               decoration: const InputDecoration(
@@ -369,13 +400,13 @@ class SendStaffIdPasswordScreen extends StatefulWidget {
   const SendStaffIdPasswordScreen({super.key});
 
   @override
-  _SendStaffIdPasswordScreenState createState() => _SendStaffIdPasswordScreenState();
+  _SendStaffIdPasswordScreenState createState() =>
+      _SendStaffIdPasswordScreenState();
 }
 
 class _SendStaffIdPasswordScreenState extends State<SendStaffIdPasswordScreen> {
   List<Staff> _staff = [];
   List<Staff> _filteredStaff = [];
-  String? _selectedStaffId;
   String _searchText = '';
 
   @override
@@ -386,7 +417,8 @@ class _SendStaffIdPasswordScreenState extends State<SendStaffIdPasswordScreen> {
 
   Future<void> _fetchStaff() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth/users?role=Teacher'));
+      final response = await http
+          .get(Uri.parse('${AppConfig.baseUrl}/api/auth/users?role=Teacher'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -400,7 +432,8 @@ class _SendStaffIdPasswordScreenState extends State<SendStaffIdPasswordScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching staff. Please try again later.')),
+        const SnackBar(
+            content: Text('Error fetching staff. Please try again later.')),
       );
     }
   }
@@ -436,7 +469,8 @@ class _SendStaffIdPasswordScreenState extends State<SendStaffIdPasswordScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error sending message. Please try again later.')),
+        const SnackBar(
+            content: Text('Error sending message. Please try again later.')),
       );
     }
   }
@@ -471,9 +505,10 @@ class _SendStaffIdPasswordScreenState extends State<SendStaffIdPasswordScreen> {
                 value: '-- Select --',
                 items: <String>['Option 1', 'Option 2', 'Option 3']
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                )).toList(),
+                          value: value,
+                          child: Text(value),
+                        ))
+                    .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
                 },
@@ -505,7 +540,8 @@ class _SendStaffIdPasswordScreenState extends State<SendStaffIdPasswordScreen> {
               const SizedBox(height: 16.0),
 
               // Staff ID/Password Details
-              const Text('Staff ID/Password Details', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Staff ID/Password Details',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
               // List of staff details
@@ -540,7 +576,8 @@ class Staff {
     return Staff(
       id: json['id'],
       name: json['name'],
-      password: json['password'], // Assuming password is available in the response
+      password:
+          json['password'], // Assuming password is available in the response
     );
   }
 }
@@ -549,7 +586,8 @@ class StaffDetailsCard extends StatelessWidget {
   final Staff staff;
   final Function(String, String) onSendMessage;
 
-  const StaffDetailsCard({super.key, required this.staff, required this.onSendMessage});
+  const StaffDetailsCard(
+      {super.key, required this.staff, required this.onSendMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -577,18 +615,18 @@ class StaffDetailsCard extends StatelessWidget {
   }
 }
 
-
 class SendStudentIdPasswordScreen extends StatefulWidget {
   const SendStudentIdPasswordScreen({super.key});
 
   @override
-  _SendStudentIdPasswordScreenState createState() => _SendStudentIdPasswordScreenState();
+  _SendStudentIdPasswordScreenState createState() =>
+      _SendStudentIdPasswordScreenState();
 }
 
-class _SendStudentIdPasswordScreenState extends State<SendStudentIdPasswordScreen> {
+class _SendStudentIdPasswordScreenState
+    extends State<SendStudentIdPasswordScreen> {
   List<Student> _students = [];
   String? _selectedStudentId;
-  String _selectedStudentName = '';
 
   @override
   void initState() {
@@ -598,7 +636,8 @@ class _SendStudentIdPasswordScreenState extends State<SendStudentIdPasswordScree
 
   Future<void> _fetchStudents() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth/users?role=Student'));
+      final response = await http
+          .get(Uri.parse('${AppConfig.baseUrl}/api/auth/users?role=Student'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -611,7 +650,8 @@ class _SendStudentIdPasswordScreenState extends State<SendStudentIdPasswordScree
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching students. Please try again later.')),
+        const SnackBar(
+            content: Text('Error fetching students. Please try again later.')),
       );
     }
   }
@@ -639,7 +679,8 @@ class _SendStudentIdPasswordScreenState extends State<SendStudentIdPasswordScree
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error sending message. Please try again later.')),
+        const SnackBar(
+            content: Text('Error sending message. Please try again later.')),
       );
     }
   }
@@ -680,7 +721,6 @@ class _SendStudentIdPasswordScreenState extends State<SendStudentIdPasswordScree
                 onChanged: (String? newValue) {
                   setState(() {
                     _selectedStudentId = newValue;
-                    _selectedStudentName = newValue != null ? _students.firstWhere((student) => student.id == newValue).name : '';
                   });
                 },
                 decoration: const InputDecoration(
@@ -691,12 +731,14 @@ class _SendStudentIdPasswordScreenState extends State<SendStudentIdPasswordScree
               const SizedBox(height: 16.0),
 
               // Student ID/Password Details
-              const Text('Student ID/Password Details', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Student ID/Password Details',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
               if (_selectedStudentId != null)
                 StudentDetailsCard(
-                  student: _students.firstWhere((student) => student.id == _selectedStudentId),
+                  student: _students.firstWhere(
+                      (student) => student.id == _selectedStudentId),
                   onSendMessage: _sendMessage,
                 ),
             ],
@@ -727,7 +769,8 @@ class StudentDetailsCard extends StatelessWidget {
   final Student student;
   final Function(String, String) onSendMessage;
 
-  const StudentDetailsCard({super.key, required this.student, required this.onSendMessage});
+  const StudentDetailsCard(
+      {super.key, required this.student, required this.onSendMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -785,9 +828,9 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
                 value: selectedStandard,
                 items: <String>['All', '1st Std', '2nd Std', '3rd Std']
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   setState(() {
@@ -814,9 +857,9 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
                   'Marathi'
                 ]
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   setState(() {
@@ -842,9 +885,9 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
                   'Marathi Exam'
                 ]
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   setState(() {
@@ -905,7 +948,8 @@ class SendFeeStatusMessageScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Send Fee Status Message to Student'),
       ),
-      resizeToAvoidBottomInset: true, // Ensures proper resizing to avoid keyboard overlap
+      resizeToAvoidBottomInset:
+          true, // Ensures proper resizing to avoid keyboard overlap
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -939,18 +983,20 @@ class SendFeeStatusMessageScreen extends StatelessWidget {
               const SizedBox(height: 16.0),
 
               // Students with Pending Fees
-              const Text('Students with Pending Fees', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Students with Pending Fees',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
               // List of students with pending fees
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: 1, // Replace with actual number of students with pending fees
+                itemCount:
+                    1, // Replace with actual number of students with pending fees
                 itemBuilder: (context, index) {
                   return const StudentWithPendingFeeCard(
-                    // Pass student data here
-                  );
+                      // Pass student data here
+                      );
                 },
               ),
             ],
@@ -1002,7 +1048,8 @@ class SendFeeReminderScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Send Fee Reminder to Student'),
       ),
-      resizeToAvoidBottomInset: true, // Ensures proper resizing to avoid keyboard overlap
+      resizeToAvoidBottomInset:
+          true, // Ensures proper resizing to avoid keyboard overlap
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -1046,18 +1093,20 @@ class SendFeeReminderScreen extends StatelessWidget {
               const SizedBox(height: 16.0),
 
               // Students with Pending Fees
-              const Text('Students with Pending Fees', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Students with Pending Fees',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
               // List of students with pending fees
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: 1, // Replace with actual number of students with pending fees
+                itemCount:
+                    1, // Replace with actual number of students with pending fees
                 itemBuilder: (context, index) {
                   return const StudentWithPendingFeeCard(
-                    // Pass student data here
-                  );
+                      // Pass student data here
+                      );
                 },
               ),
             ],
@@ -1121,7 +1170,8 @@ class _AbsentAttendanceMessageScreenState
 
   // Function to fetch absentees from the API
   Future<void> fetchAbsentees() async {
-    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/absenceMessage/absences/today'));
+    final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/absenceMessage/absences/today'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
@@ -1139,7 +1189,8 @@ class _AbsentAttendanceMessageScreenState
   void _filterAbsentees(String query) {
     setState(() {
       filteredAbsentees = absentees
-          .where((student) => student.toLowerCase().contains(query.toLowerCase()))
+          .where(
+              (student) => student.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -1179,15 +1230,15 @@ class _AbsentAttendanceMessageScreenState
               filteredAbsentees.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: filteredAbsentees.length,
-                itemBuilder: (context, index) {
-                  return AbsentStudentCard(
-                    studentName: filteredAbsentees[index],
-                  );
-                },
-              ),
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredAbsentees.length,
+                      itemBuilder: (context, index) {
+                        return AbsentStudentCard(
+                          studentName: filteredAbsentees[index],
+                        );
+                      },
+                    ),
             ],
           ),
         ),

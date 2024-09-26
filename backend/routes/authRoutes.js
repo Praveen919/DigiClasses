@@ -103,8 +103,8 @@ router.get('/students', verifyJWT, async (req, res) => {
 router.get('/users', verifyJWT, async (req, res) => {
     const role = req.query.role;
     try {
-        const query = role ? { role } : {}; // If role is provided, filter by it
-        const users = await User.find(query).select('-password'); // Exclude password
+        const query = role ? { role } : {};
+        const users = await User.find({role: 'Teacher'}).select('-password');
         res.status(200).json(users);
     } catch (error) {
         console.error('Error fetching users:', error.message);

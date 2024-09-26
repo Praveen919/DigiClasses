@@ -230,4 +230,3 @@ class _LogBookScreenState extends State<LogBookScreen> {
     );
   }
 }
-
