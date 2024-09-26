@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'forgot_password_screen.dart';
 import 'branch_year_selection_screen.dart';
 import 'package:testing_app/screens/config.dart';
@@ -27,6 +28,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signIn(BuildContext context) async {
     final String email = _emailController.text;
     final String password = _passwordController.text;
+
+    Future<void> saveToken(String token) async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('authToken', token); // Save token
+    }
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,7 +64,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        final Map<String, dynamic>? userData = data['userData'] as Map<String, dynamic>?;
+        String token = data['token'];
+        await saveToken(token);
+        final Map<String, dynamic>? userData =
+            data['userData'] as Map<String, dynamic>?;
 
         if (userData != null) {
           final String name = userData['name'] ?? 'Unknown';
@@ -103,16 +112,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   bool _isValidEmail(String email) {
-    final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+    final emailRegex =
+        RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
     return emailRegex.hasMatch(email);
   }
 
   void _createAccount(BuildContext context) {
     Navigator.pushNamed(context, '/createAccount');
   }
+
   Future<void> _testConnection() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth/login'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth/login'));
       if (response.statusCode == 200) {
         print('Connection successful!');
       } else {
@@ -120,9 +132,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (error) {
       print('Error connecting: $error');
+    }
+  }
 
-}
-}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -182,16 +194,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  )
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        )
                       : const Text(
-                    'SIGN IN',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                          'SIGN IN',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 8),
                 TextButton(

@@ -74,8 +74,6 @@ router.get('/count', async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1); // Start of the next day
 
-    console.log('Fetching count for dates:', today, tomorrow); // Debug log
-
     const count = await Inquiry.countDocuments({
       inquiryDate: {
         $gte: today,

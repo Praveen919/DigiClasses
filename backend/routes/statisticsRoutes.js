@@ -4,23 +4,6 @@ const Attendance = require('../models/attendanceModel');
 const Student = require('../models/studentModel');
 const Inquiry = require('../models/inquiryModel');
 
-// Route to get today's inquiries count
-router.get('/inquiries/count', async (req, res) => {
-  try {
-    const today = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
-    const count = await Inquiry.countDocuments({
-      inquiryDate: {
-        $gte: new Date(today),
-        $lt: new Date(new Date(today).getTime() + 24 * 60 * 60 * 1000) // 24 hours
-      }
-    });
-    res.status(200).json({ count });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch inquiries count' });
-  }
-});
-
 // Route to get total students count
 router.get('/students/count', async (req, res) => {
   try {

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:testing_app/screens/config.dart';
 import 'package:http_parser/http_parser.dart';
 
@@ -1165,9 +1166,10 @@ class _AddStudentRegistrationScreenState
               child: ElevatedButton(
                 onPressed: () {
                   // Handle reset action
+                  _formKey.currentState?.reset();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey,
+                  backgroundColor: Colors.red,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                 ),
                 child: const Text('Reset'),
@@ -1181,15 +1183,16 @@ class _AddStudentRegistrationScreenState
 
   Widget _buildTextField(String label, TextEditingController controller) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0),
+      padding: const EdgeInsets.only(top: 10.0),
       child: TextFormField(
         controller: controller,
-        decoration: InputDecoration(labelText: label),
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            if (label.contains('*')) {
-              return '$label is required';
-            }
+            return 'Please enter $label';
           }
           return null;
         },
@@ -1198,61 +1201,75 @@ class _AddStudentRegistrationScreenState
   }
 
   Widget _buildDropdownField(
-      String label, List<String> items, ValueChanged<String?>? onChanged) {
+      String label, List<String> options, ValueChanged<String?> onChanged) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0),
+      padding: const EdgeInsets.only(top: 10.0),
       child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(labelText: label),
-        items: items.map((String item) {
+        value: options[0],
+        items: options.map((String option) {
           return DropdownMenuItem<String>(
-            value: item,
-            child: Text(item),
+            value: option,
+            child: Text(option),
           );
         }).toList(),
         onChanged: onChanged,
-        validator: (value) {
-          if (value == null || value.isEmpty || value == '-- Select --') {
-            if (label.contains('*')) {
-              return '$label is required';
-            }
-          }
-          return null;
-        },
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
       ),
     );
   }
 
   Widget _buildDatePickerField(String label, bool isBirthDate) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0),
-      child: Row(
-        children: [
-          Text(label),
-          const Spacer(),
-          TextButton(
-            onPressed: () => _selectDate(context, isBirthDate),
-            child: Text(
-              DateFormat('dd/MM/yyyy').format(
-                isBirthDate ? _selectedBirthDate : _selectedJoinDate,
-              ),
-            ),
+      padding: const EdgeInsets.only(top: 10.0),
+      child: InkWell(
+        onTap: () => _selectDate(context, isBirthDate),
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: label,
+            border: const OutlineInputBorder(),
           ),
-        ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                isBirthDate
+                    ? _selectedBirthDate.toLocal().toString().split(' ')[0]
+                    : _selectedJoinDate.toLocal().toString().split(' ')[0],
+              ),
+              const Icon(Icons.calendar_today),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildImagePicker(String label) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0),
-      child: Row(
+      padding: const EdgeInsets.only(top: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ElevatedButton(
-            onPressed: _pickImage,
-            child: const Text('Choose File'),
+          Text(label),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              ElevatedButton(
+                onPressed: _pickImage,
+                child: const Text('Choose File'),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _fileName ?? '',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          Text(_fileName ?? 'No file chosen'),
         ],
       ),
     );
@@ -1260,19 +1277,15 @@ class _AddStudentRegistrationScreenState
 
   Widget _buildCheckbox(String label) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0),
-      child: Row(
-        children: [
-          Checkbox(
-            value: _printInquiry,
-            onChanged: (bool? value) {
-              setState(() {
-                _printInquiry = value ?? false;
-              });
-            },
-          ),
-          Expanded(child: Text(label)),
-        ],
+      padding: const EdgeInsets.only(top: 10.0),
+      child: CheckboxListTile(
+        title: Text(label),
+        value: _printInquiry,
+        onChanged: (bool? value) {
+          setState(() {
+            _printInquiry = value ?? false;
+          });
+        },
       ),
     );
   }
@@ -1295,52 +1308,103 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
   }
 
   Future<void> _fetchStudents() async {
-    final response = await http
-        .get(Uri.parse('${AppConfig.baseUrl}/api/registration/students'));
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('authToken');
 
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      setState(() {
-        students = data.map((json) => Student.fromJson(json)).toList();
-      });
+    if (token != null) {
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/auth/students'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        setState(() {
+          students = data.map((json) => Student.fromJson(json)).toList();
+        });
+      } else {
+        _showSnackBar('Failed to load students: ${response.statusCode}');
+      }
     } else {
-      // Handle the error
-      print('Failed to load students');
+      _showSnackBar('No token found! Please log in again.');
     }
   }
 
-  Future<void> _deleteStudent(int id, int index) async {
-    final response = await http.delete(
-        Uri.parse('${AppConfig.baseUrl}/api/registration/students/$id'));
+  Future<void> _deleteStudent(String id, int index) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('authToken');
 
-    if (response.statusCode == 200) {
-      setState(() {
-        students.removeAt(index);
-      });
+    if (token != null) {
+      try {
+        final response = await http.delete(
+          Uri.parse('${AppConfig.baseUrl}/api/registration/students/$id'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          setState(() {
+            students.removeAt(index);
+          });
+        } else {
+          final errorResponse = json.decode(response.body);
+          _showSnackBar(
+              'Failed to delete student: ${errorResponse['error'] ?? 'Unknown error'}');
+        }
+      } catch (e) {
+        _showSnackBar('Error deleting student: $e');
+      }
     } else {
-      // Handle the error
-      print('Failed to delete student');
+      _showSnackBar('No token found! Please log in again.');
     }
   }
 
   Future<void> _updateStudent(Student student) async {
-    final response = await http.put(
-      Uri.parse('${AppConfig.baseUrl}/api/registration/students/${student.id}'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(student.toJson()),
-    );
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('authToken');
 
-    if (response.statusCode == 200) {
-      _fetchStudents(); // Refresh the list
+    if (token != null) {
+      try {
+        final response = await http.put(
+          Uri.parse(
+              '${AppConfig.baseUrl}/api/registration/students/${student.id}'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: json.encode(student.toJson()),
+        );
+
+        if (response.statusCode == 200) {
+          _fetchStudents();
+        } else {
+          final errorResponse = json.decode(response.body);
+          _showSnackBar(
+              'Failed to update student: ${errorResponse['error'] ?? 'Unknown error'}');
+        }
+      } catch (e) {
+        _showSnackBar('Error updating student: $e');
+      }
     } else {
-      // Handle the error
-      print('Failed to update student');
+      _showSnackBar('No token found! Please log in again.');
     }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Manage Students')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -1448,7 +1512,7 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
     );
   }
 
-  void _confirmDeleteStudent(BuildContext context, int id, int index) {
+  void _confirmDeleteStudent(BuildContext context, String id, int index) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1478,7 +1542,7 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
 
 // Model class for Student
 class Student {
-  int id; // Added id field
+  String id;
   String name;
   String standard;
   String course;
@@ -1486,7 +1550,7 @@ class Student {
   String joinDate;
 
   Student({
-    required this.id, // Added id parameter
+    required this.id,
     required this.name,
     required this.standard,
     required this.course,
@@ -1496,17 +1560,18 @@ class Student {
 
   factory Student.fromJson(Map<String, dynamic> json) {
     return Student(
-      id: json['id'],
+      id: json['_id'],
       name: json['name'],
-      standard: json['standard'],
-      course: json['course'],
-      classBatch: json['classBatch'],
-      joinDate: json['joinDate'],
+      standard: json['standard'] ?? '',
+      course: json['course'] ?? '',
+      classBatch: json['classBatch'] ?? '',
+      joinDate: json['joinDate'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      '_id': id,
       'name': name,
       'standard': standard,
       'course': course,
@@ -2113,7 +2178,7 @@ class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
   Future<void> _fetchClassBatchData() async {
     try {
       final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/class-batch/')); // Replace with your backend API URL
+          '${AppConfig.baseUrl}/api/class-batch')); // Replace with your backend API URL
       if (response.statusCode == 200) {
         List<String> classBatches =
             List<String>.from(jsonDecode(response.body));

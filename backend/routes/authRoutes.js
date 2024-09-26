@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/userModel');
+const Student = require('../models/studentModel');
 const {verifyJWT} = require('../utils/middleware');
 
 const router = express.Router();
@@ -109,6 +110,17 @@ router.get('/users', verifyJWT, async (req, res) => {
     } catch (error) {
         console.error('Error fetching users:', error.message);
         res.status(500).json({ message: 'Error fetching users' });
+    }
+});
+
+// Route to get total students count
+router.get('/students/count', verifyJWT, async (req, res) => {
+    try {
+        const count = await User.countDocuments({ role: 'Student' }); // Count the number of students
+        res.status(200).json({ count });
+    } catch (error) {
+        console.error('Error fetching students count:', error.message); // Log error details
+        res.status(500).json({ message: 'Error fetching students count' });
     }
 });
 

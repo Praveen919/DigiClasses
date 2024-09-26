@@ -1,5 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:testing_app/screens/config.dart';
 import 'package:testing_app/screens/teachers/estudyt.dart';
 import 'package:testing_app/screens/teachers/examt.dart';
 import 'package:testing_app/screens/teachers/helpt.dart';
@@ -572,7 +578,7 @@ class SidePanel extends StatelessWidget {
   }
 }
 
-class DashboardTab extends StatelessWidget {
+class DashboardTab extends ConsumerWidget {
   final String name;
   final String branch;
   final String year;
@@ -585,7 +591,13 @@ class DashboardTab extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Fetch statistics when the widget builds
+    ref.read(statisticsProvider.notifier).fetchStatistics();
+
+    final statistics =
+        ref.watch(statisticsProvider); // Watch the statistics provider
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -595,7 +607,12 @@ class DashboardTab extends StatelessWidget {
             year: year,
           ),
           const NotificationsCard(),
-          const StatisticsCard(),
+          StatisticsCard(
+            studentsCount: statistics.studentsCount,
+            absenteesCount: statistics.absenteesCount,
+          ),
+          const TeacherTools(),
+          const Shortcuts(),
         ],
       ),
     );
@@ -666,35 +683,101 @@ class NotificationsCard extends StatelessWidget {
   }
 }
 
+class Statistics {
+  final int studentsCount;
+  final int absenteesCount;
+
+  Statistics({
+    required this.studentsCount,
+    required this.absenteesCount,
+  });
+}
+
+class StatisticsNotifier extends StateNotifier<Statistics> {
+  StatisticsNotifier() : super(Statistics(studentsCount: 0, absenteesCount: 0));
+
+  Future<void> fetchStatistics() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('authToken');
+
+      if (token != null) {
+        // Fetch total students count
+        final studentsResponse = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/auth/students/count'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        final studentsCount = jsonDecode(studentsResponse.body)['count'];
+
+        // Fetch today's absentees count
+        final absenteesResponse = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/statistics/absentees/count'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        final absenteesCount = jsonDecode(absenteesResponse.body)['count'];
+
+        // Update the state with the fetched data
+        state = Statistics(
+          studentsCount: studentsCount ?? 0,
+          absenteesCount: absenteesCount ?? 0,
+        );
+      } else {
+        print('No token found! Please log in again.');
+        // Handle no token scenario appropriately
+      }
+    } catch (error) {
+      print('Error fetching statistics: $error');
+      // Handle error appropriately
+    }
+  }
+}
+
+// Define the provider
+final statisticsProvider =
+    StateNotifierProvider<StatisticsNotifier, Statistics>((ref) {
+  return StatisticsNotifier();
+});
+
 class StatisticsCard extends StatelessWidget {
-  const StatisticsCard({super.key});
+  final int studentsCount;
+  final int absenteesCount;
+
+  const StatisticsCard({
+    Key? key,
+    required this.studentsCount,
+    required this.absenteesCount,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
+    return Card(
       child: Column(
         children: [
-          ListTile(
+          const ListTile(
             title: Text('Student Status'),
             trailing: Icon(Icons.arrow_drop_down),
           ),
           ListTile(
-            leading: Icon(Icons.question_answer),
-            title: Text("Today's Inquiries"),
-            trailing:
-                CircleAvatar(backgroundColor: Colors.green, child: Text('0')),
+            leading: const Icon(Icons.group),
+            title: const Text('Total Students'),
+            trailing: CircleAvatar(
+              backgroundColor: Colors.blue,
+              child: Text(studentsCount.toString()),
+            ),
           ),
           ListTile(
-            leading: Icon(Icons.group),
-            title: Text('Total Students'),
-            trailing:
-                CircleAvatar(backgroundColor: Colors.blue, child: Text('1')),
-          ),
-          ListTile(
-            leading: Icon(Icons.person_off),
-            title: Text('Today Absentees'),
-            trailing:
-                CircleAvatar(backgroundColor: Colors.cyan, child: Text('0')),
+            leading: const Icon(Icons.person_off),
+            title: const Text('Today Absentees'),
+            trailing: CircleAvatar(
+              backgroundColor: Colors.cyan,
+              child: Text(absenteesCount.toString()),
+            ),
           ),
         ],
       ),

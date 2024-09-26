@@ -578,13 +578,3 @@ class Shortcuts extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-
-/*https://www.figma.com/proto/QDv0ZOA5joCftuPL14imWv/Untitled?page-id=0%3A1&node-id=4-3&viewport=538%2C316%2C0.
-56&t=95oB0YAjJGF1CD8L-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=4%3A3&show-proto-sidebar=1
-*/

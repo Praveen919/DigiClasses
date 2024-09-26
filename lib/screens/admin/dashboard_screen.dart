@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:testing_app/screens/admin/estudy_screen.dart';
 import 'package:testing_app/screens/admin/exam_screen.dart';
 import 'package:testing_app/screens/admin/expenses_income_screen.dart';
@@ -1193,27 +1194,50 @@ class StatisticsNotifier extends StateNotifier<Statistics> {
 
   Future<void> fetchStatistics() async {
     try {
-      // Fetch inquiries count
-      final inquiriesResponse =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/inquiries/count'));
-      final inquiriesCount = jsonDecode(inquiriesResponse.body)['count'];
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('authToken');
 
-      // Fetch total students count
-      final studentsResponse = await http
-          .get(Uri.parse('${AppConfig.baseUrl}/api/statistics/students/count'));
-      final studentsCount = jsonDecode(studentsResponse.body)['count'];
+      if (token != null) {
+        // Fetch inquiries count
+        final inquiriesResponse = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/inquiries/count'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
 
-      // Fetch today's absentees count
-      final absenteesResponse = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/statistics/absentees/count'));
-      final absenteesCount = jsonDecode(absenteesResponse.body)['count'];
+        final inquiriesCount = jsonDecode(inquiriesResponse.body)['count'];
 
-      // Update the state with the fetched data
-      state = Statistics(
-        inquiriesCount: inquiriesCount,
-        studentsCount: studentsCount,
-        absenteesCount: absenteesCount,
-      );
+        // Fetch total students count
+        final studentsResponse = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/auth/students/count'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        final studentsCount = jsonDecode(studentsResponse.body)['count'];
+
+        // Fetch today's absentees count
+        final absenteesResponse = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/statistics/absentees/count'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        final absenteesCount = jsonDecode(absenteesResponse.body)['count'];
+
+        // Update the state with the fetched data
+        state = Statistics(
+          inquiriesCount: inquiriesCount ?? 0,
+          studentsCount: studentsCount ?? 0,
+          absenteesCount: absenteesCount ?? 0,
+        );
+      } else {
+        print('No token found! Please log in again.');
+        // Handle no token scenario appropriately
+      }
     } catch (error) {
       print('Error fetching statistics: $error');
       // Handle error appropriately
@@ -1227,20 +1251,45 @@ final statisticsProvider =
   return StatisticsNotifier();
 });
 
-class StatisticsCard extends StatelessWidget {
-  final int inquiriesCount;
-  final int studentsCount;
-  final int absenteesCount;
+class StatisticsCard extends ConsumerStatefulWidget {
+  const StatisticsCard(
+      {Key? key,
+      required int inquiriesCount,
+      required int studentsCount,
+      required int absenteesCount})
+      : super(key: key);
 
-  const StatisticsCard({
-    Key? key,
-    required this.inquiriesCount,
-    required this.studentsCount,
-    required this.absenteesCount,
-  }) : super(key: key);
+  @override
+  _StatisticsCardState createState() => _StatisticsCardState();
+}
+
+class _StatisticsCardState extends ConsumerState<StatisticsCard> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch statistics initially
+    ref.read(statisticsProvider.notifier).fetchStatistics();
+
+    // Set up a timer to refresh data every 20 seconds
+    _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
+      ref.read(statisticsProvider.notifier).fetchStatistics();
+    });
+  }
+
+  @override
+  void dispose() {
+    // Cancel the timer when the widget is disposed
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Watch the statistics provider to get current statistics
+    final statistics = ref.watch(statisticsProvider);
+
     return Card(
       child: Column(
         children: [
@@ -1253,7 +1302,7 @@ class StatisticsCard extends StatelessWidget {
             title: const Text("Today's Inquiries"),
             trailing: CircleAvatar(
               backgroundColor: Colors.green,
-              child: Text(inquiriesCount.toString()),
+              child: Text(statistics.inquiriesCount.toString()),
             ),
           ),
           ListTile(
@@ -1261,7 +1310,7 @@ class StatisticsCard extends StatelessWidget {
             title: const Text('Total Students'),
             trailing: CircleAvatar(
               backgroundColor: Colors.blue,
-              child: Text(studentsCount.toString()),
+              child: Text(statistics.studentsCount.toString()),
             ),
           ),
           ListTile(
@@ -1269,7 +1318,7 @@ class StatisticsCard extends StatelessWidget {
             title: const Text('Today Absentees'),
             trailing: CircleAvatar(
               backgroundColor: Colors.cyan,
-              child: Text(absenteesCount.toString()),
+              child: Text(statistics.absenteesCount.toString()),
             ),
           ),
         ],
