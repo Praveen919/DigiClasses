@@ -139,6 +139,7 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
           ? '${AppConfig.baseUrl}/api/staff' // URL for creating staff
           : '${AppConfig.baseUrl}/api/staff/${widget.staff!['id']}'; // URL for updating staff
 
+      // Send staff data to the server
       final staffResponse = await http.post(
         Uri.parse(staffUrl),
         headers: {
@@ -147,8 +148,12 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
         body: jsonEncode(staffData),
       );
 
-      // If new staff, create user in users collection
+      // Log the staff response for debugging
+      print('Staff response status: ${staffResponse.statusCode}');
+      print('Staff response body: ${staffResponse.body}');
+
       if (widget.staff == null) {
+        // If this is a new staff member, create a user in the auth system
         final usersData = {
           'email': _emailController.text,
           'password': _passwordController.text,
@@ -165,27 +170,42 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
           body: jsonEncode(usersData),
         );
 
-        if (staffResponse.statusCode == 201 &&
-            usersResponse.statusCode == 201) {
+        // Log the users response for debugging
+        print('Users response status: ${usersResponse.statusCode}');
+        print('Users response body: ${usersResponse.body}');
+
+        if ((staffResponse.statusCode == 201 ||
+                staffResponse.statusCode == 200) &&
+            (usersResponse.statusCode == 201 ||
+                usersResponse.statusCode == 200)) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Staff details saved successfully')),
           );
           widget.onSave(staffData); // Notify parent widget with saved data
           _resetForm();
         } else {
+          print('Staff creation response: ${staffResponse.body}');
+          print('User creation response: ${usersResponse.body}');
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to save staff details')),
+            SnackBar(
+                content: Text(
+                    'Failed to save staff details. Staff Status: ${staffResponse.statusCode}, User Status: ${usersResponse.statusCode}')),
           );
         }
       } else {
-        if (staffResponse.statusCode == 200) {
+        // Update existing staff
+        if (staffResponse.statusCode == 200 ||
+            staffResponse.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Staff details updated successfully')),
           );
           widget.onSave(staffData); // Notify parent widget with saved data
         } else {
+          print('Staff update response: ${staffResponse.body}');
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to update staff details')),
+            SnackBar(
+                content: Text(
+                    'Failed to update staff details. Status: ${staffResponse.statusCode}')),
           );
         }
       }

@@ -207,7 +207,7 @@ class StudentReport {
   }
 }
 
-/*class ViewMyCardReport extends StatelessWidget {
+class ViewMyCardReport extends StatelessWidget {
   const ViewMyCardReport({super.key});
 
   // Define the card report data as a static constant
@@ -215,14 +215,16 @@ class StudentReport {
     studentName: 'John Doe',
     rollNumber: '12345',
     classSection: '10-A',
-    performanceSummary: 'Overall performance is good with some areas for improvement.',
+    performanceSummary:
+        'Overall performance is good with some areas for improvement.',
     grades: [
       {'subject': 'Math', 'grade': 'A'},
       {'subject': 'Science', 'grade': 'B'},
       {'subject': 'English', 'grade': 'A'},
       {'subject': 'History', 'grade': 'B'},
     ],
-    comments: 'John has shown improvement in Mathematics and is encouraged to focus on Science.',
+    comments:
+        'John has shown improvement in Mathematics and is encouraged to focus on Science.',
   );
 
   @override
@@ -231,7 +233,8 @@ class StudentReport {
       appBar: AppBar(
         title: const Text('My Card Report'),
       ),
-      body: SingleChildScrollView(  // Added SingleChildScrollView
+      body: SingleChildScrollView(
+        // Added SingleChildScrollView
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,7 +248,6 @@ class StudentReport {
             Text('Roll Number: ${cardReport.rollNumber}'),
             Text('Class/Section: ${cardReport.classSection}'),
             const SizedBox(height: 16.0),
-
             Text(
               'Performance Summary',
               style: Theme.of(context).textTheme.headlineSmall,
@@ -253,7 +255,6 @@ class StudentReport {
             const SizedBox(height: 8.0),
             Text(cardReport.performanceSummary),
             const SizedBox(height: 16.0),
-
             Text(
               'Grades',
               style: Theme.of(context).textTheme.headlineSmall,
@@ -265,14 +266,12 @@ class StudentReport {
                 trailing: Text('Grade: ${grade['grade'] ?? 'N/A'}'),
               ),
             const SizedBox(height: 16.0),
-
             Text(
               'Teacher\'s Comments',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8.0),
             Text(cardReport.comments),
-
             const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () {
@@ -281,7 +280,6 @@ class StudentReport {
               child: const Text('Download Report'),
             ),
             const SizedBox(height: 16.0),
-
             TextButton(
               onPressed: () {
                 // Navigate to contact or help screen
@@ -312,7 +310,6 @@ class StudentCardReport {
     required this.comments,
   });
 }
-*/
 
 class ViewMyAttendanceReport extends StatelessWidget {
   const ViewMyAttendanceReport({super.key});

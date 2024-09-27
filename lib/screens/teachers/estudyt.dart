@@ -119,51 +119,56 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Create Study Material',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              _buildTextField('Course Name *', _courseNameController),
-              const SizedBox(height: 16),
-              _buildDropdownField('Standard *', _standardController),
-              const SizedBox(height: 16),
-              _buildDropdownField('Subject *', _subjectController),
-              const SizedBox(height: 16),
-              _buildFileUploader(),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _saveStudyMaterial,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create Study Material'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Create Study Material',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                _buildTextField('Course Name *', _courseNameController),
+                const SizedBox(height: 16),
+                _buildDropdownField('Standard *', _standardController),
+                const SizedBox(height: 16),
+                _buildDropdownField('Subject *', _subjectController),
+                const SizedBox(height: 16),
+                _buildFileUploader(),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _saveStudyMaterial,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                        ),
+                        child: const Text('SAVE'),
                       ),
-                      child: const Text('SAVE'),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _resetForm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _resetForm,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                        ),
+                        child: const Text('RESET'),
                       ),
-                      child: const Text('RESET'),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

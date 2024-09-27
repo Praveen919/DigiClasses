@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart'; // For picking images
 import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
+import 'package:path/path.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http_parser/http_parser.dart';
@@ -93,66 +95,79 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const Text(
-              'Coaching Class Detail',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            _buildTextField('Institute Name', instituteNameController, true),
-            _buildTextField('Country', countryController, true),
-            _buildTextField('City', cityController, true),
-            _buildTextField('Branch Name', branchNameController, true),
-            _buildTextField('Branch Address', branchAddressController, true),
-            const SizedBox(height: 20),
-            const Text(
-              'Profile Logo',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: const Text('Select Image'),
-            ),
-            const SizedBox(height: 20),
-            _buildDropdown(
-                'Display logo on receipt?', logoDisplay, ['Yes', 'No'],
+    return Scaffold(
+      // Wrap the screen with Scaffold
+      appBar: AppBar(
+        title: const Text('Profile Settings'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Text(
+                'Coaching Class Detail',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              _buildTextField('Institute Name', instituteNameController, true),
+              _buildTextField('Country', countryController, true),
+              _buildTextField('City', cityController, true),
+              _buildTextField('Branch Name', branchNameController, true),
+              _buildTextField('Branch Address', branchAddressController, true),
+              const SizedBox(height: 20),
+              const Text(
+                'Profile Logo',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _pickImage,
+                child: const Text('Select Image'),
+              ),
+              const SizedBox(height: 20),
+              _buildDropdown(
+                'Display logo on receipt?',
+                logoDisplay,
+                ['Yes', 'No'],
                 (value) {
-              setState(() {
-                logoDisplay = value!;
-              });
-            }),
-            _buildDropdown('Allow students to chat?', chatOption, ['Yes', 'No'],
+                  setState(() {
+                    logoDisplay = value!;
+                  });
+                },
+              ),
+              _buildDropdown(
+                'Allow students to chat?',
+                chatOption,
+                ['Yes', 'No'],
                 (value) {
-              setState(() {
-                chatOption = value!;
-              });
-            }),
-            const SizedBox(height: 20),
-            const Text(
-              'Personal Details',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            _buildTextField('Name', nameController, true),
-            _buildTextField('Mobile No.', mobileController, true,
-                isNumeric: true),
-            _buildTextField('Email', emailController, true, isEmail: true),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _submitData(); // Call the submit function
-                }
-              },
-              child: const Text('Submit'),
-            ),
-          ],
+                  setState(() {
+                    chatOption = value!;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Personal Details',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              _buildTextField('Name', nameController, true),
+              _buildTextField('Mobile No.', mobileController, true,
+                  isNumeric: true),
+              _buildTextField('Email', emailController, true, isEmail: true),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _submitData(); // Call the submit function
+                  }
+                },
+                child: const Text('Submit'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -177,12 +192,16 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
     // Add image file if selected
     if (selectedImage != null) {
       final fileBytes = await selectedImage!.readAsBytes();
+      final mimeType =
+          lookupMimeType(selectedImage!.path); // Determine mime type
       request.files.add(
         http.MultipartFile.fromBytes(
           'profileLogo',
           fileBytes,
-          contentType: MediaType('image', 'jpeg'),
-          filename: selectedImage!.name,
+          contentType:
+              MediaType.parse(mimeType!), // Use the determined mime type
+          filename:
+              basename(selectedImage!.path), // Use the file name from path
         ),
       );
     }
@@ -191,18 +210,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
       final response = await request.send();
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context as BuildContext).showSnackBar(
           const SnackBar(
               content: Text('Profile settings updated successfully!')),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context as BuildContext).showSnackBar(
           const SnackBar(content: Text('Failed to update profile settings.')),
         );
       }
     } catch (error) {
       print('Error: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
         const SnackBar(content: Text('An error occurred. Please try again.')),
       );
     }
@@ -312,20 +331,20 @@ class _ChangePasswordState extends State<ChangePassword> {
         print(response.body);
 
         if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context as BuildContext).showSnackBar(
             const SnackBar(content: Text('Password changed successfully')),
           );
         } else {
           // Handle non-200 status codes
           print('Error: Status code ${response.statusCode}');
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context as BuildContext).showSnackBar(
             const SnackBar(content: Text('An error occurred')),
           );
         }
       } catch (e) {
         // Handle parsing errors and other exceptions
         print('Error: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context as BuildContext).showSnackBar(
           const SnackBar(content: Text('An error occurred')),
         );
       } finally {
@@ -545,10 +564,10 @@ class _AutoNotificationSettingsState
           }),
         );
         if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context as BuildContext).showSnackBar(
               const SnackBar(content: Text('Settings saved successfully')));
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context as BuildContext).showSnackBar(
               const SnackBar(content: Text('Failed to save settings')));
         }
       } catch (error) {
@@ -764,10 +783,10 @@ class _AutoWhatsappSettingScreenState extends State<AutoWhatsappSettingScreen> {
           }),
         );
         if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context as BuildContext).showSnackBar(
               const SnackBar(content: Text('Settings saved successfully')));
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context as BuildContext).showSnackBar(
               const SnackBar(content: Text('Failed to save settings')));
         }
       } catch (error) {

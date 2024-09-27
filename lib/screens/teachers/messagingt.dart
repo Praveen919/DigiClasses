@@ -575,7 +575,7 @@ class SendExamReminderScreen extends StatefulWidget {
 class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
   String selectedStandard = 'All';
   String selectedSubject = 'All';
-  String selectedExamName = '-- Select --';
+  String selectedExamName = 'English Exam'; // Set a valid initial value
 
   @override
   Widget build(BuildContext context) {
@@ -684,28 +684,40 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
   }
 
   Future<void> sendExamNotification() async {
-    // Implement the API call to send the exam notification
-    // Example:
-    final response = await http.post(
-      Uri.parse('${AppConfig.baseUrl}/api/messageStudent/exam/notifications'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'standard': selectedStandard,
-        'subject': selectedSubject,
-        'examName': selectedExamName,
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/messageStudent/exam/notifications'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'standard': selectedStandard,
+          'subject': selectedSubject,
+          'examName': selectedExamName,
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      // Handle success response
-    } else {
-      // Handle error response
+      if (response.statusCode == 200) {
+        // Show success message or handle success response
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Notification sent successfully!')),
+        );
+      } else {
+        // Show error message or handle error response
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to send notification.')),
+        );
+      }
+    } catch (e) {
+      // Handle exceptions
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 }
-/*class SendExamMarksMessageScreen extends StatelessWidget {
+
+class SendExamMarksMessageScreen extends StatelessWidget {
   const SendExamMarksMessageScreen({super.key});
 
   @override
@@ -716,7 +728,7 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
         title: const Text('Send Exam Marks to Student'),
       ),
       resizeToAvoidBottomInset:
-      true, // Ensures proper resizing to avoid keyboard overlap
+          true, // Ensures proper resizing to avoid keyboard overlap
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -728,9 +740,9 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
                 value: 'All',
                 items: <String>['All', '1st Std', '2nd Std', '3rd Std']
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -755,9 +767,9 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
                   'Marathi'
                 ]
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -781,9 +793,9 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
                   'Marathi'
                 ]
                     .map((String value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
+                          value: value,
+                          child: Text(value),
+                        ))
                     .toList(),
                 onChanged: (String? newValue) {
                   // Handle dropdown selection change
@@ -809,7 +821,6 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
     );
   }
 }
-*/
 
 class AbsentAttendanceMessageScreen extends StatefulWidget {
   const AbsentAttendanceMessageScreen({super.key});

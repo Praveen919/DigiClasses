@@ -568,41 +568,149 @@ class StudentTools extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
-      child: Column(
-        children: [
-          ListTile(title: Text("Student Tools")),
-          Row(children: [
-            Expanded(
-                child: ListTile(
-                    leading: Icon(Icons.note_sharp, color: Colors.black),
-                    title: Text("Submit Exams"))),
-            Expanded(
-                child: ListTile(
-                    leading: Icon(Icons.assignment_sharp, color: Colors.black),
-                    title: Text("Submit Assignments"))),
-            Expanded(
-                child: ListTile(
-                    leading: Icon(Icons.calendar_today_outlined,
-                        color: Colors.black),
-                    title: Text("View Timetable"))),
-          ]),
-          Row(children: [
-            Expanded(
-                child: ListTile(
-                    leading:
-                        Icon(Icons.edit_note_outlined, color: Colors.black),
-                    title: Text("View Attendance"))),
-            Expanded(
-                child: ListTile(
-                    leading: Icon(Icons.book_sharp, color: Colors.black),
-                    title: Text("View Notes"))),
-            Expanded(
-                child: ListTile(
-                    leading: Icon(Icons.message, color: Colors.black),
-                    title: Text("Messages"))),
-          ]),
-        ],
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const ListTile(
+              title: Text(
+                "Student Tools",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+            const Divider(),
+            Table(
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              children: [
+                TableRow(
+                  children: [
+                    _buildTableToolItem(
+                      context,
+                      Icons.note_sharp,
+                      "Submit Exams",
+                      () {
+                        // Navigate to SubmitExamScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ViewManualExamScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildTableToolItem(
+                      context,
+                      Icons.assignment_sharp,
+                      "Submit Assignments",
+                      () {
+                        // Navigate to SubmitAssignmentScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ViewAssignmentsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildTableToolItem(
+                      context,
+                      Icons.person,
+                      "Profile Settings",
+                      () {
+                        // Navigate to Profile Settings
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfileSettings(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                TableRow(
+                  children: [
+                    _buildTableToolItem(
+                      context,
+                      Icons.edit_note_outlined,
+                      "View Attendance",
+                      () {
+                        // Navigate to ViewAttendanceScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ViewMyAttendanceScreen(
+                              classBatchId: '',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildTableToolItem(
+                      context,
+                      Icons.book_sharp,
+                      "View Notes",
+                      () {
+                        // Navigate to ViewNotesScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const ViewStudyMaterialScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildTableToolItem(
+                      context,
+                      Icons.details_rounded,
+                      "View My Report",
+                      () {
+                        // Navigate to Report
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ViewDetailReportScreen(
+                              studentId: '',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build table items with navigation
+  Widget _buildTableToolItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.black, size: 30),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -613,22 +721,41 @@ class Shortcuts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
         ListTile(
-            title: Text("Check Exam Marks"),
-            trailing: CircleAvatar(
-                child: Icon(
+          title: const Text("Send Message to Teacher"),
+          trailing: const CircleAvatar(
+            child: Icon(
               Icons.arrow_forward_sharp,
               color: Colors.black,
-            ))),
+            ),
+          ),
+          onTap: () {
+            // Navigate to the Send Message Screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SendMessageScreen()),
+            );
+          },
+        ),
         ListTile(
-            title: Text("Check Reminder"),
-            trailing: CircleAvatar(
-                child: Icon(
+          title: const Text("Give Feedback"),
+          trailing: const CircleAvatar(
+            child: Icon(
               Icons.arrow_forward_sharp,
               color: Colors.black,
-            ))),
+            ),
+          ),
+          onTap: () {
+            // Navigate to the Feedback Screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const GiveFeedbackScreen()),
+            );
+          },
+        ),
       ],
     );
   }

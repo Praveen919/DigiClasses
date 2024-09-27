@@ -1314,7 +1314,7 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
     if (token != null) {
       try {
         final response = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/auth/students'),
+          Uri.parse('${AppConfig.baseUrl}/api/registration/students'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
