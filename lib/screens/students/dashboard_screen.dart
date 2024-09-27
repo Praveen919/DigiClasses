@@ -552,35 +552,7 @@ class _NotificationsCardState extends State<NotificationsCard> {
   }
 }
 
-class StatisticsCard extends StatelessWidget {
-  const StatisticsCard({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return const Card(
-      child: Column(
-        children: [
-          ListTile(
-            title: Text('My Status'),
-            trailing: Icon(Icons.arrow_drop_down),
-          ),
-          ListTile(
-            leading: Icon(Icons.question_answer),
-            title: Text("Today's Notification"),
-            trailing:
-                CircleAvatar(backgroundColor: Colors.green, child: Text('0')),
-          ),
-          ListTile(
-            leading: Icon(Icons.person_off),
-            title: Text('Today Absentees'),
-            trailing:
-                CircleAvatar(backgroundColor: Colors.cyan, child: Text('0')),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class StudentTools extends StatelessWidget {
   const StudentTools({super.key});
