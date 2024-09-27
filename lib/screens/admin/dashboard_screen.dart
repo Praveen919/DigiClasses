@@ -1162,11 +1162,7 @@ class NotificationsCard extends StatelessWidget {
             trailing:
                 CircleAvatar(backgroundColor: Colors.orange, child: Text('0')),
           ),
-          ListTile(
-            leading: Icon(Icons.calendar_today),
-            title: Text('Last date for Subscription'),
-            trailing: Text('31 Dec 2024'),
-          ),
+        
         ],
       ),
     );
