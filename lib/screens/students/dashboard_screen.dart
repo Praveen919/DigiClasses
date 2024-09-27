@@ -415,7 +415,7 @@ class DashboardTab extends StatelessWidget {
             year: year,
           ),
           const NotificationsCard(userId: 'userId',), // Dynamic notifications
-          const StatisticsCard(),
+        
         ],
       ),
     );
