@@ -672,11 +672,6 @@ class NotificationsCard extends StatelessWidget {
             trailing:
                 CircleAvatar(backgroundColor: Colors.orange, child: Text('0')),
           ),
-          ListTile(
-            leading: Icon(Icons.calendar_today),
-            title: Text('Last date for Subscription'),
-            trailing: Text('31 Dec 2024'),
-          ),
         ],
       ),
     );
@@ -759,10 +754,7 @@ class StatisticsCard extends StatelessWidget {
     return Card(
       child: Column(
         children: [
-          const ListTile(
-            title: Text('Student Status'),
-            trailing: Icon(Icons.arrow_drop_down),
-          ),
+          const ListTile(title: Text('Student Status')),
           ListTile(
             leading: const Icon(Icons.group),
             title: const Text('Total Students'),

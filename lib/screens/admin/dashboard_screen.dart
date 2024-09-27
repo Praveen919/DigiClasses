@@ -1162,7 +1162,6 @@ class NotificationsCard extends StatelessWidget {
             trailing:
                 CircleAvatar(backgroundColor: Colors.orange, child: Text('0')),
           ),
-        
         ],
       ),
     );
@@ -1249,11 +1248,10 @@ final statisticsProvider =
 
 class StatisticsCard extends ConsumerStatefulWidget {
   const StatisticsCard(
-      {Key? key,
+      {super.key,
       required int inquiriesCount,
       required int studentsCount,
-      required int absenteesCount})
-      : super(key: key);
+      required int absenteesCount});
 
   @override
   _StatisticsCardState createState() => _StatisticsCardState();
@@ -1289,10 +1287,7 @@ class _StatisticsCardState extends ConsumerState<StatisticsCard> {
     return Card(
       child: Column(
         children: [
-          const ListTile(
-            title: Text('Student Status'),
-            trailing: Icon(Icons.arrow_drop_down),
-          ),
+          const ListTile(title: Text('Student Status')),
           ListTile(
             leading: const Icon(Icons.question_answer),
             title: const Text("Today's Inquiries"),

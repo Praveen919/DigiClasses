@@ -1312,21 +1312,25 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
     String? token = prefs.getString('authToken');
 
     if (token != null) {
-      final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/api/auth/students'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+      try {
+        final response = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/auth/students'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
 
-      if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
-        setState(() {
-          students = data.map((json) => Student.fromJson(json)).toList();
-        });
-      } else {
-        _showSnackBar('Failed to load students: ${response.statusCode}');
+        if (response.statusCode == 200) {
+          List<dynamic> data = json.decode(response.body);
+          setState(() {
+            students = data.map((json) => Student.fromJson(json)).toList();
+          });
+        } else {
+          _showSnackBar('Failed to load students: ${response.statusCode}');
+        }
+      } catch (e) {
+        _showSnackBar('Error fetching students: $e');
       }
     } else {
       _showSnackBar('No token found! Please log in again.');
@@ -1351,6 +1355,7 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
           setState(() {
             students.removeAt(index);
           });
+          _showSnackBar('Student deleted successfully');
         } else {
           final errorResponse = json.decode(response.body);
           _showSnackBar(
@@ -1381,7 +1386,8 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
         );
 
         if (response.statusCode == 200) {
-          _fetchStudents();
+          _fetchStudents(); // Refresh the list after successful update
+          _showSnackBar('Student updated successfully');
         } else {
           final errorResponse = json.decode(response.body);
           _showSnackBar(

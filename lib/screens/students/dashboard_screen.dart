@@ -414,8 +414,11 @@ class DashboardTab extends StatelessWidget {
             branch: branch,
             year: year,
           ),
-          const NotificationsCard(userId: 'userId',), // Dynamic notifications
-        
+          const NotificationsCard(
+            userId: 'userId',
+          ), // Dynamic notifications
+          const StudentTools(),
+          const Shortcuts()
         ],
       ),
     );
@@ -449,7 +452,8 @@ class UserInfoCard extends StatelessWidget {
         leading:
             const CircleAvatar(child: Text('Logo')), // Adjust logo as necessary
         title: Text(name), // Display the user's name
-        subtitle: Text('Branch: $branch\nYear: $year'), // Display branch and year
+        subtitle:
+            Text('Branch: $branch\nYear: $year'), // Display branch and year
         trailing: IconButton(
           icon: const Icon(Icons.power_settings_new),
           onPressed: () => _logout(context), // Call the logout function
@@ -460,11 +464,13 @@ class UserInfoCard extends StatelessWidget {
 }
 
 Future<List<String>> fetchNotifications(String userId) async {
-  final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/notification-settings/$userId'));
+  final response = await http
+      .get(Uri.parse('${AppConfig.baseUrl}/api/notification-settings/$userId'));
 
   if (response.statusCode == 200) {
     Map<String, dynamic> jsonResponse = json.decode(response.body);
-    List<dynamic> data = jsonResponse['notifications']; // Adjust based on your API response
+    List<dynamic> data =
+        jsonResponse['notifications']; // Adjust based on your API response
     return data.cast<String>(); // Assuming the API returns a list of strings
   } else {
     throw Exception('Failed to load notifications');
@@ -472,7 +478,8 @@ Future<List<String>> fetchNotifications(String userId) async {
 }
 
 class NotificationsCard extends StatefulWidget {
-  const NotificationsCard({super.key, required this.userId}); // Require userId in the constructor
+  const NotificationsCard(
+      {super.key, required this.userId}); // Require userId in the constructor
 
   final String userId; // Added userId field
 
@@ -498,7 +505,8 @@ class _NotificationsCardState extends State<NotificationsCard> {
 
   Future<void> _loadNotifications() async {
     try {
-      List<String> fetchedNotifications = await fetchNotifications(widget.userId); // Use userId from widget
+      List<String> fetchedNotifications =
+          await fetchNotifications(widget.userId); // Use userId from widget
       setState(() {
         notifications = fetchedNotifications;
         isLoading = false;
@@ -527,7 +535,8 @@ class _NotificationsCardState extends State<NotificationsCard> {
             title: const Text("Today's Notifications"),
             trailing: CircleAvatar(
               backgroundColor: Colors.orange,
-              child: Text(notifications.length.toString()), // Notification count
+              child:
+                  Text(notifications.length.toString()), // Notification count
             ),
           ),
           isLoading
@@ -537,8 +546,10 @@ class _NotificationsCardState extends State<NotificationsCard> {
                       title: Text('No notifications for today'),
                     )
                   : ListView.builder(
-                      shrinkWrap: true, // Add this to avoid infinite height issues
-                      physics: const NeverScrollableScrollPhysics(), // Disable scrolling for this inner ListView
+                      shrinkWrap:
+                          true, // Add this to avoid infinite height issues
+                      physics:
+                          const NeverScrollableScrollPhysics(), // Disable scrolling for this inner ListView
                       itemCount: notifications.length,
                       itemBuilder: (context, index) {
                         return ListTile(
@@ -551,8 +562,6 @@ class _NotificationsCardState extends State<NotificationsCard> {
     );
   }
 }
-
-
 
 class StudentTools extends StatelessWidget {
   const StudentTools({super.key});
@@ -581,7 +590,8 @@ class StudentTools extends StatelessWidget {
           Row(children: [
             Expanded(
                 child: ListTile(
-                    leading: Icon(Icons.edit_note_outlined, color: Colors.black),
+                    leading:
+                        Icon(Icons.edit_note_outlined, color: Colors.black),
                     title: Text("View Attendance"))),
             Expanded(
                 child: ListTile(

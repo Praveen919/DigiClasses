@@ -408,6 +408,7 @@ class _SendStaffIdPasswordScreenState extends State<SendStaffIdPasswordScreen> {
   List<Staff> _staff = [];
   List<Staff> _filteredStaff = [];
   String _searchText = '';
+  String? _selectedValue; // State variable to track the selected dropdown value
 
   @override
   void initState() {
@@ -502,15 +503,18 @@ class _SendStaffIdPasswordScreenState extends State<SendStaffIdPasswordScreen> {
 
               // Send Message with Mobile App Link Dropdown (for future use)
               DropdownButtonFormField<String>(
-                value: '-- Select --',
-                items: <String>['Option 1', 'Option 2', 'Option 3']
-                    .map((String value) => DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        ))
-                    .toList(),
+                value: _selectedValue ?? '-- Select --',
+                items:
+                    <String>['-- Select --', 'Option 1', 'Option 2', 'Option 3']
+                        .map((String value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ))
+                        .toList(),
                 onChanged: (String? newValue) {
-                  // Handle dropdown selection change
+                  setState(() {
+                    _selectedValue = newValue;
+                  });
                 },
                 decoration: const InputDecoration(
                   labelText: 'Send Message with Mobile App Link',
@@ -808,7 +812,7 @@ class SendExamReminderScreen extends StatefulWidget {
 class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
   String selectedStandard = 'All';
   String selectedSubject = 'All';
-  String selectedExamName = '-- Select --';
+  String selectedExamName = '-- Select --'; // Initial value
 
   @override
   Widget build(BuildContext context) {
@@ -877,6 +881,7 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
               DropdownButtonFormField<String>(
                 value: selectedExamName,
                 items: <String>[
+                  '-- Select --', // Include '-- Select --' as an option
                   'English Exam',
                   'Maths Exam',
                   'Science Exam',
@@ -918,7 +923,6 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
 
   Future<void> sendExamNotification() async {
     // Implement the API call to send the exam notification
-    // Example:
     final response = await http.post(
       Uri.parse('${AppConfig.baseUrl}/api/messageStudent/exam/notifications'),
       headers: <String, String>{

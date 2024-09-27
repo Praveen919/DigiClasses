@@ -53,7 +53,6 @@ router.post('/students', upload.single('profileImage'), async (req, res) => {
     });
 
     await newStudent.save();
-
     res.status(201).json({ message: 'Student registered successfully!' });
   } catch (error) {
     console.error(error);
@@ -106,7 +105,7 @@ router.put('/students/:id', upload.single('profileImage'), async (req, res) => {
       res.status(404).json({ error: 'Student not found' });
     }
   } catch (error) {
-    console.error(error);
+    console.error('Error updating student:', error); // Log error for debugging
     res.status(500).json({ error: 'Server error: Failed to update student' });
   }
 });
@@ -122,7 +121,7 @@ router.delete('/students/:id', async (req, res) => {
       res.status(404).json({ error: 'Student not found' });
     }
   } catch (error) {
-    console.error(error);
+    console.error('Error deleting student:', error); // Log error for debugging
     res.status(500).json({ error: 'Server error: Failed to delete student' });
   }
 });
