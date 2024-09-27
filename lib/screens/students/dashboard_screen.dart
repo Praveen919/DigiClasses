@@ -7,6 +7,10 @@ import 'package:testing_app/screens/students/messaging_screen.dart';
 import 'package:testing_app/screens/students/report_screen.dart';
 import 'package:testing_app/screens/students/settings_screen.dart';
 import 'package:testing_app/screens/students/student_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
+import 'package:testing_app/screens/config.dart';
 
 class Dashboard1Screen extends StatelessWidget {
   final String name;
@@ -410,7 +414,7 @@ class DashboardTab extends StatelessWidget {
             branch: branch,
             year: year,
           ),
-          const NotificationsCard(),
+          const NotificationsCard(userId: 'userId',), // Dynamic notifications
           const StatisticsCard(),
         ],
       ),
@@ -445,37 +449,103 @@ class UserInfoCard extends StatelessWidget {
         leading:
             const CircleAvatar(child: Text('Logo')), // Adjust logo as necessary
         title: Text(name), // Display the user's name
-        subtitle:
-            Text('Branch: $branch\nYear: $year'), // Display branch and year
+        subtitle: Text('Branch: $branch\nYear: $year'), // Display branch and year
         trailing: IconButton(
           icon: const Icon(Icons.power_settings_new),
-          onPressed: () =>
-              _logout(context), // Call the logout function when pressed
+          onPressed: () => _logout(context), // Call the logout function
         ),
       ),
     );
   }
 }
 
-class NotificationsCard extends StatelessWidget {
-  const NotificationsCard({super.key});
+Future<List<String>> fetchNotifications(String userId) async {
+  final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/notification-settings/$userId'));
+
+  if (response.statusCode == 200) {
+    Map<String, dynamic> jsonResponse = json.decode(response.body);
+    List<dynamic> data = jsonResponse['notifications']; // Adjust based on your API response
+    return data.cast<String>(); // Assuming the API returns a list of strings
+  } else {
+    throw Exception('Failed to load notifications');
+  }
+}
+
+class NotificationsCard extends StatefulWidget {
+  const NotificationsCard({super.key, required this.userId}); // Require userId in the constructor
+
+  final String userId; // Added userId field
+
+  @override
+  _NotificationsCardState createState() => _NotificationsCardState();
+}
+
+class _NotificationsCardState extends State<NotificationsCard> {
+  List<String> notifications = [];
+  bool isLoading = true;
+  late Timer _timer; // Declare Timer
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+
+    // Poll for new notifications every 30 seconds
+    _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _loadNotifications();
+    });
+  }
+
+  Future<void> _loadNotifications() async {
+    try {
+      List<String> fetchedNotifications = await fetchNotifications(widget.userId); // Use userId from widget
+      setState(() {
+        notifications = fetchedNotifications;
+        isLoading = false;
+      });
+    } catch (e) {
+      // Handle error (you might want to show a Snackbar here)
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel(); // Cancel the timer when disposing
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Card(
+    return Card(
       child: Column(
         children: [
           ListTile(
-            leading: Icon(Icons.notifications),
-            title: Text("Today's Notifications"),
-            trailing:
-                CircleAvatar(backgroundColor: Colors.orange, child: Text('0')),
+            leading: const Icon(Icons.notifications),
+            title: const Text("Today's Notifications"),
+            trailing: CircleAvatar(
+              backgroundColor: Colors.orange,
+              child: Text(notifications.length.toString()), // Notification count
+            ),
           ),
-          ListTile(
-            leading: Icon(Icons.calendar_today),
-            title: Text('Upcoming exam date'),
-            trailing: Text('31 Dec 2024'),
-          ),
+          isLoading
+              ? const CircularProgressIndicator() // Show loader while fetching
+              : notifications.isEmpty
+                  ? const ListTile(
+                      title: Text('No notifications for today'),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true, // Add this to avoid infinite height issues
+                      physics: const NeverScrollableScrollPhysics(), // Disable scrolling for this inner ListView
+                      itemCount: notifications.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(notifications[index]),
+                        );
+                      },
+                    ),
         ],
       ),
     );
@@ -518,38 +588,41 @@ class StudentTools extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Card(
-        child: Column(children: [
-      ListTile(title: Text("Student Tools")),
-      Row(children: [
-        Expanded(
-            child: ListTile(
-                leading: Icon(Icons.note_sharp, color: Colors.black),
-                title: Text("Submit Exams"))),
-        Expanded(
-            child: ListTile(
-                leading: Icon(Icons.assignment_sharp, color: Colors.black),
-                title: Text("Submit Assignments"))),
-        Expanded(
-            child: ListTile(
-                leading:
-                    Icon(Icons.calendar_today_outlined, color: Colors.black),
-                title: Text("View Timetable")))
-      ]),
-      Row(children: [
-        Expanded(
-            child: ListTile(
-                leading: Icon(Icons.edit_note_outlined, color: Colors.black),
-                title: Text("View Attendance"))),
-        Expanded(
-            child: ListTile(
-                leading: Icon(Icons.book_sharp, color: Colors.black),
-                title: Text("View Notes"))),
-        Expanded(
-            child: ListTile(
-                leading: Icon(Icons.message, color: Colors.black),
-                title: Text("Messages")))
-      ])
-    ]));
+      child: Column(
+        children: [
+          ListTile(title: Text("Student Tools")),
+          Row(children: [
+            Expanded(
+                child: ListTile(
+                    leading: Icon(Icons.note_sharp, color: Colors.black),
+                    title: Text("Submit Exams"))),
+            Expanded(
+                child: ListTile(
+                    leading: Icon(Icons.assignment_sharp, color: Colors.black),
+                    title: Text("Submit Assignments"))),
+            Expanded(
+                child: ListTile(
+                    leading: Icon(Icons.calendar_today_outlined,
+                        color: Colors.black),
+                    title: Text("View Timetable"))),
+          ]),
+          Row(children: [
+            Expanded(
+                child: ListTile(
+                    leading: Icon(Icons.edit_note_outlined, color: Colors.black),
+                    title: Text("View Attendance"))),
+            Expanded(
+                child: ListTile(
+                    leading: Icon(Icons.book_sharp, color: Colors.black),
+                    title: Text("View Notes"))),
+            Expanded(
+                child: ListTile(
+                    leading: Icon(Icons.message, color: Colors.black),
+                    title: Text("Messages"))),
+          ]),
+        ],
+      ),
+    );
   }
 }
 
