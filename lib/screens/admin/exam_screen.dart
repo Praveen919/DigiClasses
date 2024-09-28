@@ -242,6 +242,7 @@ class _CreateManualExamScreenState extends State<CreateManualExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(widget.examData != null
             ? 'Edit Manual Exam'
             : 'Create Manual Exam'),
@@ -510,6 +511,7 @@ class _ManageManualExamScreenState extends State<ManageManualExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manage Manual Exams'),
       ),
       body: _isLoading
@@ -630,6 +632,7 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Create MCQ Exam'),
       ),
       body: SingleChildScrollView(
@@ -639,21 +642,6 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'My Panel',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Manage MCQ Paper',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Create MCQ Paper',
-                style: TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 16),
               TextFormField(
                 decoration: const InputDecoration(
                   labelText: 'Paper Name *',
@@ -874,6 +862,7 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text('Add MCQ Questions for ${widget.paperName}'),
       ),
       body: Column(
@@ -1156,6 +1145,7 @@ class _ManageMCQExamScreenState extends State<ManageMCQExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manage MCQ Exams'),
         backgroundColor: Colors.teal,
       ),
@@ -1366,6 +1356,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Edit MCQ Paper'),
       ),
       body: SingleChildScrollView(
@@ -1851,6 +1842,7 @@ class _CreateAssignmentsScreenState extends State<CreateAssignmentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(widget.assignment == null
             ? 'Create Assignment'
             : 'Edit Assignment'),
@@ -2027,6 +2019,7 @@ class _ManageAssignmentsScreenState extends State<ManageAssignmentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manage Assignments'),
         backgroundColor: Colors.teal,
       ),

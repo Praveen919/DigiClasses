@@ -173,6 +173,7 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Send Message to Students'),
       ),
       body: Padding(
@@ -480,6 +481,7 @@ class _SendStaffIdPasswordScreenState extends State<SendStaffIdPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Send ID/Password to Staff'),
       ),
       resizeToAvoidBottomInset: true, // Allows resizing to avoid keyboard
@@ -950,6 +952,7 @@ class SendFeeStatusMessageScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Send Fee Status Message to Student'),
       ),
       resizeToAvoidBottomInset:
@@ -1050,6 +1053,7 @@ class SendFeeReminderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Send Fee Reminder to Student'),
       ),
       resizeToAvoidBottomInset:

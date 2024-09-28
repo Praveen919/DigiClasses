@@ -12,6 +12,17 @@ const expenseSchema = new mongoose.Schema({
 
 const Expense = mongoose.model('Expense', expenseSchema);
 
+// Schema for Expense Type
+const expenseTypeSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    required: true, 
+    unique: true,    // Ensure types are unique
+  },
+});
+
+const ExpenseType = mongoose.model('ExpenseType', expenseTypeSchema);
+
 // Schema for Income
 const incomeSchema = new mongoose.Schema({
   incomeType: { type: String, required: true },
@@ -24,4 +35,4 @@ const incomeSchema = new mongoose.Schema({
 
 const Income = mongoose.model('Income', incomeSchema);
 
-module.exports = { Expense, Income };
+module.exports = { Expense, ExpenseType, Income };  

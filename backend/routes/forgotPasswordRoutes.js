@@ -28,7 +28,7 @@ router.post('/forgot-password', async (req, res) => {
         await user.save();
 
         // Send email with the reset token
-        const resetLink = `http://192.168.0.104:3000/reset-password?token=${resetToken}`;
+        const resetLink = `http://192.168.0.108:3000/reset-password?token=${resetToken}`;
 
         // Send email (using nodemailer here)
         const transporter = nodemailer.createTransport({

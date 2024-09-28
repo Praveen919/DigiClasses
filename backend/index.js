@@ -30,6 +30,7 @@ const yearRoutes = require('./routes/yearRoutes');
 const assignStandardRoutes = require('./routes/assignStandardRoutes');
 const assignSubjectRoutes = require('./routes/assignSubjectRoutes');
 const expenseIncomeRoutes = require('./routes/expenseIncomeRoutes');
+const expenseTypeRoutes = require('./routes/expenseIncomeRoutes')
 const inquiryRoutes = require('./routes/inquiryRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
 const assignClassBatchRoutes = require('./routes/assignClassBatchRoutes');
@@ -70,6 +71,7 @@ app.use('/api/attendance', attendanceRoutes);
 // Use updated/new routes
 app.use('/api/profile-settings', profileSettingRoutes); // Updated route for profile settings
 app.use('/api/expenses', expenseIncomeRoutes);
+app.use('/api/expense-types', expenseIncomeRoutes);
 app.use('/api/incomes', expenseIncomeRoutes);
 app.use('/api/messageStudent', messageStudentRoutes);
 // Use other new routes

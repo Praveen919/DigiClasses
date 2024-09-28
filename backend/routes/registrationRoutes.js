@@ -5,17 +5,30 @@ const StudentRegistration = require('../models/registrationModel');
 
 const router = express.Router();
 
-// Multer setup for image uploads
+// Define Multer Storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, './uploads/'); // Store images in the "uploads" folder
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + path.extname(file.originalname)); // Set unique file name
-  },
+  }
 });
 
-const upload = multer({ storage: storage });
+// Multer setup for image upload and file type filter
+const upload = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    const fileTypes = /jpeg|jpg|png/;
+    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase()); // Check file extension
+    const mimetype = fileTypes.test(file.mimetype); // Check mime type
+    if (mimetype && extname) {
+      return cb(null, true); // Accept file
+    } else {
+      cb('Error: Images Only!'); // Reject file if not an image
+    }
+  }
+});
 
 // @route   POST /api/students
 // @desc    Register a new student
@@ -105,7 +118,7 @@ router.put('/students/:id', upload.single('profileImage'), async (req, res) => {
       res.status(404).json({ error: 'Student not found' });
     }
   } catch (error) {
-    console.error('Error updating student:', error); // Log error for debugging
+    console.error(error);
     res.status(500).json({ error: 'Server error: Failed to update student' });
   }
 });
@@ -121,7 +134,7 @@ router.delete('/students/:id', async (req, res) => {
       res.status(404).json({ error: 'Student not found' });
     }
   } catch (error) {
-    console.error('Error deleting student:', error); // Log error for debugging
+    console.error(error);
     res.status(500).json({ error: 'Server error: Failed to delete student' });
   }
 });

@@ -7,6 +7,15 @@ router.post('/classbatch', async (req, res) => {
     try {
         const { classBatchName, strength, fromTime, toTime } = req.body;
 
+        // Check if the classBatchName already exists
+        const existingClassBatch = await ClassBatch.findOne({ classBatchName });
+
+        if (existingClassBatch) {
+            // Return conflict status if a class/batch with that name exists
+            return res.status(409).json({ message: 'Class/Batch with that name already exists' });
+        }
+
+        // Create new ClassBatch instance
         const newClassBatch = new ClassBatch({
             classBatchName,
             strength,
@@ -14,9 +23,11 @@ router.post('/classbatch', async (req, res) => {
             toTime
         });
 
+        // Save the new class/batch to the database
         await newClassBatch.save();
         res.status(201).json({ message: 'Class/Batch created successfully!' });
     } catch (error) {
+        // Handle validation errors and other errors
         res.status(400).json({ message: 'Error creating class/batch', error });
     }
 });

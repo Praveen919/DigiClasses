@@ -285,9 +285,24 @@ class _ChangePasswordState extends State<ChangePassword> {
       });
       final currentPassword = currentPasswordController.text;
       final newPassword = newPasswordController.text;
-      // Simulated token from authentication system (replace this with actual token retrieval logic)
-      const token = 'user_jwt_token';
+
       try {
+        // Fetch the token from SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? token = prefs.getString('authToken');
+
+        if (token == null) {
+          // Handle case where token is null
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Authorization token not found')),
+          );
+          setState(() {
+            _isLoading = false; // Stop loading
+          });
+          return;
+        }
+
+        // Make the API call with the token
         final response = await http.post(
           Uri.parse('${AppConfig.baseUrl}/api/password'),
           headers: {
@@ -322,8 +337,7 @@ class _ChangePasswordState extends State<ChangePassword> {
         );
       } finally {
         setState(() {
-          _isLoading = false;
-          // Stop loading
+          _isLoading = false; // Stop loading
         });
       }
     }

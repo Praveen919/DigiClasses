@@ -1410,7 +1410,9 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Students')),
+      appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: const Text('Manage Students')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -1944,6 +1946,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Student Attendance'),
       ),
       body: Padding(

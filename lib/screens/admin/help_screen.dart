@@ -38,10 +38,10 @@ void _openInstagram() async {
   await FlutterWebBrowser.openWebPage(url: instagramUrl);
 }
 
-
 // Function to open the Facebook page
 void _openFacebook() async {
-  const facebookUrl = 'https://www.facebook.com/yourProfileLink'; // Replace with your Facebook profile link
+  const facebookUrl =
+      'https://www.facebook.com/yourProfileLink'; // Replace with your Facebook profile link
   if (await canLaunchUrl(Uri.parse(facebookUrl))) {
     await launchUrl(Uri.parse(facebookUrl));
   } else {
@@ -169,7 +169,6 @@ class ContactUsScreen extends StatelessWidget {
   }
 }
 
-
 class ViewFeedbackScreen extends StatefulWidget {
   const ViewFeedbackScreen({super.key});
 
@@ -191,7 +190,8 @@ class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
 
   Future<void> _fetchFeedbacks() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/feedbacks/admin/feedbacks'));
+      final response = await http
+          .get(Uri.parse('${AppConfig.baseUrl}/api/feedbacks/admin/feedbacks'));
       if (response.statusCode == 200) {
         setState(() {
           _feedbacks = jsonDecode(response.body);
@@ -210,8 +210,14 @@ class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
     setState(() {
       _filteredFeedbacks = _feedbacks
           .where((feedback) =>
-      feedback['comment'].toString().toLowerCase().contains(query.toLowerCase()) ||
-          feedback['subject'].toString().toLowerCase().contains(query.toLowerCase()))
+              feedback['comment']
+                  .toString()
+                  .toLowerCase()
+                  .contains(query.toLowerCase()) ||
+              feedback['subject']
+                  .toString()
+                  .toLowerCase()
+                  .contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -220,6 +226,7 @@ class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('View Feedbacks'),
       ),
       body: Padding(
@@ -230,7 +237,9 @@ class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
             const SizedBox(height: 16),
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator()) // Show loading spinner while fetching data
+                  ? const Center(
+                      child:
+                          CircularProgressIndicator()) // Show loading spinner while fetching data
                   : _buildFeedbackList(),
             ),
           ],
@@ -248,14 +257,14 @@ class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
         prefixIcon: const Icon(Icons.search),
         suffixIcon: _searchController.text.isNotEmpty
             ? IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () {
-            setState(() {
-              _searchController.clear();
-              _filteredFeedbacks = _feedbacks;
-            });
-          },
-        )
+                icon: const Icon(Icons.clear),
+                onPressed: () {
+                  setState(() {
+                    _searchController.clear();
+                    _filteredFeedbacks = _feedbacks;
+                  });
+                },
+              )
             : null,
       ),
       onChanged: _searchFeedbacks,

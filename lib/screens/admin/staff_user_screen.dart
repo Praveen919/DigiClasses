@@ -148,10 +148,6 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
         body: jsonEncode(staffData),
       );
 
-      // Log the staff response for debugging
-      print('Staff response status: ${staffResponse.statusCode}');
-      print('Staff response body: ${staffResponse.body}');
-
       if (widget.staff == null) {
         // If this is a new staff member, create a user in the auth system
         final usersData = {
@@ -170,27 +166,21 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
           body: jsonEncode(usersData),
         );
 
-        // Log the users response for debugging
-        print('Users response status: ${usersResponse.statusCode}');
-        print('Users response body: ${usersResponse.body}');
-
-        if ((staffResponse.statusCode == 201 ||
-                staffResponse.statusCode == 200) &&
-            (usersResponse.statusCode == 201 ||
-                usersResponse.statusCode == 200)) {
+        if (staffResponse.statusCode == 201 ||
+            staffResponse.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Staff details saved successfully')),
+            const SnackBar(content: Text('Staff Created Successfully')),
           );
           widget.onSave(staffData); // Notify parent widget with saved data
           _resetForm();
         } else {
-          print('Staff creation response: ${staffResponse.body}');
-          print('User creation response: ${usersResponse.body}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(
-                    'Failed to save staff details. Staff Status: ${staffResponse.statusCode}, User Status: ${usersResponse.statusCode}')),
-          );
+          print('Staff creation failed: ${staffResponse.body}');
+        }
+
+        // Log the users response for debugging
+        if (usersResponse.statusCode != 201 &&
+            usersResponse.statusCode != 200) {
+          print('User creation failed: ${usersResponse.body}');
         }
       } else {
         // Update existing staff
@@ -313,6 +303,7 @@ class _CreateStaffScreenState extends State<CreateStaffScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(widget.staff == null ? 'Create Staff' : 'Edit Staff'),
       ),
       body: Padding(
@@ -568,7 +559,8 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Staff')),
+      appBar: AppBar(
+          automaticallyImplyLeading: false, title: const Text('Manage Staff')),
       body: staffList.isEmpty
           ? const Center(child: Text('No staff members currently'))
           : ListView.builder(
@@ -703,10 +695,10 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
               .toList();
         });
       } else {
-        print('Failed to load staff: ${response.statusCode}'); // Debug print
+        print('Failed to load staff: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching staff list: $e'); // Debug print
+      print('Error fetching staff list: $e');
     }
   }
 
@@ -720,7 +712,8 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
           adminList = data
-              .where((staff) => staff['role'] == 'Admin')
+              .where((staff) =>
+                  staff['role'] == 'Admin' && staff['staffId'] != null)
               .map((staff) => {
                     'id': staff['staffId']['_id'],
                     'firstName': staff['staffId']['firstName'] ?? '',
@@ -730,7 +723,8 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
               .toList();
 
           teacherList = data
-              .where((staff) => staff['role'] == 'Teacher')
+              .where((staff) =>
+                  staff['role'] == 'Teacher' && staff['staffId'] != null)
               .map((staff) => {
                     'id': staff['staffId']['_id'],
                     'firstName': staff['staffId']['firstName'] ?? '',
@@ -740,7 +734,8 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
               .toList();
 
           studentList = data
-              .where((staff) => staff['role'] == 'Student')
+              .where((staff) =>
+                  staff['role'] == 'Student' && staff['staffId'] != null)
               .map((staff) => {
                     'id': staff['staffId']['_id'],
                     'firstName': staff['staffId']['firstName'] ?? '',
@@ -750,11 +745,10 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
               .toList();
         });
       } else {
-        print(
-            'Failed to load staff rights: ${response.statusCode}'); // Debug print
+        print('Failed to load staff rights: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching staff rights: $e'); // Debug print
+      print('Error fetching staff rights: $e');
     }
   }
 
@@ -774,10 +768,9 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
           newRole = 'Student';
           break;
         default:
-          newRole = 'Teacher'; // Default case
+          newRole = 'Teacher';
       }
 
-      // Send the request to update the user role
       final url =
           '${AppConfig.baseUrl}/api/staff-rights/assignRights'; // Corrected API URL
 
@@ -793,9 +786,15 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
             content: Text(
                 '$_selectedRight granted to ${staffList.firstWhere((staff) => staff['id'] == _selectedStaff)['firstName']}'),
           ));
-          // Refresh the staff list and rights after granting rights
-          _fetchStaff();
-          _fetchStaffRights();
+
+          // Ensure rights are updated and list is fetched again
+          await _fetchStaffRights(); // Fetch the latest rights
+
+          // Reset the dropdown and radio buttons
+          setState(() {
+            _selectedStaff = null;
+            _selectedRight = null;
+          });
         } else {
           print('Failed to update role: ${response.statusCode}');
           print('Response body: ${response.body}');
@@ -814,6 +813,7 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manage Staff Rights'),
       ),
       body: SingleChildScrollView(
@@ -831,6 +831,8 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
                 labelText: 'Staff Name*',
                 border: OutlineInputBorder(),
               ),
+              isDense: true, // Makes the dropdown smaller
+              isExpanded: false, // Prevents the dropdown from taking full width
               value: _selectedStaff,
               items: staffList.map((staff) {
                 return DropdownMenuItem<String>(

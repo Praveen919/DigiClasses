@@ -1004,7 +1004,7 @@ class SidePanel extends StatelessWidget {
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.connect_without_contact),
-                title: const Text('Contact US'),
+                title: const Text('Contact Us'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(

@@ -9,7 +9,7 @@ class Expense {
   final String name; // Expense type
   final String paymentMode;
   final String? chequeNo; // Nullable
-  DateTime date; // Change to DateTime
+  final DateTime date; // Change to DateTime
   final double amount;
   final String? remark; // Nullable
 
@@ -39,14 +39,14 @@ class Expense {
 
     return Expense(
       id: json['_id'] ?? '',
-      name: json['name'] ?? 'Unknown',
+      name: json['type'] ?? 'Unknown', // Updated to use 'type' from backend
       paymentMode: json['paymentMode'] ?? 'Unknown',
-      chequeNo: json['chequeNo'],
+      chequeNo: json['chequeNumber'], // Ensure this matches the backend schema
       date: parsedDate, // Use the parsed DateTime
       amount: (json['amount'] is int)
           ? (json['amount'] as int).toDouble()
-          : json['amount'],
-      remark: json['remark'],
+          : json['amount'].toDouble(), // Ensure it's always a double
+      remark: json['remark'], // Nullable
     );
   }
 
@@ -54,9 +54,9 @@ class Expense {
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
-      'name': name,
+      'type': name, // Sending as 'type' to match backend
       'paymentMode': paymentMode,
-      'chequeNo': chequeNo,
+      'chequeNumber': chequeNo, // Ensure this matches the backend schema
       'date': date.toIso8601String(), // Convert DateTime to String
       'amount': amount,
       'remark': remark,
@@ -401,7 +401,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 child: ElevatedButton(
                   onPressed: _resetForm,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
+                    backgroundColor: Colors.indigo,
                   ),
                   child: const Text('Reset'),
                 ),
@@ -411,7 +411,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 child: ElevatedButton(
                   onPressed: _submitForm,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo,
+                    backgroundColor: Colors.teal,
                   ),
                   child: const Text('Submit'),
                 ),
@@ -480,8 +480,128 @@ class _ManageExpenseScreenState extends State<ManageExpenseScreen> {
   }
 
   Future<void> _showEditDialog(BuildContext context, Expense expense) async {
-    // Implement the edit dialog logic here
-    // Similar to the earlier implementation
+    final TextEditingController nameController =
+        TextEditingController(text: expense.name);
+    final TextEditingController paymentModeController =
+        TextEditingController(text: expense.paymentMode);
+    final TextEditingController chequeNumberController =
+        TextEditingController(text: expense.chequeNo);
+    final TextEditingController dateController = TextEditingController(
+        text: expense.date
+            .toIso8601String()
+            .split('T')[0]); // Display as date string
+    final TextEditingController amountController =
+        TextEditingController(text: expense.amount.toString());
+    final TextEditingController remarkController =
+        TextEditingController(text: expense.remark ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Expense'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Expense Type'),
+                ),
+                TextField(
+                  controller: paymentModeController,
+                  decoration: const InputDecoration(labelText: 'Payment Mode'),
+                ),
+                TextField(
+                  controller: chequeNumberController,
+                  decoration: const InputDecoration(labelText: 'Cheque Number'),
+                ),
+                TextField(
+                  controller: dateController,
+                  decoration:
+                      const InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
+                  onTap: () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: expense.date,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2101),
+                    );
+                    if (pickedDate != null) {
+                      dateController.text =
+                          pickedDate.toIso8601String().split('T')[0];
+                    }
+                  },
+                ),
+                TextField(
+                  controller: amountController,
+                  decoration: const InputDecoration(labelText: 'Amount'),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: remarkController,
+                  decoration: const InputDecoration(labelText: 'Remark'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Prepare the updated expense data
+                final updatedExpense = Expense(
+                  id: expense.id,
+                  name: nameController.text,
+                  paymentMode: paymentModeController.text,
+                  chequeNo: chequeNumberController.text.isNotEmpty
+                      ? chequeNumberController.text
+                      : null,
+                  date: DateTime.parse(dateController.text),
+                  amount: double.tryParse(amountController.text) ?? 0.0,
+                  remark: remarkController.text.isNotEmpty
+                      ? remarkController.text
+                      : null,
+                );
+
+                // Send update request to the backend
+                final url = '${AppConfig.baseUrl}/api/expenses/${expense.id}';
+                final response = await http.patch(
+                  Uri.parse(url),
+                  headers: {'Content-Type': 'application/json'},
+                  body: json.encode(updatedExpense.toJson()),
+                );
+
+                if (response.statusCode == 200) {
+                  // Update the local state with the new expense data
+                  setState(() {
+                    expenses[expenses.indexWhere((e) => e.id == expense.id)] =
+                        updatedExpense;
+                    filteredExpenses[filteredExpenses.indexWhere(
+                        (e) => e.id == expense.id)] = updatedExpense;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Expense updated successfully')),
+                  );
+                  Navigator.of(context).pop(); // Close the dialog
+                } else {
+                  print('Failed to update expense');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Failed to update expense')),
+                  );
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _showDeleteConfirmationDialog(
@@ -530,6 +650,7 @@ class _ManageExpenseScreenState extends State<ManageExpenseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manage Expenses'),
       ),
       body: Column(
@@ -595,8 +716,9 @@ class _AddExpenseTypeScreenState extends State<AddExpenseTypeScreen> {
   Future<void> _saveExpenseType() async {
     if (_formKey.currentState?.validate() ?? false) {
       final expenseType = _expenseTypeController.text;
-      // Replace with your backend URL
-      const url = '${AppConfig.baseUrl}/expense-types';
+      print('Expense Type to send: $expenseType'); // Debug print
+
+      const url = '${AppConfig.baseUrl}/api/expense-types';
 
       try {
         final response = await http.post(
@@ -609,16 +731,26 @@ class _AddExpenseTypeScreenState extends State<AddExpenseTypeScreen> {
           }),
         );
 
+        print('Response Status: ${response.statusCode}'); // Debug print
+        print('Response Body: ${response.body}'); // Debug print
+
         if (response.statusCode == 201) {
-          // Success
           print('Expense Type Saved: $expenseType');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Expense Type saved successfully!')),
           );
           _resetForm();
         } else {
-          // Failure
-          throw Exception('Failed to save expense type');
+          String errorMessage = 'Failed to save expense type';
+          if (response.body.isNotEmpty) {
+            final responseBody = jsonDecode(response.body);
+            if (responseBody['error'] != null) {
+              errorMessage = responseBody['error'];
+            }
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage)),
+          );
         }
       } catch (e) {
         print('Error: $e');
@@ -698,7 +830,7 @@ class ManageExpenseTypeScreen extends StatefulWidget {
 }
 
 class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
-  List<String> expenseTypes = [];
+  List<Map<String, dynamic>> expenseTypes = [];
 
   @override
   void initState() {
@@ -708,7 +840,7 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
 
   Future<void> _fetchExpenseTypes() async {
     // Replace with your backend URL
-    const url = '${AppConfig.baseUrl}/expense-types';
+    const url = '${AppConfig.baseUrl}/api/expense-types';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -716,7 +848,9 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
         setState(() {
-          expenseTypes = data.map((item) => item['type'] as String).toList();
+          expenseTypes = data
+              .map((item) => {'id': item['id'], 'type': item['type']})
+              .toList();
         });
       } else {
         throw Exception('Failed to fetch expense types');
@@ -727,14 +861,81 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
   }
 
   Future<void> _editExpenseType(BuildContext context, int index) async {
-    // Implement edit logic
-    print("Edit Expense Type: ${expenseTypes[index]}");
+    final TextEditingController _editController =
+        TextEditingController(text: expenseTypes[index]['type']);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Expense Type'),
+          content: TextField(
+            controller: _editController,
+            decoration: const InputDecoration(labelText: 'Expense Type'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (_editController.text.isNotEmpty) {
+                  await _updateExpenseType(index, _editController.text);
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Expense Type cannot be empty')),
+                  );
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _updateExpenseType(int index, String newType) async {
+    final url =
+        '${AppConfig.baseUrl}/api/expense-types/${expenseTypes[index]['id']}';
+
+    try {
+      final response = await http.put(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'type': newType,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          expenseTypes[index]['type'] = newType;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Expense Type updated successfully!')),
+        );
+      } else {
+        throw Exception('Failed to update expense type');
+      }
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update expense type')),
+      );
+    }
   }
 
   Future<void> _deleteExpenseType(int index) async {
-    // Replace with your backend URL
     final url =
-        '${AppConfig.baseUrl}:3000/expense-types/${expenseTypes[index]}';
+        '${AppConfig.baseUrl}/api/expense-types/${expenseTypes[index]['id']}';
 
     try {
       final response = await http.delete(Uri.parse(url));
@@ -743,7 +944,6 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
         setState(() {
           expenseTypes.removeAt(index);
         });
-        print("Delete Expense Type: ${expenseTypes[index]}");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Expense Type deleted successfully!')),
         );
@@ -756,6 +956,34 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
         const SnackBar(content: Text('Failed to delete expense type')),
       );
     }
+  }
+
+  void _confirmDeleteExpenseType(int index) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content:
+              const Text('Are you sure you want to delete this expense type?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteExpenseType(index);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -789,7 +1017,7 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
               itemBuilder: (context, index) {
                 return ListTile(
                   leading: Text("${index + 1}."),
-                  title: Text("Expense Type: ${expenseTypes[index]}"),
+                  title: Text("Expense Type: ${expenseTypes[index]['type']}"),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -799,7 +1027,7 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete),
-                        onPressed: () => _deleteExpenseType(index),
+                        onPressed: () => _confirmDeleteExpenseType(index),
                       ),
                     ],
                   ),
@@ -834,21 +1062,36 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
 
   Future<void> _saveIncome() async {
     if (_selectedIncomeType != null &&
+        _selectedIncomeType!.isNotEmpty &&
         _selectedPaymentType != null &&
+        _selectedPaymentType!.isNotEmpty &&
         _selectedDate != null &&
         _amountController.text.isNotEmpty) {
       try {
+        double? parsedAmount = double.tryParse(_amountController.text);
+        if (parsedAmount == null) {
+          throw Exception('Amount is not valid');
+        }
+
+        final Map<String, dynamic> requestBody = {
+          'incomeType': _selectedIncomeType,
+          'iPaymentType': _selectedPaymentType,
+          'iChequeNumber': _chequeNoController.text.isEmpty
+              ? null
+              : _chequeNoController.text,
+          'bankName': _bankNameController.text.isEmpty
+              ? null
+              : _bankNameController.text,
+          'iDate': _selectedDate?.toIso8601String(),
+          'iAmount': parsedAmount,
+        };
+
+        print('Request Body: ${json.encode(requestBody)}');
+
         final response = await http.post(
           Uri.parse('${AppConfig.baseUrl}/api/incomes'),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({
-            'type': _selectedIncomeType,
-            'paymentType': _selectedPaymentType,
-            'chequeNumber': _chequeNoController.text,
-            'bankName': _bankNameController.text,
-            'date': _selectedDate?.toIso8601String(),
-            'amount': double.tryParse(_amountController.text),
-          }),
+          body: json.encode(requestBody),
         );
 
         if (response.statusCode == 201) {
@@ -857,7 +1100,8 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
           );
           _resetForm(); // Reset form after saving
         } else {
-          throw Exception('Failed to save data');
+          final errorResponse = json.decode(response.body);
+          throw Exception(errorResponse['error'] ?? 'Failed to save data');
         }
       } catch (e) {
         print('Error saving income: $e');
@@ -901,7 +1145,6 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      // Wrap the content in a scrollable view
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -919,20 +1162,26 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                   ),
                   const SizedBox(height: 20),
                   _buildDropdown(
-                      'Income Type *', _incomeTypes, _selectedIncomeType,
-                      (String? newValue) {
-                    setState(() {
-                      _selectedIncomeType = newValue;
-                    });
-                  }),
+                    'Income Type *',
+                    _incomeTypes,
+                    _selectedIncomeType,
+                    (String? newValue) {
+                      setState(() {
+                        _selectedIncomeType = newValue;
+                      });
+                    },
+                  ),
                   const SizedBox(height: 10),
                   _buildDropdown(
-                      'Payment Type *', _paymentTypes, _selectedPaymentType,
-                      (String? newValue) {
-                    setState(() {
-                      _selectedPaymentType = newValue;
-                    });
-                  }),
+                    'Payment Type *',
+                    _paymentTypes,
+                    _selectedPaymentType,
+                    (String? newValue) {
+                      setState(() {
+                        _selectedPaymentType = newValue;
+                      });
+                    },
+                  ),
                   const SizedBox(height: 10),
                   _buildTextField('Cheque No', _chequeNoController),
                   const SizedBox(height: 10),
@@ -944,9 +1193,10 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                       child: _buildTextField(
                         'Date *',
                         TextEditingController(
-                            text: _selectedDate != null
-                                ? '${_selectedDate!.toLocal()}'.split(' ')[0]
-                                : ''),
+                          text: _selectedDate != null
+                              ? '${_selectedDate!.toLocal()}'.split(' ')[0]
+                              : '',
+                        ),
                       ),
                     ),
                   ),
@@ -1100,6 +1350,7 @@ class _ManageIncomeScreenState extends State<ManageIncomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manage Income'),
         actions: [
           IconButton(

@@ -41,11 +41,43 @@ class CreateFeeStructureScreen extends StatefulWidget {
 class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
   String? selectedStandard;
   String? selectedCourseType;
+  List<String> alreadyAssignedStandards = []; // To hold fetched standards
 
   final TextEditingController feeAmountController = TextEditingController();
   final TextEditingController remarkController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchAlreadyAssignedStandards(); // Fetch standards on init
+  }
+
+  Future<void> _fetchAlreadyAssignedStandards() async {
+    try {
+      final url =
+          Uri.parse('${AppConfig.baseUrl}/api/assignStandard/alreadyAssigned');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['standards'] is List) {
+          setState(() {
+            alreadyAssignedStandards = List<String>.from(data['standards']);
+          });
+        } else {
+          _showMessage('Unexpected data format');
+        }
+      } else {
+        _showMessage(
+            'Failed to load already assigned standards: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      _showMessage('Error loading assigned standards: $e');
+    }
+  }
+
   Future<void> _saveFeeStructure() async {
+    // Call the API to save fee structure
     final response = await http.post(
       Uri.parse('${AppConfig.baseUrl}/api/fee-structures'),
       headers: {'Content-Type': 'application/json'},
@@ -62,7 +94,7 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Fee structure saved successfully')),
       );
-      _resetForm(); // Optionally reset form after successful save
+      _resetForm(); // Reset form after successful save
     } else {
       // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,11 +105,17 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
 
   void _resetForm() {
     setState(() {
-      selectedStandard = null;
-      selectedCourseType = null;
+      selectedStandard = null; // Reset selected standard
+      selectedCourseType = null; // Reset selected course type
       feeAmountController.clear(); // Clear fee amount text
       remarkController.clear(); // Clear remark text
+      // alreadyAssignedStandards remains unchanged
     });
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -93,15 +131,17 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            _buildDropdownField('Standard *', '-- Select --', (value) {
+            _buildDropdownField('Standard *', alreadyAssignedStandards,
+                (value) {
               setState(() {
                 selectedStandard = value;
               });
             }),
             const SizedBox(height: 16),
-            _buildDropdownField('Course Type *', '-- Select --', (value) {
+            _buildDropdownField(
+                'Course Type *', ['Course Type 1', 'Course Type 2'], (value) {
               setState(() {
-                selectedCourseType = value;
+                selectedCourseType = value; // Update selected course type
               });
             }),
             const SizedBox(height: 16),
@@ -139,7 +179,7 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
   }
 
   Widget _buildDropdownField(
-      String label, String hint, Function(String?) onChanged) {
+      String label, List<String> items, Function(String?) onChanged) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -148,24 +188,33 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(4),
           ),
-          items: const [
-            DropdownMenuItem(
-              value: 'Standard 1',
-              child: Text('Standard 1'),
+          child: DropdownButtonFormField<String>(
+            isExpanded: true, // Make it expand to fit the container
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
             ),
-            DropdownMenuItem(
-              value: 'Standard 2',
-              child: Text('Standard 2'),
-            ),
-            // Add more items as needed
-          ],
-          onChanged: onChanged,
-          hint: Text(hint),
-          value: selectedStandard,
+            items: items.map((String item) {
+              return DropdownMenuItem(
+                value: item,
+                child: Text(item),
+              );
+            }).toList(),
+            onChanged: onChanged,
+            hint: const Text('-- Select --'),
+            value: items.contains(selectedStandard)
+                ? selectedStandard
+                : items.contains(selectedCourseType)
+                    ? selectedCourseType
+                    : null, // Ensure the value is valid
+            validator: (value) =>
+                value == null ? 'Please select an option' : null,
+          ),
         ),
       ],
     );
@@ -263,6 +312,34 @@ class _ManageFeeStructureScreenState extends State<ManageFeeStructureScreen> {
     });
   }
 
+  void _confirmDeleteFeeStructure(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content:
+              const Text('Are you sure you want to delete this fee structure?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteFeeStructure(index); // Proceed to delete
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _deleteFeeStructure(int index) async {
     final id = feeStructures[index]['_id'];
     try {
@@ -315,7 +392,8 @@ class _ManageFeeStructureScreenState extends State<ManageFeeStructureScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete),
-                    onPressed: () => _deleteFeeStructure(index),
+                    onPressed: () => _confirmDeleteFeeStructure(
+                        index), // Show confirmation dialog
                   ),
                 ],
               ),
@@ -343,6 +421,7 @@ class _EditFeeStructureScreenState extends State<EditFeeStructureScreen> {
   late String selectedCourseType;
   late String feeAmount;
   late String remark;
+  List<String> alreadyAssignedStandards = []; // To hold fetched standards
 
   final _formKey = GlobalKey<FormState>();
 
@@ -353,6 +432,31 @@ class _EditFeeStructureScreenState extends State<EditFeeStructureScreen> {
     selectedCourseType = widget.feeStructure['courseType'] ?? '';
     feeAmount = widget.feeStructure['feeAmount'] ?? '';
     remark = widget.feeStructure['remark'] ?? '';
+    _fetchAlreadyAssignedStandards(); // Fetch standards on init
+  }
+
+  Future<void> _fetchAlreadyAssignedStandards() async {
+    try {
+      final url =
+          Uri.parse('${AppConfig.baseUrl}/api/assignStandard/alreadyAssigned');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['standards'] is List) {
+          setState(() {
+            alreadyAssignedStandards = List<String>.from(data['standards']);
+          });
+        } else {
+          _showMessage('Unexpected data format');
+        }
+      } else {
+        _showMessage(
+            'Failed to load already assigned standards: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      _showMessage('Error loading assigned standards: $e');
+    }
   }
 
   Future<void> _saveChanges() async {
@@ -380,11 +484,14 @@ class _EditFeeStructureScreenState extends State<EditFeeStructureScreen> {
           throw Exception('Failed to update fee structure');
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        _showMessage('Error: ${e.toString()}');
       }
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -393,20 +500,22 @@ class _EditFeeStructureScreenState extends State<EditFeeStructureScreen> {
       appBar: AppBar(
         title: const Text('Edit Fee Structure'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDropdownField('Standard *', (value) {
+              _buildDropdownField('Standard *', alreadyAssignedStandards,
+                  (value) {
                 setState(() {
                   selectedStandard = value!;
                 });
               }, selectedStandard),
               const SizedBox(height: 16),
-              _buildDropdownField('Course Type *', (value) {
+              _buildDropdownField(
+                  'Course Type *', ['Course Type 1', 'Course Type 2'], (value) {
                 setState(() {
                   selectedCourseType = value!;
                 });
@@ -438,8 +547,8 @@ class _EditFeeStructureScreenState extends State<EditFeeStructureScreen> {
     );
   }
 
-  Widget _buildDropdownField(
-      String label, Function(String?) onChanged, String currentValue) {
+  Widget _buildDropdownField(String label, List<String> items,
+      Function(String?) onChanged, String currentValue) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -452,17 +561,12 @@ class _EditFeeStructureScreenState extends State<EditFeeStructureScreen> {
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
           ),
-          items: const [
-            DropdownMenuItem(
-              value: 'Standard 1',
-              child: Text('Standard 1'),
-            ),
-            DropdownMenuItem(
-              value: 'Standard 2',
-              child: Text('Standard 2'),
-            ),
-            // Add more items as needed
-          ],
+          items: items.map((String item) {
+            return DropdownMenuItem(
+              value: item,
+              child: Text(item),
+            );
+          }).toList(),
           onChanged: onChanged,
           value: currentValue,
           validator: (value) =>

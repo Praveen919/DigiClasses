@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:testing_app/screens/loginscreen.dart';
 import 'package:testing_app/screens/students/dashboard_screen.dart';
 import 'package:testing_app/screens/teachers/dashboardt.dart';
@@ -8,7 +8,7 @@ import 'package:testing_app/screens/branch_year_selection_screen.dart';
 import 'package:testing_app/screens/admin/dashboard_screen.dart';
 
 void main() {
-  runApp(const ProviderScope(child: MyApp())); // Wrap MyApp with ProviderScope
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

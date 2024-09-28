@@ -65,6 +65,7 @@ class _AddYearScreenState extends State<AddYearScreen> {
   DateTime? toDate;
   final TextEditingController _yearNameController = TextEditingController();
   final TextEditingController _remarksController = TextEditingController();
+  bool _isLoading = false; // To manage loading state
 
   @override
   void initState() {
@@ -114,6 +115,24 @@ class _AddYearScreenState extends State<AddYearScreen> {
     return DateTime(year, month, day);
   }
 
+  // Method to check if the year name or overlapping dates already exist
+  Future<bool> _checkYearExists(String yearName) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/years/check?yearName=$yearName'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['exists'] ?? false;
+      } else {
+        throw Exception('Failed to check year existence');
+      }
+    } catch (e) {
+      throw Exception('Failed to check year existence: $e');
+    }
+  }
+
   Future<void> _submit() async {
     if (_yearNameController.text.isEmpty ||
         fromDate == null ||
@@ -124,38 +143,52 @@ class _AddYearScreenState extends State<AddYearScreen> {
       return;
     }
 
-    final response = widget.yearId == null
-        ? await http.post(
-            Uri.parse('${AppConfig.baseUrl}/api/years/add'),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({
-              'yearName': _yearNameController.text,
-              'fromDate': _formatDate(fromDate),
-              'toDate': _formatDate(toDate),
-              'remarks': _remarksController.text,
-            }),
-          )
-        : await http.put(
-            Uri.parse('${AppConfig.baseUrl}/api/years/edit/${widget.yearId}'),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({
-              'yearName': _yearNameController.text,
-              'fromDate': _formatDate(fromDate),
-              'toDate': _formatDate(toDate),
-              'remarks': _remarksController.text,
-            }),
-          );
+    setState(() {
+      _isLoading = true; // Start loading
+    });
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Year saved successfully')),
+    try {
+      // Check if the year name already exists
+      bool exists = await _checkYearExists(_yearNameController.text);
+      if (exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Year with that name already exists')),
+        );
+        return;
+      }
+
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/years/add'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'yearName': _yearNameController.text,
+          'fromDate':
+              _formatDate(fromDate), // Ensure this is formatted correctly
+          'toDate': _formatDate(toDate), // Ensure this is formatted correctly
+          'remarks': _remarksController.text,
+        }),
       );
-      Navigator.pop(context, true); // Pass 'true' indicating success
-    } else {
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Year saved successfully')),
+        );
+        Navigator.pop(context, true); // Pass 'true' indicating success
+      } else {
+        // Log the response body for debugging
+        final errorResponse = await response.body; // Check this
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save year: $errorResponse')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Failed to save year: ${response.reasonPhrase}')),
+        SnackBar(content: Text('An error occurred: $e')),
       );
+    } finally {
+      setState(() {
+        _isLoading = false; // Stop loading
+      });
     }
   }
 
@@ -172,6 +205,7 @@ class _AddYearScreenState extends State<AddYearScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(widget.yearId == null ? 'Add Year' : 'Edit Year'),
       ),
       body: SingleChildScrollView(
@@ -228,7 +262,7 @@ class _AddYearScreenState extends State<AddYearScreen> {
             Row(
               children: [
                 ElevatedButton(
-                  onPressed: _submit,
+                  onPressed: _isLoading ? null : _submit,
                   child:
                       Text(widget.yearId == null ? 'Add Year' : 'Update Year'),
                 ),
@@ -326,6 +360,7 @@ class _ManageYearScreenState extends State<ManageYearScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manage Years'),
       ),
       body: _isLoading
@@ -1290,7 +1325,7 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
       _formKey.currentState!.save();
 
       final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/class-batch'),
+        Uri.parse('${AppConfig.baseUrl}/api/class-batch/classbatch'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'classBatchName': classBatchName,
@@ -1301,6 +1336,7 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
       );
 
       if (response.statusCode == 201) {
+        // Successful creation
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Class/Batch created successfully!')),
         );
@@ -1309,8 +1345,14 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
           fromTime = null;
           toTime = null;
         });
+      } else if (response.statusCode == 409) {
+        // Conflict: Class/Batch name already exists
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Class/Batch with that name already exists')),
+        );
       } else {
-        // Handle the error if classBatchName already exists
+        // Handle other errors
         final responseBody = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1583,15 +1625,41 @@ class _ManageClassBatchScreenState extends State<ManageClassBatchScreen> {
   }
 
   Future<void> _deleteClassBatch(String id) async {
-    final response = await http
-        .delete(Uri.parse('${AppConfig.baseUrl}/api/class-batch/$id'));
-    if (response.statusCode == 200) {
-      setState(() {
-        _classBatches.removeWhere((batch) => batch.id == id);
-        _filteredClassBatches.removeWhere((batch) => batch.id == id);
-      });
-    } else {
-      throw Exception('Failed to delete Class/Batch');
+    // Show confirmation dialog
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Deletion'),
+        content:
+            const Text('Are you sure you want to delete this class/batch?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false), // Cancel
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true), // Confirm
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    // Proceed with deletion if confirmed
+    if (shouldDelete == true) {
+      final response = await http
+          .delete(Uri.parse('${AppConfig.baseUrl}/api/class-batch/$id'));
+      if (response.statusCode == 200) {
+        setState(() {
+          _classBatches.removeWhere((batch) => batch.id == id);
+          _filteredClassBatches.removeWhere((batch) => batch.id == id);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Class/Batch deleted successfully!')),
+        );
+      } else {
+        throw Exception('Failed to delete Class/Batch');
+      }
     }
   }
 
@@ -1631,13 +1699,17 @@ class _ManageClassBatchScreenState extends State<ManageClassBatchScreen> {
             _filteredClassBatches[index] = updatedBatch;
           }
         });
+        // Show success SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Details updated successfully!')),
+        );
       } else {
         // Handle the error if classBatchName already exists
         final responseBody = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  responseBody['message'] ?? 'Failed to update class batch')),
+              content:
+                  Text(responseBody['message'] ?? 'Error updating details')),
         );
       }
     }
@@ -1712,127 +1784,119 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
 
   Future<void> _viewTimeTable() async {
     final standard = _standardController.text;
-    final batch =
-        _batchController.text.toLowerCase(); // Convert to lowercase here
+    final batch = _batchController.text.toLowerCase(); // Convert to lowercase
 
     if (standard.isEmpty || batch.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter standard and batch')),
-      );
+      _showSnackBar('Please enter standard and batch');
       return;
     }
 
     try {
       final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/timetable?standard=$standard&batch=$batch')); // Use the lowercase batch directly
+          '${AppConfig.baseUrl}/api/timetable?standard=$standard&batch=$batch')); // Use lowercase batch
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as List<dynamic>;
-        setState(() {
-          _timeTable = List.generate(5, (i) => List.filled(6, null));
-          for (var item in data) {
-            int day = item['day'] ?? 0; // Default to 0 if null
-            int timeSlot = item['timeSlot'] ?? 0; // Default to 0 if null
-            if (timeSlot >= 0 && timeSlot < 5 && day >= 0 && day < 6) {
-              _timeTable[timeSlot][day] = item['subject']; // Allow null
-            }
-          }
-          isEditable = false;
-        });
+        final data = jsonDecode(response.body);
+
+        // Check if the data is a Map and contains a 'message' (meaning it's not a timetable but an info message)
+        if (data is Map<String, dynamic> && data.containsKey('message')) {
+          _showSnackBar(data['message']); // Display the message from the server
+        }
+        // Otherwise, assume it's a timetable list
+        else if (data is List) {
+          _updateTimeTableFromResponse(response); // Process timetable
+        } else {
+          _showSnackBar('Unexpected data format received');
+        }
       } else if (response.statusCode == 404) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content:
-                  Text('Standard/Batch not found. Creating new timetable.')),
-        );
+        _showSnackBar('Standard/Batch not found. Creating new timetable.');
         await _createNewTimeTable(standard, batch);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${response.statusCode}')));
+        _showSnackBar('Error: ${response.statusCode}');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load timetable: $e')));
+      _showSnackBar('Failed to load timetable: $e');
     }
   }
 
   Future<void> _createNewTimeTable(String standard, String batch) async {
-    final newTimeTable =
-        List.generate(5, (i) => List.filled(6, null)); // Allow null values
-
     final response = await http.post(
       Uri.parse('${AppConfig.baseUrl}/api/timetable/create'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'standard': standard,
         'batch': batch.toLowerCase(),
-        'timetable': newTimeTable,
+        'timetable': _timeTable, // Use the existing timetable structure
       }),
     );
 
     if (response.statusCode == 201) {
-      setState(() {
-        _timeTable = newTimeTable; // Refresh the timetable to empty
-        isEditable = false; // Exit edit mode
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('New timetable created successfully.')),
-      );
+      _resetTimetable();
+      _showSnackBar('New timetable created successfully.');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to create new timetable.')),
-      );
+      _showSnackBar('Failed to create new timetable.');
     }
   }
 
   Future<void> _updateTimeTable() async {
-    final standard = _standardController.text;
-    final batch = _batchController.text;
+  final standard = _standardController.text.trim();
+  final batch = _batchController.text.trim();
 
-    if (standard.isEmpty || batch.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter standard and batch')),
-      );
-      return;
-    }
-
-    final updatedData = _timeTable
-        .expand((row) => row.asMap().entries.map((e) => {
-              'day': e.key,
-              'timeSlot': _timeTable.indexOf(row),
-              'subject': e.value, // Allow null
-            }))
-        .toList();
-
-    final response = await http.put(
-      Uri.parse('${AppConfig.baseUrl}/api/timetable/update'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'standard': standard,
-        'batch': batch.toLowerCase(),
-        'timetable': updatedData,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        isEditable = false; // Exit edit mode after update
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Timetable updated successfully')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update timetable')),
-      );
-    }
+  if (standard.isEmpty || batch.isEmpty) {
+    _showSnackBar('Please enter standard and batch');
+    return;
   }
+
+  // Map the timetable into the format expected by the backend
+  final updatedTimeTable = _timeTable.asMap().entries.map((entry) {
+    final timeSlotIndex = entry.key;
+    final timeSlot = entry.value;
+
+    return {
+      'time': 'Time Slot ${timeSlotIndex + 1}',
+      'lectures': timeSlot.asMap().entries
+          .map((e) {
+            final dayIndex = e.key;
+            final subject = e.value?.trim(); // Trim whitespace
+
+            if (subject == null || subject.isEmpty) {
+              return null; // Ignore empty or whitespace-only entries
+            }
+
+            return {
+              'day': dayIndex,
+              'subject': subject,
+            };
+          })
+          .where((lecture) => lecture != null) // Remove null lectures
+          .toList(),
+    };
+  }).toList();
+
+  // Send the update request
+  final response = await http.put(
+    Uri.parse('${AppConfig.baseUrl}/api/timetable/update'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'standard': standard,
+      'batch': batch.toLowerCase(),
+      'timetable': updatedTimeTable,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    setState(() {
+      isEditable = false; // Exit edit mode after update
+    });
+    _showSnackBar('Timetable updated successfully');
+  } else {
+    _showSnackBar('Failed to update timetable');
+  }
+}
 
   Future<void> _deleteTimeTable(String standard, String batch) async {
     if (standard.isEmpty || batch.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Standard and Batch cannot be empty')),
-      );
+      _showSnackBar('Standard and Batch cannot be empty');
       return;
     }
 
@@ -1843,37 +1907,22 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
     );
 
     if (response.statusCode == 200) {
-      setState(() {
-        _timeTable =
-            List.generate(5, (i) => List.filled(6, null)); // Clear timetable
-        _standardController.clear();
-        _batchController.clear();
-        isEditable = false; // Exit edit mode
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Timetable deleted successfully')),
-      );
+      _resetTimetable();
+      _showSnackBar('Timetable deleted successfully');
     } else {
-      // Handle specific status codes for better debugging
-      String message;
-      if (response.statusCode == 404) {
-        message = 'Timetable not found';
-      } else {
-        message = 'Error: ${response.statusCode}';
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete timetable: $message')),
-      );
+      String message = (response.statusCode == 404)
+          ? 'Timetable not found'
+          : 'Error: ${response.statusCode}';
+      _showSnackBar('Failed to delete timetable: $message');
     }
   }
 
-  void _resetFields() {
-    _standardController.clear();
-    _batchController.clear();
+  void _resetTimetable() {
     setState(() {
       _timeTable =
           List.generate(5, (i) => List.filled(6, null)); // Clear timetable
+      _standardController.clear();
+      _batchController.clear();
       isEditable = false; // Reset edit state
     });
   }
@@ -1907,10 +1956,34 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
     );
   }
 
+  void _updateTimeTableFromResponse(http.Response response) {
+    final data = jsonDecode(response.body) as List<dynamic>;
+
+    setState(() {
+      // Initialize the timetable with 5 time slots and 7 periods (for 6 days + timing)
+      _timeTable = List.generate(5, (i) => List.filled(7, null));
+
+      for (var item in data) {
+        int day = item['day'] ?? 0; // Default to 0 if null
+        int timeSlot = item['timeSlot'] ?? 0; // Default to 0 if null
+        if (timeSlot >= 0 && timeSlot < 5 && day >= 0 && day < 6) {
+          _timeTable[timeSlot][day] = item['subject']; // Allow null
+        }
+      }
+      isEditable = false; // Exit edit mode after update
+    });
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manage Time Table'),
       ),
       body: SingleChildScrollView(
@@ -1947,16 +2020,13 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
                         isEditable = !isEditable;
                       });
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Please enter standard and batch')),
-                      );
+                      _showSnackBar('Please enter standard and batch');
                     }
                   },
                   child: Text(isEditable ? 'Cancel Edit' : 'Edit'),
                 ),
                 ElevatedButton(
-                  onPressed: _resetFields,
+                  onPressed: _resetTimetable,
                   child: const Text('Reset'),
                 ),
               ],
@@ -2013,30 +2083,27 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
                                 : value; // Update subject to allow null
                           },
                           controller: TextEditingController(
-                            text: _timeTable[timeSlotIndex][dayIndex] ?? '',
+                            text: _timeTable[timeSlotIndex][dayIndex],
                           ),
                         ),
                       ),
-                      if (dayIndex < 5) const SizedBox(width: 10), // Spacing
+                      const SizedBox(width: 10),
                     ],
                   ],
                 );
               },
             ),
             const SizedBox(height: 20),
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: isEditable ? _updateTimeTable : null,
-                  child: const Text('Update Timetable'),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: isEditable ? _confirmDelete : null,
-                  child: const Text('Delete Timetable'),
-                ),
-              ],
-            ),
+            if (isEditable)
+              ElevatedButton(
+                onPressed: _updateTimeTable,
+                child: const Text('Update Timetable'),
+              ),
+            if (!isEditable)
+              ElevatedButton(
+                onPressed: () => _confirmDelete(),
+                child: const Text('Delete Timetable'),
+              ),
           ],
         ),
       ),

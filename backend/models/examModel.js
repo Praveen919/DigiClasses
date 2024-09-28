@@ -1,5 +1,4 @@
 // models/examModel.js
-
 const mongoose = require('mongoose');
 
 const examSchema = new mongoose.Schema({
@@ -12,7 +11,7 @@ const examSchema = new mongoose.Schema({
   toTime: { type: String, required: true },
   note: { type: String },
   remark: { type: String },
-  documentUrl: { type: String } // Updated field for document URL
+  documentPath: { type: String }, // To store file path
 });
 
 module.exports = mongoose.model('Exam', examSchema);
