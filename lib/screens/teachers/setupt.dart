@@ -273,33 +273,53 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/class-batch'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'classBatchName': classBatchName,
-          'strength': strength,
-          'fromTime': fromTime!.format(context),
-          'toTime': toTime!.format(context),
-        }),
-      );
-
-      if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Class/Batch created successfully!')),
+      try {
+        final response = await http.post(
+          Uri.parse('${AppConfig.baseUrl}/api/class-batch'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'classBatchName': classBatchName,
+            'strength': strength,
+            'fromTime': fromTime!.format(context),
+            'toTime': toTime!.format(context),
+          }),
         );
-        _formKey.currentState!.reset();
-        setState(() {
-          fromTime = null;
-          toTime = null;
-        });
-      } else {
-        // Handle the error if classBatchName already exists
-        final responseBody = jsonDecode(response.body);
+
+        if (response.statusCode == 201) {
+          // Success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Class/Batch created successfully!')),
+          );
+          _formKey.currentState!.reset();
+          setState(() {
+            fromTime = null;
+            toTime = null;
+          });
+        } else {
+          // Check if response body is JSON
+          if (response.headers['content-type']?.contains('application/json') ==
+              true) {
+            final responseBody = jsonDecode(response.body);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    responseBody['message'] ?? 'Failed to create Class/Batch'),
+              ),
+            );
+          } else {
+            // If response is not JSON, handle it as plain text or error page
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Failed to create Class/Batch: ${response.statusCode}'),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // Handle network or other errors
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  responseBody['message'] ?? 'Failed to create Class/Batch')),
+          SnackBar(content: Text('An error occurred: $e')),
         );
       }
     }

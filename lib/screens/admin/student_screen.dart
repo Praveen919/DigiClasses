@@ -1314,7 +1314,7 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
     if (token != null) {
       try {
         final response = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/registration/students'),
+          Uri.parse('${AppConfig.baseUrl}/api/auth/students'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -1642,6 +1642,7 @@ class StudentCard extends StatelessWidget {
 
 class AssignClassBatchScreen extends StatefulWidget {
   const AssignClassBatchScreen({super.key});
+
   @override
   _AssignClassBatchScreenState createState() => _AssignClassBatchScreenState();
 }
@@ -1678,31 +1679,52 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
     }
   }
 
-  // Fetch students from API
+  // Fetch students from API with token authorization
   Future<List<dynamic>> getAllStudents() async {
-    final response =
-        await http.get(Uri.parse('${AppConfig.baseUrl}/api/student/all'));
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('authToken');
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
+    if (token != null) {
+      try {
+        final response = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/auth/students'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          return json.decode(response.body);
+        } else {
+          throw Exception('Failed to load students: ${response.statusCode}');
+        }
+      } catch (e) {
+        throw Exception('Error fetching students: $e');
+      }
     } else {
-      throw Exception('Failed to load students');
+      throw Exception('No token found! Please log in again.');
     }
   }
 
   // Fetch class batches from API
   Future<List<dynamic>> getAllClassBatches() async {
-    final response =
-        await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch/'));
+    try {
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch/'));
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load class batches');
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load class batches');
+      }
+    } catch (e) {
+      throw Exception('Error fetching class batches: $e');
     }
   }
 
   // Assign student to class/batch
+  // Assign student to class/batch with logging
   Future<void> assignStudentToClass() async {
     if (selectedStudentId != null && selectedClassBatchId != null) {
       try {
@@ -1717,15 +1739,27 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
           }),
         );
 
+        // Log response for debugging
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Student assigned to class/batch successfully.')),
           );
         } else {
-          throw Exception('Failed to assign student to class/batch');
+          // Handle error case and log response body
+          print('Error: Failed to assign student to class/batch');
+          print('Response body: ${response.body}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Failed to assign student to class/batch.')),
+          );
         }
       } catch (e) {
+        // Log exception
+        print('Exception occurred while assigning student: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Failed to assign student to class/batch.')),
@@ -1734,7 +1768,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
     }
   }
 
-  // Remove student from class/batch
+// Remove student from class/batch with logging
   Future<void> removeStudentFromClass() async {
     if (selectedStudentId != null && selectedClassBatchId != null) {
       try {
@@ -1749,6 +1783,10 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
           }),
         );
 
+        // Log response for debugging
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -1756,9 +1794,17 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                     Text('Student removed from class/batch successfully.')),
           );
         } else {
-          throw Exception('Failed to remove student from class/batch');
+          // Handle error case and log response body
+          print('Error: Failed to remove student from class/batch');
+          print('Response body: ${response.body}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Failed to remove student from class/batch.')),
+          );
         }
       } catch (e) {
+        // Log exception
+        print('Exception occurred while removing student: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Failed to remove student from class/batch.')),
@@ -1786,6 +1832,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
+                  // Dropdown for selecting student
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
                       labelText: 'Select Student',
@@ -1804,6 +1851,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
+                  // Dropdown for selecting class/batch
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
                       labelText: 'Select Class/Batch',
@@ -1822,6 +1870,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
+                  // Button to assign class/batch to student
                   ElevatedButton(
                     onPressed: assignStudentToClass,
                     style: ElevatedButton.styleFrom(
@@ -1831,6 +1880,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                     child: const Text('Assign Class/Batch To Student'),
                   ),
                   const SizedBox(height: 8),
+                  // Button to remove student from class/batch
                   ElevatedButton(
                     onPressed: removeStudentFromClass,
                     style: ElevatedButton.styleFrom(

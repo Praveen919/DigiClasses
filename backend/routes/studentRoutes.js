@@ -54,6 +54,11 @@ router.post('/assign-class', async (req, res) => {
     const availableSeats = classBatch.strength - classBatch.assignedStudents.length;
 
     if (availableSeats > 0) {
+      // Check if student is already assigned to the class
+      if (classBatch.assignedStudents.includes(studentId)) {
+        return res.status(400).json({ message: 'Student is already assigned to this class/batch.' });
+      }
+
       // Assign student to classBatch
       student.classBatch = classBatchId;
       classBatch.assignedStudents.push(studentId);
@@ -67,7 +72,8 @@ router.post('/assign-class', async (req, res) => {
       res.status(400).json({ message: 'No available seats in this class/batch.' });
     }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error assigning student to class/batch:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -89,6 +95,11 @@ router.post('/remove-class', async (req, res) => {
       return res.status(404).json({ error: 'Student or Class/Batch not found' });
     }
 
+    // Check if student is actually assigned to the classBatch
+    if (!classBatch.assignedStudents.includes(studentId)) {
+      return res.status(400).json({ message: 'Student is not assigned to this class/batch.' });
+    }
+
     // Remove student from classBatch
     student.classBatch = null;
     classBatch.assignedStudents = classBatch.assignedStudents.filter(
@@ -101,8 +112,10 @@ router.post('/remove-class', async (req, res) => {
 
     res.json({ message: 'Student removed from class/batch successfully.' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error removing student from class/batch:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 module.exports = router;

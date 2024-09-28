@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:testing_app/screens/config.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:testing_app/screens/admin/expenses_income_screen.dart';
 
 class ReportScreen extends StatefulWidget {
   final String option;
@@ -197,13 +198,14 @@ class _StudentInquiryReportScreenState
                               return ListTile(
                                 title: Text(
                                     'Student Name: ${inquiry['studentName']}\nStandard: ${inquiry['standard']}\nInquiry Date: ${inquiry['inquiryDate']}\nInquiry Source: ${inquiry['inquirySource']}'),
-                                subtitle: Text(
-                                    inquiry['status'] ? 'Solved' : 'Unsolved'),
+                                subtitle: Text((inquiry['status'] ?? false)
+                                    ? 'Solved'
+                                    : 'Unsolved'),
                                 trailing: Icon(
-                                  inquiry['status']
+                                  (inquiry['status'] ?? false)
                                       ? Icons.check_circle
                                       : Icons.cancel,
-                                  color: inquiry['status']
+                                  color: (inquiry['status'] ?? false)
                                       ? Colors.green
                                       : Colors.red,
                                 ),
@@ -234,8 +236,7 @@ class _StudentInquiryReportScreenState
   // Method to fetch inquiries from the database
   Future<List<Map<String, dynamic>>> fetchInquiriesFromDB(
       DateTime? fromDate, DateTime? toDate, String search) async {
-    const String apiUrl =
-        '${AppConfig.baseUrl}/inquiries'; // Replace with your actual API endpoint
+    const String apiUrl = '${AppConfig.baseUrl}/api/inquiries';
 
     try {
       // Create query parameters
@@ -250,6 +251,10 @@ class _StudentInquiryReportScreenState
       final response = await http
           .get(Uri.parse('$apiUrl?${Uri(queryParameters: queryParams).query}'));
 
+      // Log the HTTP response for debugging
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         // Parse the JSON response
         List<dynamic> data = json.decode(response.body);
@@ -257,6 +262,8 @@ class _StudentInquiryReportScreenState
         // Convert JSON data to a list of maps
         return data.map((item) => item as Map<String, dynamic>).toList();
       } else {
+        print(
+            'Error: Failed to fetch inquiries with status code: ${response.statusCode}');
         throw Exception('Failed to load inquiries');
       }
     } catch (e) {
@@ -288,16 +295,20 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
   }
 
   Future<void> fetchStudents() async {
-    final response =
-        await http.get(Uri.parse('${AppConfig.baseUrl}/api/students'));
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      setState(() {
-        students = data;
-        filteredStudents = data; // Initially, show all students
-      });
-    } else {
-      throw Exception('Failed to load students');
+    try {
+      final response =
+          await http.get(Uri.parse('YOUR_API_BASE_URL/api/students'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          students = data;
+          filteredStudents = data; // Initially, show all students
+        });
+      } else {
+        throw Exception('Failed to load students');
+      }
+    } catch (e) {
+      print('Error fetching students: $e');
     }
   }
 
@@ -335,38 +346,45 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
 
   Future<void> _editStudentDetail(
       int studentId, Map<String, dynamic> updatedData) async {
-    final response = await http.put(
-      Uri.parse('${AppConfig.baseUrl}/api/students/$studentId'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(updatedData),
-    );
+    try {
+      final response = await http.put(
+        Uri.parse('YOUR_API_BASE_URL/api/students/$studentId'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(updatedData),
+      );
 
-    if (response.statusCode == 200) {
-      setState(() {
-        // Update the local students list with the new data
-        final index =
-            students.indexWhere((student) => student['id'] == studentId);
-        if (index != -1) {
-          students[index] = updatedData;
-          _filterStudents(); // Re-filter the list with updated data
-        }
-      });
-    } else {
-      throw Exception('Failed to update student');
+      if (response.statusCode == 200) {
+        setState(() {
+          final index =
+              students.indexWhere((student) => student['id'] == studentId);
+          if (index != -1) {
+            students[index] = updatedData;
+            _filterStudents(); // Re-filter the list with updated data
+          }
+        });
+      } else {
+        throw Exception('Failed to update student');
+      }
+    } catch (e) {
+      print('Error updating student: $e');
     }
   }
 
   Future<void> _deleteStudentDetail(int studentId) async {
-    final response = await http
-        .delete(Uri.parse('${AppConfig.baseUrl}/api/students/$studentId'));
+    try {
+      final response = await http
+          .delete(Uri.parse('YOUR_API_BASE_URL/api/students/$studentId'));
 
-    if (response.statusCode == 200) {
-      setState(() {
-        students.removeWhere((student) => student['id'] == studentId);
-        _filterStudents(); // Re-filter the list after deletion
-      });
-    } else {
-      throw Exception('Failed to delete student');
+      if (response.statusCode == 200) {
+        setState(() {
+          students.removeWhere((student) => student['id'] == studentId);
+          _filterStudents(); // Re-filter the list after deletion
+        });
+      } else {
+        throw Exception('Failed to delete student');
+      }
+    } catch (e) {
+      print('Error deleting student: $e');
     }
   }
 
@@ -547,9 +565,8 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed:
-                      _filterStudents, // Filter data based on selected dates and search query
-                  child: const Text('Get Data'),
+                  onPressed: _viewReport,
+                  child: const Text('View Report'),
                 ),
               ],
             ),
@@ -559,34 +576,30 @@ class _StudentDetailReportScreenState extends State<StudentDetailReportScreen> {
                 itemCount: filteredStudents.length,
                 itemBuilder: (context, index) {
                   final student = filteredStudents[index];
-                  return ListTile(
-                    title: Text(student['name']),
-                    subtitle: Text(
-                        'Standard: ${student['standard']} | Course: ${student['course']} | Batch: ${student['batch']}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            _showEditDialog(student);
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            _deleteStudentDetail(student['id']);
-                          },
-                        ),
-                      ],
+                  return Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: ListTile(
+                      title: Text(student['name']),
+                      subtitle: Text('Standard: ${student['standard']}'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () => _showEditDialog(student),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () =>
+                                _deleteStudentDetail(student['id']),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
               ),
-            ),
-            ElevatedButton(
-              onPressed: _viewReport, // View the filtered student report
-              child: const Text('View Report'),
             ),
           ],
         ),
@@ -1398,8 +1411,8 @@ class ExpenseReportScreen extends StatefulWidget {
 class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
   DateTime? fromDate;
   DateTime? toDate;
-  List<dynamic> expenseData = [];
-  List<dynamic> filteredData = [];
+  List<Expense> expenseData = []; // Change to List<Expense>
+  List<Expense> filteredData = []; // Change to List<Expense>
   String searchQuery = '';
 
   @override
@@ -1411,11 +1424,14 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
   // Method to fetch data from the database
   Future<void> _fetchData() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AppConfig.baseUrl}/api/expenses/expenses'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/expenses'));
       if (response.statusCode == 200) {
         setState(() {
-          expenseData = json.decode(response.body);
+          // Parse the response into a list of Expense objects
+          expenseData = (json.decode(response.body) as List)
+              .map((json) => Expense.fromJson(json))
+              .toList();
           filteredData = expenseData;
         });
       } else {
@@ -1430,16 +1446,14 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
   void _filterData() {
     setState(() {
       filteredData = expenseData.where((expense) {
-        final expenseDate = DateTime.parse(expense['date']);
         final isInDateRange = (fromDate == null ||
-                expenseDate.isAfter(fromDate!) ||
-                expenseDate.isAtSameMomentAs(fromDate!)) &&
+                expense.date.isAfter(fromDate!) ||
+                expense.date.isAtSameMomentAs(fromDate!)) &&
             (toDate == null ||
-                expenseDate.isBefore(toDate!) ||
-                expenseDate.isAtSameMomentAs(toDate!));
-        final matchesSearchQuery = expense['expenseType']
-            .toLowerCase()
-            .contains(searchQuery.toLowerCase());
+                expense.date.isBefore(toDate!) ||
+                expense.date.isAtSameMomentAs(toDate!));
+        final matchesSearchQuery =
+            expense.name.toLowerCase().contains(searchQuery.toLowerCase());
         return isInDateRange && matchesSearchQuery;
       }).toList();
     });
@@ -1551,7 +1565,7 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
                   columns: const [
-                    DataColumn(label: Text('')),
+                    DataColumn(label: Text('ID')),
                     DataColumn(label: Text('Expense Type')),
                     DataColumn(label: Text('Payment Mode')),
                     DataColumn(label: Text('Date')),
@@ -1561,12 +1575,21 @@ class _ExpenseReportScreenState extends State<ExpenseReportScreen> {
                     filteredData.length,
                     (index) => DataRow(
                       cells: [
-                        DataCell(Text((index + 1).toString())),
-                        DataCell(Text(filteredData[index]['expenseType'])),
-                        DataCell(Text(filteredData[index]['paymentMode'])),
-                        DataCell(Text(filteredData[index]['date'])),
-                        DataCell(
-                            Text(filteredData[index]['amount'].toString())),
+                        DataCell(Text(filteredData[index].id)),
+                        DataCell(Text(
+                          filteredData[index]
+                              .name, // Use the name from the Expense object
+                        )),
+                        DataCell(Text(
+                          filteredData[index].paymentMode,
+                        )),
+                        DataCell(Text(
+                          DateFormat.yMMMd().format(filteredData[index]
+                              .date), // Format date using DateTime
+                        )),
+                        DataCell(Text(
+                          filteredData[index].amount.toString(),
+                        )),
                       ],
                     ),
                   ),

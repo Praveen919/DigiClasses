@@ -2,14 +2,14 @@ const mongoose = require('mongoose');
 
 // Define the schema for student registration
 const registrationSchema = new mongoose.Schema({
-  firstName: { type: String, required: true },
+  firstName: { type: String },
   middleName: { type: String },
-  lastName: { type: String, required: true },
+  lastName: { type: String },
   fatherName: { type: String },
   motherName: { type: String },
   fatherMobile: { type: String },
   motherMobile: { type: String },
-  studentMobile: { type: String, required: true },
+  studentMobile: { type: String },
   studentEmail: { type: String, required: true, unique: true },
   address: { type: String },
   state: { type: String },

@@ -3,7 +3,7 @@ const router = express.Router();
 const ClassBatch = require('../models/classBatchModel');
 
 // Create a new class/batch
-router.post('/classbatch', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const { classBatchName, strength, fromTime, toTime } = req.body;
 

@@ -46,7 +46,7 @@ const absenceMessageRoutes = require ('./routes/absenceMessageRoutes');
 //const cardReportRoutes = require('./routes/cardReportRoutes');
 const staffRightsRoutes = require('./routes/staffRightsRoutes');
 const forgotPasswordRoutes = require('./routes/forgotPasswordRoutes');
-//const logbookTRoutes = require('./routes/logbookTRoutes');
+const logbookTRoutes = require('./routes/logbookTRoutes');
 const statisticsRoutes = require('./routes/statisticsRoutes');
 
 // Middleware setup
@@ -98,7 +98,7 @@ app.use('/api/absenceMessage', absenceMessageRoutes);
 //app.use('/api/cardReport', cardReportRoutes);
 app.use('/api/staff-rights', staffRightsRoutes);
 app.use ('/api/forgotPass', forgotPasswordRoutes);
-//app.use('/api/logbook', logbookTRoutes); 
+app.use('/api/logbook', logbookTRoutes); 
 app.use('/api/statistics', statisticsRoutes);
 
 // Start the server

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:testing_app/screens/config.dart';
 // import 'dart:io';
 
 class EstudyScreen extends StatelessWidget {
@@ -53,8 +54,8 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
 
   Future<void> fetchStudyMaterials() async {
     try {
-      final response = await http
-          .get(Uri.parse('http://192.168.0.108:3000/api/study-material'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/study-material'));
       if (response.statusCode == 200) {
         setState(() {
           studyMaterials = json.decode(response.body);
@@ -73,11 +74,9 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
 
   Future<void> downloadFile(String filePath, String fileName) async {
     try {
-      const String baseUrl = 'http://192.168.0.108:3000/';
-
       // Ensure the filePath uses forward slashes
       final String normalizedFilePath = filePath.replaceAll('\\', '/');
-      final String fileUrl = '$baseUrl$normalizedFilePath';
+      final String fileUrl = '${AppConfig.baseUrl}/$normalizedFilePath';
 
       print('Attempting to download from: $fileUrl'); // Debugging line
 
@@ -167,8 +166,8 @@ class _ViewSharedStudyMaterialScreenState
 
   Future<void> fetchSharedMaterials() async {
     try {
-      final response = await http
-          .get(Uri.parse('http://192.168.0.108:3000/api/study-material'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/study-material'));
       if (response.statusCode == 200) {
         setState(() {
           sharedMaterials = json.decode(response.body);
@@ -187,11 +186,9 @@ class _ViewSharedStudyMaterialScreenState
 
   Future<void> downloadFile(String filePath, String fileName) async {
     try {
-      const String baseUrl = 'http://192.168.0.108:3000/';
-
       // Ensure the filePath uses forward slashes
       final String normalizedFilePath = filePath.replaceAll('\\', '/');
-      final String fileUrl = '$baseUrl$normalizedFilePath';
+      final String fileUrl = '${AppConfig.baseUrl}/$normalizedFilePath';
 
       print('Attempting to download from: $fileUrl'); // Debugging line
 

@@ -15,8 +15,7 @@ const Expense = mongoose.model('Expense', expenseSchema);
 // Schema for Expense Type
 const expenseTypeSchema = new mongoose.Schema({
   type: {
-    type: String,
-    required: true, 
+    type: String, 
     unique: true,    // Ensure types are unique
   },
 });

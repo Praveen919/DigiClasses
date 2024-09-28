@@ -247,7 +247,7 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   Future<void> fetchMCQExam() async {
     try {
       final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/mcq-exams/EXAM_ID')); // Update EXAM_ID dynamically
+          '${AppConfig.baseUrl}/api/mcq-exams/$examId')); // Update EXAM_ID dynamically
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
