@@ -71,7 +71,7 @@ app.use('/api/attendance', attendanceRoutes);
 // Use updated/new routes
 app.use('/api/profile-settings', profileSettingRoutes); // Updated route for profile settings
 app.use('/api/expenses', expenseIncomeRoutes);
-app.use('/api/expense-types', expenseIncomeRoutes);
+app.use('/api/expense-types', expenseTypeRoutes);
 app.use('/api/incomes', expenseIncomeRoutes);
 app.use('/api/messageStudent', messageStudentRoutes);
 // Use other new routes
