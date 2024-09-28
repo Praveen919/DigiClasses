@@ -8,43 +8,44 @@ class LogBookService {
   final String apiUrl = "${AppConfig.baseUrl}/api/logbook"; // Use HTTP
 
   // Function to save logbook data to the backend
-  Future<void> saveLogbook(List<Map<String, dynamic>> logbookData) async {
-    try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(logbookData),
-      );
+Future<void> saveLogbook(List<Map<String, dynamic>> logbookData) async {
+  try {
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(logbookData),
+    );
 
-      if (response.statusCode == 200) {
-        print("Logbook saved successfully");
-      } else {
-        print("Failed to save logbook. Status code: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Error saving logbook: $e");
+    // Check for successful response
+    if (response.statusCode == 200) {
+      print("Logbook saved successfully");
+    } else {
+      // Log the error response body if the status code is not 200
+      print("Failed to save logbook: ${response.body}");
     }
+  } catch (e) {
+    print("Error saving logbook: $e");
   }
+}
 
-  // Function to fetch logbook data from the backend for a specific month
+
   Future<List<dynamic>> fetchLogbook(String month) async {
-    try {
-      final response = await http.get(Uri.parse('$apiUrl?month=$month'));
+  try {
+    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/logbook?month=$month'));
 
-      if (response.statusCode == 200) {
-        List<dynamic> logbook = jsonDecode(response.body);
-        return logbook;
-      } else {
-        print("Failed to fetch logbook. Status code: ${response.statusCode}");
-        return [];
-      }
-    } catch (e) {
-      print("Error fetching logbook: $e");
-      return [];
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body)['data']; // Access data field directly
+    } else {
+      throw Exception('Failed to load logbook: ${response.body}');
     }
+  } catch (e) {
+    print("Error fetching logbook: $e");
+    return [];
   }
+}
+
 }
 
 // LogBookScreen for UI and Data Entry
@@ -56,19 +57,40 @@ class LogBookScreen extends StatefulWidget {
 }
 
 class _LogBookScreenState extends State<LogBookScreen> {
-  final TextEditingController _standardController = TextEditingController();
+  final List<String> _months = [
+    'January', 'February', 'March', 'April',
+    'May', 'June', 'July', 'August',
+    'September', 'October', 'November', 'December'
+  ];
+  String? _selectedMonth; // Holds the selected month
   bool isEditable = false; // Controls whether the grid is editable or not
   List<List<String?>> _logbook = List.generate(4, (i) => List.filled(4, null));
 
   // View Logbook based on month
   void _viewLogbook() async {
-    String month = _standardController.text; // Get month from input
-    List<dynamic> fetchedData = await LogBookService().fetchLogbook(month);
+    if (_selectedMonth == null) {
+      // Show error if no month is selected
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a month')),
+      );
+      return;
+    }
+
+    List<dynamic> fetchedData = await LogBookService().fetchLogbook(_selectedMonth!);
 
     setState(() {
-      _logbook = fetchedData.map<List<String?>>((row) {
-        return [row['date'], row['timing'], row['subject'], row['topic']];
-      }).toList();
+      // Ensure the fetchedData is structured correctly
+      _logbook = List.generate(4, (i) => List.filled(4, null)); // Reset logbook
+
+      for (var row in fetchedData) {
+        int timeSlot = (row['timing'] as int) - 1; // Adjusting to 0 index
+        _logbook[timeSlot] = [
+          row['date']?.toString(),
+          row['timing']?.toString(),
+          row['subject']?.toString(),
+          row['topic']?.toString(),
+        ];
+      }
       isEditable = false;
     });
   }
@@ -135,15 +157,28 @@ class _LogBookScreenState extends State<LogBookScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Logbook')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: _standardController,
+            DropdownButtonFormField<String>(
+              value: _selectedMonth,
+              hint: const Text('Select Month'),
+              items: _months.map((String month) {
+                return DropdownMenuItem<String>(
+                  value: month,
+                  child: Text(month),
+                );
+              }).toList(),
+              onChanged: (String? value) {
+                setState(() {
+                  _selectedMonth = value;
+                });
+              },
               decoration: const InputDecoration(
-                labelText: 'Enter Month *',
-                hintText: 'e.g. January',
+                labelText: 'Month *',
+                border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 10),
@@ -159,7 +194,7 @@ class _LogBookScreenState extends State<LogBookScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                   ),
-                  child: const Text('Update Logbook'),
+                  child: const Text('Edit Logbook'),
                 ),
               ],
             ),
@@ -173,7 +208,7 @@ class _LogBookScreenState extends State<LogBookScreen> {
                 SizedBox(width: 34),
                 Text("Subject"),
                 SizedBox(width: 36),
-                Text("Topic")
+                Text("Topic"),
               ],
             ),
             Expanded(
@@ -182,7 +217,7 @@ class _LogBookScreenState extends State<LogBookScreen> {
                   crossAxisCount: 4,
                   childAspectRatio: 2,
                 ),
-                itemCount: 16, // 5 days * 5 time slots (can be adjusted)
+                itemCount: 16, // 4 days * 4 time slots
                 itemBuilder: (context, index) {
                   int day = index % 4;
                   int timeSlot = index ~/ 4;
@@ -222,7 +257,7 @@ class _LogBookScreenState extends State<LogBookScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
               ),
-              child: const Text('Update Logbook'),
+              child: const Text('Save Logbook'),
             ),
           ],
         ),
