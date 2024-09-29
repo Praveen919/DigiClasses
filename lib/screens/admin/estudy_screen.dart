@@ -23,11 +23,11 @@ class EstudyScreen extends StatelessWidget {
   Widget _buildContent() {
     switch (option) {
       case 'createStudyMaterial':
-        return CreateStudyMaterialScreen();
+        return const CreateStudyMaterialScreen();
       case 'manageStudyMaterial':
-        return ManageStudyMaterialScreen();
+        return const ManageStudyMaterialScreen();
       case 'manageSharedStudyMaterial':
-        return ManageSharedStudyMaterialScreen();
+        return const ManageSharedStudyMaterialScreen();
       default:
         return const Center(child: Text('Unknown Option'));
     }
@@ -415,7 +415,8 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
   void _navigateToCreateStudyMaterial() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CreateStudyMaterialScreen()),
+      MaterialPageRoute(
+          builder: (context) => const CreateStudyMaterialScreen()),
     );
 
     if (result == true) {
@@ -635,7 +636,8 @@ class _ManageSharedStudyMaterialScreenState
   void _navigateToCreateStudyMaterial() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CreateStudyMaterialScreen()),
+      MaterialPageRoute(
+          builder: (context) => const CreateStudyMaterialScreen()),
     );
 
     if (result == true) {

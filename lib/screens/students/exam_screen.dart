@@ -22,11 +22,11 @@ class ExamScreen extends StatelessWidget {
   Widget _buildContent() {
     switch (option) {
       case 'viewManualExam':
-        return ViewManualExamScreen();
+        return const ViewManualExamScreen();
       case 'viewMCQExam':
-        return ViewMCQExamScreen();
+        return const ViewMCQExamScreen();
       case 'viewAssignments':
-        return ViewAssignmentsScreen();
+        return const ViewAssignmentsScreen();
       default:
         return const Center(child: Text('Unknown Option'));
     }

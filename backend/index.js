@@ -29,8 +29,9 @@ const autoWhatsappSettingRoutes = require('./routes/autoWhatsappSettingRoutes');
 const yearRoutes = require('./routes/yearRoutes');
 const assignStandardRoutes = require('./routes/assignStandardRoutes');
 const assignSubjectRoutes = require('./routes/assignSubjectRoutes');
-const expenseIncomeRoutes = require('./routes/expenseIncomeRoutes');
-const expenseTypeRoutes = require('./routes/expenseIncomeRoutes')
+const expenseRoutes = require('./routes/expenseRoutes');
+const expenseTypeRoutes = require('./routes/expenseTypeRoutes');
+const incomeRoutes = require('./routes/incomeRoutes');
 const inquiryRoutes = require('./routes/inquiryRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
 const assignClassBatchRoutes = require('./routes/assignClassBatchRoutes');
@@ -70,9 +71,9 @@ app.use('/api/timetable', manageTimeTableRoutes);
 app.use('/api/attendance', attendanceRoutes);
 // Use updated/new routes
 app.use('/api/profile-settings', profileSettingRoutes); // Updated route for profile settings
-app.use('/api/expenses', expenseIncomeRoutes);
+app.use('/api/expenses', expenseRoutes);
 app.use('/api/expense-types', expenseTypeRoutes);
-app.use('/api/incomes', expenseIncomeRoutes);
+app.use('/api/incomes', incomeRoutes);
 app.use('/api/messageStudent', messageStudentRoutes);
 // Use other new routes
 app.use('/api/mcq-exams', mcqExamRoutes);

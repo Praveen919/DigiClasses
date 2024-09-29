@@ -715,7 +715,7 @@ class _AddExpenseTypeScreenState extends State<AddExpenseTypeScreen> {
 
   Future<void> _saveExpenseType() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final expenseType = _expenseTypeController.text;
+      final expenseType = _expenseTypeController.text.trim();
       print('Expense Type to send: $expenseType'); // Debug print
 
       const url = '${AppConfig.baseUrl}/api/expense-types';
@@ -741,19 +741,10 @@ class _AddExpenseTypeScreenState extends State<AddExpenseTypeScreen> {
           );
           _resetForm();
         } else {
-          String errorMessage = 'Failed to save expense type';
-          if (response.body.isNotEmpty) {
-            final responseBody = jsonDecode(response.body);
-            if (responseBody['error'] != null) {
-              errorMessage = responseBody['error'];
-            }
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMessage)),
-          );
+          _handleErrorResponse(response);
         }
-      } catch (e) {
-        print('Error: $e');
+      } catch (error) {
+        print('Error: $error');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to save expense type')),
         );
@@ -761,9 +752,33 @@ class _AddExpenseTypeScreenState extends State<AddExpenseTypeScreen> {
     }
   }
 
+  void _handleErrorResponse(http.Response response) {
+    String errorMessage = 'Failed to save expense type';
+    if (response.body.isNotEmpty) {
+      try {
+        final responseBody = jsonDecode(response.body);
+        if (responseBody['error'] != null) {
+          errorMessage = responseBody['error'];
+        }
+      } catch (e) {
+        // Handle JSON parsing error if needed
+        print('Error parsing response body: $e');
+      }
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(errorMessage)),
+    );
+  }
+
   void _resetForm() {
     _formKey.currentState?.reset();
     _expenseTypeController.clear();
+  }
+
+  @override
+  void dispose() {
+    _expenseTypeController.dispose();
+    super.dispose();
   }
 
   @override
@@ -901,8 +916,20 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
   }
 
   Future<void> _updateExpenseType(int index, String newType) async {
-    final url =
-        '${AppConfig.baseUrl}/api/expense-types/${expenseTypes[index]['id']}';
+    final expenseId = expenseTypes[index]['id'];
+
+    // Print the ID to check if it's valid
+    print('Expense ID: $expenseId');
+
+    // Check if the id is valid
+    if (expenseId == null || expenseId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid expense type ID')),
+      );
+      return;
+    }
+
+    final url = '${AppConfig.baseUrl}/api/expense-types/$expenseId';
 
     try {
       final response = await http.put(
@@ -910,9 +937,7 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: jsonEncode(<String, String>{
-          'type': newType,
-        }),
+        body: jsonEncode(<String, String>{'type': newType}),
       );
 
       if (response.statusCode == 200) {
@@ -934,8 +959,20 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
   }
 
   Future<void> _deleteExpenseType(int index) async {
-    final url =
-        '${AppConfig.baseUrl}/api/expense-types/${expenseTypes[index]['id']}';
+    final expenseId = expenseTypes[index]['id'];
+
+    // Print the ID to check if it's valid
+    print('Expense ID: $expenseId');
+
+    // Check if the id is valid
+    if (expenseId == null || expenseId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid expense type ID')),
+      );
+      return;
+    }
+
+    final url = '${AppConfig.baseUrl}/api/expense-types/$expenseId';
 
     try {
       final response = await http.delete(Uri.parse(url));
@@ -1038,6 +1075,66 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
         ],
       ),
     );
+  }
+}
+
+class Income {
+  final String id;
+  final String incomeType; // Income type
+  final String paymentType;
+  final String? chequeNo; // Nullable
+  final String? bankName; // Nullable
+  final DateTime date; // Change to DateTime
+  final double amount;
+
+  Income({
+    required this.id,
+    required this.incomeType,
+    required this.paymentType,
+    this.chequeNo,
+    this.bankName,
+    required this.date,
+    required this.amount,
+  });
+
+  // Factory constructor to create an Income object from JSON
+  factory Income.fromJson(Map<String, dynamic> json) {
+    String dateString = json['iDate'];
+    DateTime parsedDate;
+
+    // Handle different formats or use try-catch for safety
+    try {
+      parsedDate = DateTime.parse(dateString); // Assume ISO format
+    } catch (e) {
+      print('Error parsing date: $dateString, error: $e');
+      parsedDate =
+          DateTime.now(); // Fallback to current date or handle accordingly
+    }
+
+    return Income(
+      id: json['_id'] ?? '',
+      incomeType: json['incomeType'] ?? 'Unknown',
+      paymentType: json['iPaymentType'] ?? 'Unknown',
+      chequeNo: json['iChequeNumber'],
+      bankName: json['bankName'], // Nullable field for bank name
+      date: parsedDate, // Use the parsed DateTime
+      amount: (json['iAmount'] is int)
+          ? (json['iAmount'] as int).toDouble()
+          : json['iAmount'].toDouble(), // Ensure it's always a double
+    );
+  }
+
+  // Converts an Income object to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'incomeType': incomeType,
+      'iPaymentType': paymentType,
+      'iChequeNumber': chequeNo,
+      'bankName': bankName, // Nullable field for bank name
+      'iDate': date.toIso8601String(), // Convert DateTime to String
+      'iAmount': amount,
+    };
   }
 }
 

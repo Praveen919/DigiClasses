@@ -1514,6 +1514,8 @@ class ClassBatch {
       toTime: json['toTime'],
     );
   }
+
+  get name => null;
 }
 
 // Dialog for editing a class batch
@@ -1839,60 +1841,62 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
   }
 
   Future<void> _updateTimeTable() async {
-  final standard = _standardController.text.trim();
-  final batch = _batchController.text.trim();
+    final standard = _standardController.text.trim();
+    final batch = _batchController.text.trim();
 
-  if (standard.isEmpty || batch.isEmpty) {
-    _showSnackBar('Please enter standard and batch');
-    return;
+    if (standard.isEmpty || batch.isEmpty) {
+      _showSnackBar('Please enter standard and batch');
+      return;
+    }
+
+    // Map the timetable into the format expected by the backend
+    final updatedTimeTable = _timeTable.asMap().entries.map((entry) {
+      final timeSlotIndex = entry.key;
+      final timeSlot = entry.value;
+
+      return {
+        'time': 'Time Slot ${timeSlotIndex + 1}',
+        'lectures': timeSlot
+            .asMap()
+            .entries
+            .map((e) {
+              final dayIndex = e.key;
+              final subject = e.value?.trim(); // Trim whitespace
+
+              if (subject == null || subject.isEmpty) {
+                return null; // Ignore empty or whitespace-only entries
+              }
+
+              return {
+                'day': dayIndex,
+                'subject': subject,
+              };
+            })
+            .where((lecture) => lecture != null) // Remove null lectures
+            .toList(),
+      };
+    }).toList();
+
+    // Send the update request
+    final response = await http.put(
+      Uri.parse('${AppConfig.baseUrl}/api/timetable/update'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'standard': standard,
+        'batch': batch.toLowerCase(),
+        'timetable': updatedTimeTable,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        isEditable = false; // Exit edit mode after update
+      });
+      _showSnackBar('Timetable updated successfully');
+    } else {
+      _showSnackBar('Failed to update timetable');
+    }
   }
-
-  // Map the timetable into the format expected by the backend
-  final updatedTimeTable = _timeTable.asMap().entries.map((entry) {
-    final timeSlotIndex = entry.key;
-    final timeSlot = entry.value;
-
-    return {
-      'time': 'Time Slot ${timeSlotIndex + 1}',
-      'lectures': timeSlot.asMap().entries
-          .map((e) {
-            final dayIndex = e.key;
-            final subject = e.value?.trim(); // Trim whitespace
-
-            if (subject == null || subject.isEmpty) {
-              return null; // Ignore empty or whitespace-only entries
-            }
-
-            return {
-              'day': dayIndex,
-              'subject': subject,
-            };
-          })
-          .where((lecture) => lecture != null) // Remove null lectures
-          .toList(),
-    };
-  }).toList();
-
-  // Send the update request
-  final response = await http.put(
-    Uri.parse('${AppConfig.baseUrl}/api/timetable/update'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'standard': standard,
-      'batch': batch.toLowerCase(),
-      'timetable': updatedTimeTable,
-    }),
-  );
-
-  if (response.statusCode == 200) {
-    setState(() {
-      isEditable = false; // Exit edit mode after update
-    });
-    _showSnackBar('Timetable updated successfully');
-  } else {
-    _showSnackBar('Failed to update timetable');
-  }
-}
 
   Future<void> _deleteTimeTable(String standard, String batch) async {
     if (standard.isEmpty || batch.isEmpty) {

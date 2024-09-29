@@ -21,7 +21,7 @@ class StudentScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ViewMyAttendanceScreen(
+                    builder: (context) => const ViewMyAttendanceScreen(
                           classBatchId: '',
                         )),
               );
@@ -33,7 +33,7 @@ class StudentScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ViewSharedDocumentsScreen()),
+                    builder: (context) => const ViewSharedDocumentsScreen()),
               );
             },
           ),
@@ -42,7 +42,8 @@ class StudentScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => GiveFeedbackScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const GiveFeedbackScreen()),
               );
             },
           ),

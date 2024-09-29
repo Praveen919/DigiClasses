@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 // Schema for Income
 const incomeSchema = new mongoose.Schema({
     incomeType: { type: String, required: true },
