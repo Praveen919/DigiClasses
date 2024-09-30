@@ -69,6 +69,20 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
   XFile? selectedImage; // Store the picked image file
 
   final String apiUrl = '${AppConfig.baseUrl}/api/profile-settings';
+  String? authToken;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchToken(); // Fetch the token when the widget is initialized
+  }
+
+  Future<void> fetchToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      authToken = prefs.getString('authToken'); // Retrieve the token
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -177,6 +191,11 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
           filename: selectedImage!.name,
         ),
       );
+    }
+
+    // Include the token in the request headers if needed
+    if (authToken != null) {
+      request.headers['Authorization'] = 'Bearer $authToken';
     }
 
     try {
@@ -293,9 +312,7 @@ class _ChangePasswordState extends State<ChangePassword> {
 
         if (token == null) {
           // Handle case where token is null
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Authorization token not found')),
-          );
+          _showSnackBar('Authorization token not found');
           setState(() {
             _isLoading = false; // Stop loading
           });
@@ -304,13 +321,14 @@ class _ChangePasswordState extends State<ChangePassword> {
 
         // Make the API call with the token
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/password'),
+          Uri.parse('${AppConfig.baseUrl}/api/password/resetPassword'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
           },
           body: json.encode({
-            'currentPassword': currentPassword,
+            'currentPassword':
+                currentPassword, // Send current password for verification
             'newPassword': newPassword,
           }),
         );
@@ -319,28 +337,33 @@ class _ChangePasswordState extends State<ChangePassword> {
         print(response.body);
 
         if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Password changed successfully')),
-          );
+          _showSnackBar('Password changed successfully');
+          // Optionally clear the text fields after success
+          currentPasswordController.clear();
+          newPasswordController.clear();
+          confirmPasswordController.clear();
         } else {
           // Handle non-200 status codes
           print('Error: Status code ${response.statusCode}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('An error occurred')),
-          );
+          final responseBody = json.decode(response.body);
+          _showSnackBar(responseBody['message'] ?? 'An error occurred');
         }
       } catch (e) {
         // Handle parsing errors and other exceptions
         print('Error: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occurred')),
-        );
+        _showSnackBar('An error occurred: $e');
       } finally {
         setState(() {
           _isLoading = false; // Stop loading
         });
       }
     }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -386,6 +409,10 @@ class _ChangePasswordState extends State<ChangePassword> {
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a new password';
+                }
+                // You can add more complex validation for the new password here
+                if (value.length < 6) {
+                  return 'Password must be at least 6 characters';
                 }
                 return null;
               },

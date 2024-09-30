@@ -1,95 +1,128 @@
 const express = require('express');
-const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const ProfileSettings = require('../models/profileSettingModel');
+const User = require('../models/userModel'); 
+const jwt = require('jsonwebtoken');
+
+const router = express.Router();
+
+// Middleware to verify the token
+const verifyToken = (req, res, next) => {
+    const token = req.headers['authorization']?.split(' ')[1];
+
+    if (!token) {
+        return res.status(403).send('A token is required for authentication');
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded; // Attach user info to request
+    } catch (err) {
+        return res.status(401).send('Invalid Token');
+    }
+    return next();
+};
 
 // Multer setup for file uploads
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, './uploads'); // Store files in the "uploads/" folder
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // Set unique file name
-  },
+    destination: function (req, file, cb) {
+        cb(null, './uploads');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    },
 });
 
-// Optional: Filter to allow only image files (JPEG/PNG)
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed!'), false);
-  }
-};
-
-// Initialize multer with storage, size limit (5MB), and file filter
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 1024 * 1024 * 5 }, // 5MB file size limit
-  fileFilter: fileFilter,
+    storage: storage,
+    limits: { fileSize: 1024 * 1024 * 5 },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed!'), false);
+        }
+    },
 });
 
-// Create or update profile settings with profileLogo upload
-router.post('/', upload.single('profileLogo'), async (req, res) => {
-  try {
-    const {
-      instituteName,
-      country,
-      city,
-      branchName,
-      feeRecHeader,
-      branchAddress,
-      taxNo,
-      feeFooter,
-      logoDisplay,
-      feeStatusDisplay,
-      chatOption,
-      name,
-      mobile,
-      email
-    } = req.body;
+// Update or create profile settings
+router.post('/', verifyToken, upload.single('profileLogo'), async (req, res) => {
+    try {
+        const {
+            instituteName,
+            country,
+            city,
+            branchName,
+            feeRecHeader,
+            branchAddress,
+            taxNo,
+            feeFooter,
+            logoDisplay,
+            feeStatusDisplay,
+            chatOption,
+            name,
+            mobile,
+            email,
+        } = req.body;
 
-    // Ensure email is provided, used for identification
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required to update profile settings' });
+        const userId = req.user.id; 
+
+        // Validate user ID
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+
+        // Check if email is provided and matches the logged-in user's email
+        if (!email || email === 'null') {
+            return res.status(400).json({ message: 'Email is required and cannot be null' });
+        }
+        if (email !== req.user.email) {
+            return res.status(400).json({ message: 'Email must match the logged-in user' });
+        }
+
+        // Prepare the profile data
+        const profileData = {
+            instituteName,
+            country,
+            city,
+            branchName,
+            feeRecHeader,
+            branchAddress,
+            taxNo,
+            feeFooter,
+            logoDisplay,
+            feeStatusDisplay,
+            chatOption,
+            name,
+            mobile,
+            email,
+            profileLogo: req.file ? req.file.path : null, 
+            userId: userId, 
+        };
+
+        // Check for existing profile settings to prevent null email entry
+        const existingProfile = await ProfileSettings.findOne({ userId });
+        if (existingProfile && !existingProfile.email) {
+            return res.status(400).json({ message: 'Existing profile settings cannot have a null email' });
+        }
+
+        // Update or create the existing profile settings
+        const profileSettings = await ProfileSettings.findOneAndUpdate(
+            { userId },
+            profileData,
+            { new: true, upsert: true }
+        );
+
+        res.status(200).json({
+            message: 'Profile settings updated successfully',
+            profileSettings,
+        });
+
+    } catch (error) {
+        console.error('Error saving profile settings:', error);
+        res.status(500).json({ message: 'Error saving profile settings', error: error.message });
     }
-
-    // Prepare profile data object with file path if file uploaded
-    const profileData = {
-      instituteName,
-      country,
-      city,
-      branchName,
-      feeRecHeader,
-      branchAddress,
-      taxNo,
-      feeFooter,
-      logoDisplay,
-      feeStatusDisplay,
-      chatOption,
-      name,
-      mobile,
-      email,
-      profileLogo: req.file ? req.file.path : null, // Store file path
-    };
-
-    // Find existing profile settings by email, update or create new if not found
-    const profileSettings = await ProfileSettings.findOneAndUpdate(
-      { email }, // Identify profile by email
-      profileData,
-      { new: true, upsert: true, setDefaultsOnInsert: true } // Create if doesn't exist
-    );
-
-    // Send success response
-    res.status(200).json({
-      message: 'Profile settings saved successfully',
-      profileSettings
-    });
-  } catch (error) {
-    console.error('Error saving profile settings:', error);
-    res.status(500).json({ message: 'Error saving profile settings', error: error.message });
-  }
 });
 
 module.exports = router;

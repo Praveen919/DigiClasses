@@ -42,6 +42,25 @@ const ExamNotificationSchema = new mongoose.Schema({
   date: {type: Date,default: Date.now,},
 });
 
+const adminToTeacherMessageSchema = new mongoose.Schema({
+  teacherId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Teacher', // Reference to Teacher model
+    required: true,
+  },
+  subject: {
+    type: String,
+    required: false,
+  },
+  message: {
+    type: String,
+    required: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
 // Models
 const MessageStudent = mongoose.model('MessageStudent', MessageStudentSchema);
@@ -49,6 +68,7 @@ const StudentToAdminTeacherMessage = mongoose.model('StudentToAdminTeacherMessag
 const TeacherToStudentMessage = mongoose.model('TeacherToStudentMessage', TeacherToStudentMessageSchema);
 const TeacherToStaffMessage = mongoose.model('TeacherToStaffMessage', TeacherToStaffMessageSchema);
 const ExamNotification = mongoose.model('ExamNotification', ExamNotificationSchema);
+const AdminToTeacherMessage = mongoose.model('AdminToTeacherMessage', adminToTeacherMessageSchema);
 
 module.exports = {
   MessageStudent,
@@ -56,4 +76,5 @@ module.exports = {
   TeacherToStudentMessage,
   TeacherToStaffMessage,
   ExamNotification,
+  AdminToTeacherMessage
 };

@@ -14,9 +14,18 @@ const profileSettingsSchema = new mongoose.Schema({
     chatOption: { type: String },
     name: { type: String },
     mobile: { type: String },
-    email: { type: String, required: true, match: [/.+@.+\..+/, 'Invalid email format'] },
+    email: { 
+        type: String, 
+        required: true, 
+        match: [/.+@.+\..+/, 'Invalid email format'] 
+    },
     year: { type: String },
-    profileLogo: { type: String } // Optional: URL or filename of the uploaded profile logo
+    profileLogo: { type: String },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
 });
 
 module.exports = mongoose.model('ProfileSettings', profileSettingsSchema);

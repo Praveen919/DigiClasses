@@ -5,7 +5,8 @@ const {
   StudentToAdminTeacherMessage,
   TeacherToStudentMessage,
   TeacherToStaffMessage,
-  ExamNotification
+  ExamNotification,
+  AdminToTeacherMessage // Assuming you need this model for admin-to-teacher messages
 } = require('../models/messageStudentModel'); // Import models
 
 // POST route to send a message from admin to student
@@ -109,6 +110,34 @@ router.post('/teacher/staff/messages', async (req, res) => {
       teacherId,
       staffId,
       subject,
+      message,
+    });
+
+    // Save message to the database
+    await newMessage.save();
+
+    // Send success response
+    res.status(200).json({ success: true, message: 'Message sent successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error while sending message' });
+  }
+});
+
+// POST route to send a message from admin to staff
+router.post('/admin/staff', async (req, res) => {
+  const { teacherId, subject, message } = req.body;
+
+  // Validate input
+  if (!teacherId || !message) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    // Create a new admin-to-teacher message
+    const newMessage = new AdminToTeacherMessage({
+      teacherId,
+      subject: subject || '',
       message,
     });
 

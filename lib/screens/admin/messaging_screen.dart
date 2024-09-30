@@ -29,13 +29,13 @@ class _MessagingScreenState extends State<MessagingScreen> {
       case 'student':
         return const SendStudentMessageScreen();
       case 'staff':
-        return const SendStaffMessageScreen();
+        return SendStaffMessageScreen();
       case 'staffIdPassword':
         return const SendStaffIdPasswordScreen();
       case 'studentIdPassword':
         return const SendStudentIdPasswordScreen();
       case 'examReminder':
-        return const SendExamReminderScreen();
+        return SendExamReminderScreen();
       case 'feeStatus':
         return const SendFeeStatusMessageScreen();
       case 'feeReminder':
@@ -64,56 +64,80 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
   List<dynamic> _students = [];
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
+  bool isLoading = true;
   String? _token; // Store the JWT token
 
   @override
   void initState() {
     super.initState();
-    _loadToken(); // Load the JWT token
+    _loadToken(); // Load the JWT token on screen initialization
   }
 
+  // Method to load token from SharedPreferences
   Future<void> _loadToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _token = prefs.getString('token'); // Load saved token
+      _token = prefs.getString('authToken'); // Ensure token is properly fetched
     });
-    _fetchStudents(); // Fetch students after loading token
+    if (_token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No token found. Please log in again.')),
+      );
+    } else {
+      _fetchStudents(); // Fetch students after token is loaded
+    }
   }
 
+  // Method to fetch students with the token
   Future<void> _fetchStudents() async {
     if (_token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No token found. Please log in.')),
+        const SnackBar(content: Text('No token found. Please log in again.')),
       );
       return;
     }
 
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/api/auth/users?role=Student'),
-        headers: {'Authorization': 'Bearer $_token'}, // Include JWT token
+        Uri.parse('${AppConfig.baseUrl}/api/auth/students'),
+        headers: {
+          'Authorization': 'Bearer $_token', // Use the fetched token
+          'Content-Type': 'application/json',
+        },
       );
 
       if (response.statusCode == 200) {
         setState(() {
           _students = json.decode(response.body);
+          isLoading = false;
         });
       } else {
-        // Handle error response
         final errorMessage =
             json.decode(response.body)['error'] ?? 'Failed to fetch students';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
+        setState(() {
+          isLoading = false;
+        });
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Error fetching students. Please try again later.')),
+          content: Text('Error fetching students. Please try again later.'),
+        ),
       );
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
+  // Method to send a message to a student
   Future<void> _sendMessage() async {
     if (_selectedStudentId == null ||
         _titleController.text.isEmpty ||
@@ -126,17 +150,17 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
 
     if (_token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No token found. Please log in.')),
+        const SnackBar(content: Text('No token found. Please log in again.')),
       );
       return;
     }
 
     try {
       final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/admin/messages'),
+        Uri.parse('${AppConfig.baseUrl}/api/messageStudent/admin/messages'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_token', // Include JWT token
+          'Authorization': 'Bearer $_token', // Use the fetched token
         },
         body: json.encode({
           'studentId': _selectedStudentId,
@@ -176,146 +200,155 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
         automaticallyImplyLeading: false,
         title: const Text('Send Message to Students'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DropdownButton<String>(
-                value: _selectedStudentId,
-                hint: const Text('Select Student*'),
-                isExpanded: true,
-                items: _students.map((student) {
-                  return DropdownMenuItem<String>(
-                    value: student['_id'],
-                    child:
-                        Text('${student['firstName']} ${student['lastName']}'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedStudentId = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 16.0),
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Title*',
-                  border: OutlineInputBorder(),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: _selectedStudentId,
+                      hint: const Text('Select Student*'),
+                      isExpanded: true,
+                      items: _students.map((student) {
+                        return DropdownMenuItem<String>(
+                          value: student['_id'],
+                          child: Text(student['name'] ?? 'No name'),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedStudentId = value;
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Select Student',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
+                    TextFormField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Title*',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
+                    TextFormField(
+                      controller: _messageController,
+                      maxLines: 5,
+                      decoration: const InputDecoration(
+                        labelText: 'Message*',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 32.0),
+                    ElevatedButton(
+                      onPressed: _sendMessage,
+                      child: const Text('Send'),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16.0),
-              TextFormField(
-                controller: _messageController,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  labelText: 'Message*',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 32.0),
-              ElevatedButton(
-                onPressed: _sendMessage,
-                child: const Text('Send'),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
 
 class SendStaffMessageScreen extends StatefulWidget {
-  const SendStaffMessageScreen({super.key});
-
   @override
   _SendStaffMessageScreenState createState() => _SendStaffMessageScreenState();
 }
 
 class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
-  String? selectedStaffId;
-  List<Map<String, String>> staffList = []; // List to hold staff members
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController messageController = TextEditingController();
-  String? errorMessage;
+  List<Map<String, dynamic>> staffList = [];
+  String? _selectedStaff;
+  String? _subject;
+  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _subjectController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    fetchStaffMembers();
+    _fetchStaff(); // Fetch staff members on initialization
   }
 
-  void fetchStaffMembers() async {
+  Future<void> _fetchStaff() async {
+    const url =
+        '${AppConfig.baseUrl}/api/staff'; // Replace with actual endpoint
+
     try {
-      final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/staff/teachers')); // Replace with your API endpoint
+      final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
+        final List<dynamic> data = json.decode(response.body);
         setState(() {
-          staffList = data.map<Map<String, String>>((staff) {
-            return {
-              'id': staff['id'].toString(), // Ensure it's a string
-              'name': staff['name'] ?? 'Unknown', // Handle null name
-            };
-          }).toList();
+          staffList = data
+              .map((staff) => {
+                    'id': staff['_id'],
+                    'firstName': staff['firstName'] ?? '',
+                    'middleName': staff['middleName'] ?? '',
+                    'lastName': staff['lastName'] ?? '',
+                  })
+              .toList();
         });
       } else {
-        setState(() {
-          errorMessage = 'Failed to load staff members';
-        });
+        print('Failed to load staff: ${response.statusCode}');
       }
     } catch (e) {
-      setState(() {
-        errorMessage = 'An error occurred: $e';
-      });
+      print('Error fetching staff list: $e');
     }
   }
 
-  Future<void> sendMessage() async {
-    if (selectedStaffId == null ||
-        titleController.text.isEmpty ||
-        messageController.text.isEmpty) {
-      setState(() {
-        errorMessage = 'Please fill all fields.';
-      });
-      return;
-    }
+  Future<void> _sendMessage() async {
+    if (_selectedStaff != null &&
+        _messageController.text.isNotEmpty &&
+        _subjectController.text.isNotEmpty) {
+      final selectedStaffId = _selectedStaff;
+      final message = _messageController.text;
+      final subject = _subjectController.text;
 
-    try {
-      final response = await http.post(
-        Uri.parse(
-            '${AppConfig.baseUrl}/api/messageStudent'), // Replace with your API endpoint
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'teacherId': selectedStaffId,
-          'subject': titleController.text,
-          'message': messageController.text,
-        }),
-      );
+      final url =
+          '${AppConfig.baseUrl}/api/messageStudent/admin/staff'; // Correct API URL
 
-      if (response.statusCode == 200) {
-        setState(() {
-          errorMessage = null; // Clear any previous error message
-          titleController.clear();
-          messageController.clear();
-          selectedStaffId = null;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Message sent successfully')));
-      } else {
-        setState(() {
-          errorMessage =
-              'Failed to send message: ${json.decode(response.body)['error']}';
-        });
+      try {
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {"Content-Type": "application/json"},
+          body: json.encode({
+            'staffId': selectedStaffId,
+            'subject': subject,
+            'message': message,
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                'Message sent to ${staffList.firstWhere((staff) => staff['id'] == _selectedStaff)['firstName']}'),
+          ));
+
+          // Clear the message input and reset the dropdown
+          setState(() {
+            _messageController.clear();
+            _subjectController.clear();
+            _selectedStaff = null;
+          });
+        } else {
+          print('Failed to send message: ${response.statusCode}');
+          print('Response body: ${response.body}');
+        }
+      } catch (e) {
+        print('Error sending message: $e');
       }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'An error occurred: $e';
-      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+            'Please select a staff member, write a message, and add a subject'),
+      ));
     }
   }
 
@@ -326,69 +359,90 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
         automaticallyImplyLeading: false,
         title: const Text('Send Message to Staff'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Staff Dropdown
+            const Text(
+              'Select Staff Member',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
             DropdownButtonFormField<String>(
-              value: selectedStaffId,
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedStaffId = newValue;
-                });
-              },
-              items: staffList
-                  .map<DropdownMenuItem<String>>((Map<String, String> staff) {
+              decoration: const InputDecoration(
+                labelText: 'Staff Name*',
+                border: OutlineInputBorder(),
+              ),
+              isDense: true, // Makes the dropdown smaller
+              isExpanded: false, // Prevents the dropdown from taking full width
+              value: _selectedStaff,
+              items: staffList.map((staff) {
                 return DropdownMenuItem<String>(
-                  value: staff['id'], // Use the ID for selection
-                  child: Text(
-                      staff['name'] ?? 'Unknown'), // Display the staff name
+                  value: staff['id'],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircleAvatar(
+                        backgroundColor: Colors.grey,
+                        child: Icon(Icons.person),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          '${staff['firstName']} ${staff['middleName']} ${staff['lastName']}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedStaff = value;
+                });
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please select a staff member';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Subject:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _subjectController,
               decoration: const InputDecoration(
-                labelText: 'Select Staff*',
                 border: OutlineInputBorder(),
+                hintText: 'Enter the subject here...',
               ),
             ),
-            const SizedBox(height: 16.0),
-
-            // Title
-            TextFormField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title*',
-                border: OutlineInputBorder(),
-              ),
+            const SizedBox(height: 20),
+            const Text(
+              'Message:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16.0),
-
-            // Message
+            const SizedBox(height: 10),
             TextFormField(
-              controller: messageController,
+              controller: _messageController,
               maxLines: 5,
               decoration: const InputDecoration(
-                labelText: 'Message*',
                 border: OutlineInputBorder(),
+                hintText: 'Enter your message here...',
               ),
             ),
-            const SizedBox(height: 16.0),
-
-            // Error Message
-            if (errorMessage != null)
-              Text(
-                errorMessage!,
-                style: TextStyle(color: Colors.red),
+            const SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: _sendMessage,
+                child: const Text('Send Message'),
               ),
-            const SizedBox(height: 16.0),
-
-            // Send Button
-            ElevatedButton(
-              onPressed: () {
-                sendMessage();
-              },
-              child: const Text('Send'),
             ),
           ],
         ),
@@ -804,17 +858,53 @@ class StudentDetailsCard extends StatelessWidget {
   }
 }
 
-class SendExamReminderScreen extends StatefulWidget {
-  const SendExamReminderScreen({super.key});
+class Exam {
+  final String id;
+  final String paperName;
+  final String standard;
+  final String subject;
+  final String examPaperType;
 
+  Exam({
+    required this.id,
+    required this.paperName,
+    required this.standard,
+    required this.subject,
+    required this.examPaperType,
+  });
+
+  factory Exam.fromJson(Map<String, dynamic> json, String type) {
+    return Exam(
+      id: json['_id'],
+      paperName: json['paperName'] ?? 'N/A',
+      standard: json['standard'] ?? 'N/A',
+      subject: json['subject'] ?? 'N/A',
+      examPaperType: type,
+    );
+  }
+}
+
+class SendExamReminderScreen extends StatefulWidget {
   @override
   _SendExamReminderScreenState createState() => _SendExamReminderScreenState();
 }
 
 class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
-  String selectedStandard = 'All';
-  String selectedSubject = 'All';
-  String selectedExamName = '-- Select --'; // Initial value
+  String selectedStandard = '';
+  String selectedSubject = '';
+  String selectedExamName = '';
+  List<String> alreadyAssignedStandards = [];
+  List<String> alreadyAssignedSubjects = [];
+  List<Exam> examNames = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAlreadyAssignedStandards();
+    _fetchAlreadyAssignedSubjects();
+    _fetchExams();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -831,8 +921,10 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
             children: [
               // Standard Dropdown
               DropdownButtonFormField<String>(
-                value: selectedStandard,
-                items: <String>['All', '1st Std', '2nd Std', '3rd Std']
+                value: alreadyAssignedStandards.isNotEmpty
+                    ? selectedStandard
+                    : null,
+                items: alreadyAssignedStandards
                     .map((String value) => DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -852,16 +944,9 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
 
               // Subject Dropdown
               DropdownButtonFormField<String>(
-                value: selectedSubject,
-                items: <String>[
-                  'All',
-                  'English',
-                  'Maths',
-                  'Science',
-                  'Social Science',
-                  'Hindi',
-                  'Marathi'
-                ]
+                value:
+                    alreadyAssignedSubjects.isNotEmpty ? selectedSubject : null,
+                items: alreadyAssignedSubjects
                     .map((String value) => DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -881,21 +966,13 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
 
               // Exam Name Dropdown
               DropdownButtonFormField<String>(
-                value: selectedExamName,
-                items: <String>[
-                  '-- Select --', // Include '-- Select --' as an option
-                  'English Exam',
-                  'Maths Exam',
-                  'Science Exam',
-                  'Social Science Exam',
-                  'Hindi Exam',
-                  'Marathi Exam'
-                ]
-                    .map((String value) => DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        ))
-                    .toList(),
+                value: examNames.isNotEmpty ? selectedExamName : null,
+                items: examNames.map((exam) {
+                  return DropdownMenuItem<String>(
+                    value: exam.id,
+                    child: Text('${exam.paperName} (${exam.examPaperType})'),
+                  );
+                }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
                     selectedExamName = newValue!;
@@ -911,8 +988,8 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
               // Send Button
               ElevatedButton(
                 onPressed: () async {
-                  // Implement sending logic here
                   await sendExamNotification();
+                  _clearFields(); // Clear fields after sending notification
                 },
                 child: const Text('Send'),
               ),
@@ -923,25 +1000,147 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
     );
   }
 
-  Future<void> sendExamNotification() async {
-    // Implement the API call to send the exam notification
-    final response = await http.post(
-      Uri.parse('${AppConfig.baseUrl}/api/messageStudent/exam/notifications'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'standard': selectedStandard,
-        'subject': selectedSubject,
-        'examName': selectedExamName,
-      }),
-    );
+  Future<void> _fetchAlreadyAssignedStandards() async {
+    try {
+      final url =
+          Uri.parse('${AppConfig.baseUrl}/api/assignStandard/alreadyAssigned');
+      final response = await http.get(url);
 
-    if (response.statusCode == 200) {
-      // Handle success response
-    } else {
-      // Handle error response
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['standards'] is List) {
+          setState(() {
+            alreadyAssignedStandards = List<String>.from(data['standards']);
+            // No default selection to keep dropdown empty initially
+          });
+        } else {
+          _showMessage('Unexpected data format');
+        }
+      } else {
+        _showMessage(
+            'Failed to load already assigned standards: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      _showMessage('Error loading assigned standards: $e');
     }
+  }
+
+  Future<void> _fetchAlreadyAssignedSubjects() async {
+    try {
+      final url =
+          Uri.parse('${AppConfig.baseUrl}/api/assignSubject/alreadyAssigned');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['subjects'] is List) {
+          setState(() {
+            alreadyAssignedSubjects = List<String>.from(data['subjects']);
+            // No default selection to keep dropdown empty initially
+          });
+        } else {
+          _showMessage('Unexpected data format');
+        }
+      } else {
+        _showMessage(
+            'Failed to load already assigned subjects: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      _showMessage('Error loading assigned subjects: $e');
+    }
+  }
+
+  Future<void> _fetchExams() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      // Fetch MCQ Exams
+      final mcqResponse =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/'));
+      // Fetch Manual Exams
+      final manualResponse =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/exams'));
+
+      List<Exam> mcqExams = [];
+      List<Exam> manualExams = [];
+
+      if (mcqResponse.statusCode == 200) {
+        final List<dynamic> mcqData = json.decode(mcqResponse.body);
+        mcqExams =
+            mcqData.map<Exam>((exam) => Exam.fromJson(exam, 'MCQ')).toList();
+      } else {
+        _showMessage('Failed to load MCQ exams: ${mcqResponse.statusCode}');
+      }
+
+      if (manualResponse.statusCode == 200) {
+        final List<dynamic> manualData = json.decode(manualResponse.body);
+        manualExams = manualData
+            .map<Exam>((exam) => Exam.fromJson(exam, 'Manual'))
+            .toList();
+      } else {
+        _showMessage(
+            'Failed to load manual exams: ${manualResponse.statusCode}');
+      }
+
+      // Combine both exam lists
+      setState(() {
+        examNames = [...mcqExams, ...manualExams];
+        // No default selection to keep dropdown empty initially
+      });
+    } catch (error) {
+      _showMessage('Error fetching exams: $error');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> sendExamNotification() async {
+    if (selectedStandard.isEmpty ||
+        selectedSubject.isEmpty ||
+        selectedExamName.isEmpty) {
+      _showMessage('Please select all fields before sending.');
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/messageStudent/exam/notifications'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'standard': selectedStandard,
+          'subject': selectedSubject,
+          'examName': selectedExamName,
+          'date': DateTime.now().toIso8601String(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        _showMessage('Exam notification sent successfully');
+      } else {
+        _showMessage('Failed to send notification: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      _showMessage('Error sending notification: $e');
+    }
+  }
+
+  void _clearFields() {
+    setState(() {
+      selectedStandard = '';
+      selectedSubject = '';
+      selectedExamName = '';
+    });
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }
 
