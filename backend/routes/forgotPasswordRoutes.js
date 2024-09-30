@@ -75,7 +75,7 @@ router.post('/verify-otp', (req, res) => {
   }
 });
 
-// Reset Password
+// Reset Password without hashing
 router.post('/reset-password', async (req, res) => {
   const { email, newPassword } = req.body;
 
@@ -85,11 +85,8 @@ router.post('/reset-password', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Hash the new password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    user.password = hashedPassword; // Save hashed password
+    // Directly update the password without hashing
+    user.password = newPassword; // Save plain text password
     await user.save();
 
     res.status(200).json({ message: 'Password reset successfully' });
