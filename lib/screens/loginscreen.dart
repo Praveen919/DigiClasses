@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'forgot_password_screen.dart';
+import 'package:testing_app/screens/forgot_password_screens/forgot_password_screen.dart';
 import 'branch_year_selection_screen.dart';
 import 'package:testing_app/screens/config.dart';
 
