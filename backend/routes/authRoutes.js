@@ -32,7 +32,7 @@ router.post('/register', [
             return res.status(409).json({ message: 'Email already exists' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // No need to hash the password here, as it's already handled in the user model
         const newUser = new User({
             instituteName,
             country,
@@ -40,7 +40,7 @@ router.post('/register', [
             name,
             mobile,
             email,
-            password: hashedPassword,
+            password, // Directly store the password; it will be hashed in userModel.js
             role
         });
 
@@ -51,6 +51,7 @@ router.post('/register', [
         res.status(500).json({ message: 'Error registering user' });
     }
 });
+
 
 // Login route with input validation
 router.post('/login', async (req, res) => {
