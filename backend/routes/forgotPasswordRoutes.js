@@ -1,89 +1,101 @@
 const express = require('express');
+const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer');
-const User = require('../models/userModel'); // Import the User model
-
+const User = require('../models/userModel'); // Your user model
 const router = express.Router();
+require('dotenv').config();
 
-// POST route to request a password reset
-router.post('/forgot-password', async (req, res) => {
-    const { email } = req.body;
+let otpStore = {}; // Temporary storage for OTPs (in production, use a database)
 
-    try {
-        const user = await User.findOne({ email });
+// Send OTP to the user's email
+router.post('/send-otp', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
 
-        if (!user) {
-            return res.status(404).send('User with this email does not exist');
-        }
-
-        // Generate a reset token
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-
-        // Set the token and its expiration (1 hour)
-        user.resetPasswordToken = resetTokenHash;
-        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour from now
-
-        await user.save();
-
-        // Send email with the reset token
-        const resetLink = `http://192.168.0.108:3000/reset-password?token=${resetToken}`;
-
-        // Send email (using nodemailer here)
-        const transporter = nodemailer.createTransport({
-            service: 'gmail', // Use your preferred email service
-            auth: {
-                user: 'digiclass737@gmail.com', // Replace with your email
-                pass: 'digiclass@2024'  // Replace with your email password
-            }
-        });
-
-        const mailOptions = {
-            from: 'digiclass737@gmail.com',
-            to: user.email,
-            subject: 'Password Reset Request',
-            text: `You requested a password reset. Click the link to reset your password: ${resetLink}`
-        };
-
-        await transporter.sendMail(mailOptions);
-
-        res.send('Password reset link has been sent to your email.');
-    } catch (error) {
-        res.status(500).send('Something went wrong. Please try again.');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    const otp = crypto.randomInt(100000, 999999); // Generate a 6-digit OTP
+    const expiryTime = Date.now() + 5 * 60 * 1000; // OTP expires in 5 minutes
+
+    otpStore[email] = { otp, expiryTime }; // Store OTP and expiry time
+
+    // Configure nodemailer
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    // Send OTP email
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: email,
+      subject: 'Your OTP Code',
+      text: `Your OTP code is ${otp}. It is valid for 5 minutes.`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        return res.status(500).json({ message: 'Failed to send OTP' });
+      }
+      res.status(200).json({ message: 'OTP sent successfully' });
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error sending OTP', error });
+  }
 });
 
-// POST route to reset the password
-router.post('/reset-password/:token', async (req, res) => {
-    const { token } = req.params;
-    const { password } = req.body;
+// Verify OTP
+router.post('/verify-otp', (req, res) => {
+  const { email, otp } = req.body;
+  const storedOtpData = otpStore[email];
 
-    try {
-        // Hash the token received from the URL
-        const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  if (!storedOtpData) {
+    return res.status(400).json({ message: 'OTP not found or expired' });
+  }
 
-        // Find the user with the matching token and ensure it's not expired
-        const user = await User.findOne({
-            resetPasswordToken: resetTokenHash,
-            resetPasswordExpires: { $gt: Date.now() }  // Check if token is still valid
-        });
+  const { otp: storedOtp, expiryTime } = storedOtpData;
 
-        if (!user) {
-            return res.status(400).send('Token is invalid or has expired.');
-        }
+  if (Date.now() > expiryTime) {
+    delete otpStore[email];
+    return res.status(400).json({ message: 'OTP has expired' });
+  }
 
-        // Update password and clear the reset token fields
-        user.password = password;
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
+  if (storedOtp === otp) {
+    delete otpStore[email]; // Clear OTP after successful verification
+    return res.status(200).json({ message: 'OTP verified successfully' });
+  } else {
+    return res.status(400).json({ message: 'Invalid OTP' });
+  }
+});
 
-        await user.save();
+// Reset Password
+router.post('/reset-password', async (req, res) => {
+  const { email, newPassword } = req.body;
 
-        res.send('Password has been reset successfully.');
-    } catch (error) {
-        res.status(500).send('Something went wrong. Please try again.');
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    // Hash the new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    user.password = hashedPassword; // Save hashed password
+    await user.save();
+
+    res.status(200).json({ message: 'Password reset successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error resetting password', error });
+  }
 });
 
 module.exports = router;
