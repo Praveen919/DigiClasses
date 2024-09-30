@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart'; // For handling permissions
 import 'package:testing_app/screens/config.dart';
-// import 'dart:io';
+import 'package:open_file/open_file.dart';
+import 'dart:io';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class EstudyScreen extends StatelessWidget {
   final String option;
@@ -74,14 +77,29 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
 
   Future<void> downloadFile(String filePath, String fileName) async {
     try {
-      // Ensure the filePath uses forward slashes
+      // Request storage permission
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Storage permission is required')));
+        return;
+      }
+
+      // Format file path and construct the download URL
       final String normalizedFilePath = filePath.replaceAll('\\', '/');
       final String fileUrl = '${AppConfig.baseUrl}/$normalizedFilePath';
 
-      print('Attempting to download from: $fileUrl'); // Debugging line
+      print('Attempting to download from: $fileUrl');
 
-      final directory = await getApplicationDocumentsDirectory();
-      final filePathToSave = "${directory.path}/$fileName";
+      // Get the path for the Downloads directory
+      Directory? downloadsDirectory = Directory('/storage/emulated/0/Download');
+
+      // Ensure the Downloads directory exists
+      if (!downloadsDirectory.existsSync()) {
+        downloadsDirectory.createSync();
+      }
+
+      final String filePathToSave = "${downloadsDirectory.path}/$fileName";
 
       await dio.download(fileUrl, filePathToSave,
           onReceiveProgress: (received, total) {
@@ -93,6 +111,14 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
       print('Download complete: $filePathToSave');
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Download complete: $fileName')));
+
+      // Show toast and optionally open the file
+      Fluttertoast.showToast(
+          msg: "File downloaded to: $filePathToSave",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM);
+
+      OpenFile.open(filePathToSave);
     } catch (e) {
       print('Download failed: $e');
       ScaffoldMessenger.of(context)
@@ -122,10 +148,8 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
                 itemCount: studyMaterials.length,
                 itemBuilder: (context, index) {
                   final material = studyMaterials[index];
-                  final fileUrl = material[
-                      'filePath']; // Assuming `filePath` is the URL of the file
-                  final fileName = material['fileName'] ??
-                      'unknown_file'; // Assuming `fileName` is available
+                  final fileUrl = material['filePath'];
+                  final fileName = material['fileName'] ?? 'unknown_file';
 
                   return ListTile(
                     title: Text(material['courseName'] ?? 'No Title'),
@@ -143,7 +167,6 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
     );
   }
 }
-
 class ViewSharedStudyMaterialScreen extends StatefulWidget {
   const ViewSharedStudyMaterialScreen({super.key});
 
@@ -167,7 +190,7 @@ class _ViewSharedStudyMaterialScreenState
   Future<void> fetchSharedMaterials() async {
     try {
       final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/study-material'));
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/study-material')); // Ensure the correct endpoint is used
       if (response.statusCode == 200) {
         setState(() {
           sharedMaterials = json.decode(response.body);
@@ -186,14 +209,29 @@ class _ViewSharedStudyMaterialScreenState
 
   Future<void> downloadFile(String filePath, String fileName) async {
     try {
-      // Ensure the filePath uses forward slashes
+      // Request storage permission
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Storage permission is required')));
+        return;
+      }
+
+      // Normalize file path and construct the download URL
       final String normalizedFilePath = filePath.replaceAll('\\', '/');
       final String fileUrl = '${AppConfig.baseUrl}/$normalizedFilePath';
 
-      print('Attempting to download from: $fileUrl'); // Debugging line
+      print('Attempting to download from: $fileUrl');
 
-      final directory = await getApplicationDocumentsDirectory();
-      final filePathToSave = "${directory.path}/$fileName";
+      // Get the path for the application documents directory
+      Directory? downloadsDirectory = Directory('/storage/emulated/0/Download');
+
+      // Ensure the Downloads directory exists
+      if (!downloadsDirectory.existsSync()) {
+        downloadsDirectory.createSync();
+      }
+
+      final String filePathToSave = "${downloadsDirectory.path}/$fileName";
 
       await dio.download(fileUrl, filePathToSave,
           onReceiveProgress: (received, total) {
@@ -205,6 +243,14 @@ class _ViewSharedStudyMaterialScreenState
       print('Download complete: $filePathToSave');
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Download complete: $fileName')));
+
+      // Show toast and optionally open the file
+      Fluttertoast.showToast(
+          msg: "File downloaded to: $filePathToSave",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM);
+
+      OpenFile.open(filePathToSave);
     } catch (e) {
       print('Download failed: $e');
       ScaffoldMessenger.of(context)
@@ -234,10 +280,8 @@ class _ViewSharedStudyMaterialScreenState
                 itemCount: sharedMaterials.length,
                 itemBuilder: (context, index) {
                   final material = sharedMaterials[index];
-                  final fileUrl = material[
-                      'filePath']; // Assuming `filePath` is the URL of the file
-                  final fileName = material['fileName'] ??
-                      'unknown_file'; // Assuming `fileName` is available
+                  final fileUrl = material['filePath']; // Ensure this is the correct field for the file URL
+                  final fileName = material['fileName'] ?? 'unknown_file'; // Ensure this field exists
 
                   return ListTile(
                     title: Text(material['courseName'] ?? 'No Title'),
