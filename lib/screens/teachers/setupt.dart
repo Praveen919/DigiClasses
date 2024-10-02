@@ -164,6 +164,7 @@ class _AddYearScreenState extends State<AddYearScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(widget.yearId == null ? 'Add Year' : 'Edit Year'),
       ),
       body: SingleChildScrollView(
@@ -694,6 +695,7 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manage Time Table'),
       ),
       body: SingleChildScrollView(
