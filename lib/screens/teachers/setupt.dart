@@ -496,105 +496,105 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
 
   Future<void> _viewTimeTable() async {
     final standard = _standardController.text;
-    final batch =
-        _batchController.text.toLowerCase(); // Convert to lowercase here
+    final batch = _batchController.text.toLowerCase(); // Convert to lowercase
 
     if (standard.isEmpty || batch.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter standard and batch')),
-      );
+      _showSnackBar('Please enter standard and batch');
       return;
     }
 
     try {
       final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/timetable?standard=$standard&batch=$batch')); // Use the lowercase batch directly
+          '${AppConfig.baseUrl}/api/timetable?standard=$standard&batch=$batch')); // Use lowercase batch
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as List<dynamic>;
-        setState(() {
-          _timeTable = List.generate(5, (i) => List.filled(6, null));
-          for (var item in data) {
-            int day = item['day'] ?? 0; // Default to 0 if null
-            int timeSlot = item['timeSlot'] ?? 0; // Default to 0 if null
-            if (timeSlot >= 0 && timeSlot < 5 && day >= 0 && day < 6) {
-              _timeTable[timeSlot][day] = item['subject']; // Allow null
-            }
-          }
-          isEditable = false;
-        });
+        final data = jsonDecode(response.body);
+
+        // Check if the data is a Map and contains a 'message' (meaning it's not a timetable but an info message)
+        if (data is Map<String, dynamic> && data.containsKey('message')) {
+          _showSnackBar(data['message']); // Display the message from the server
+        }
+        // Otherwise, assume it's a timetable list
+        else if (data is List) {
+          _updateTimeTableFromResponse(response); // Process timetable
+        } else {
+          _showSnackBar('Unexpected data format received');
+        }
       } else if (response.statusCode == 404) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content:
-                  Text('Standard/Batch not found. Creating new timetable.')),
-        );
+        _showSnackBar('Standard/Batch not found. Creating new timetable.');
         await _createNewTimeTable(standard, batch);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${response.statusCode}')));
+        _showSnackBar('Error: ${response.statusCode}');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load timetable: $e')));
+      _showSnackBar('Failed to load timetable: $e');
     }
   }
 
   Future<void> _createNewTimeTable(String standard, String batch) async {
-    final newTimeTable =
-        List.generate(5, (i) => List.filled(6, null)); // Allow null values
-
     final response = await http.post(
       Uri.parse('${AppConfig.baseUrl}/api/timetable/create'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'standard': standard,
         'batch': batch.toLowerCase(),
-        'timetable': newTimeTable,
+        'timetable': _timeTable, // Use the existing timetable structure
       }),
     );
 
     if (response.statusCode == 201) {
-      setState(() {
-        _timeTable = newTimeTable; // Refresh the timetable to empty
-        isEditable = false; // Exit edit mode
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('New timetable created successfully.')),
-      );
+      _resetTimetable();
+      _showSnackBar('New timetable created successfully.');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to create new timetable.')),
-      );
+      _showSnackBar('Failed to create new timetable.');
     }
   }
 
   Future<void> _updateTimeTable() async {
-    final standard = _standardController.text;
-    final batch = _batchController.text;
+    final standard = _standardController.text.trim();
+    final batch = _batchController.text.trim();
 
     if (standard.isEmpty || batch.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter standard and batch')),
-      );
+      _showSnackBar('Please enter standard and batch');
       return;
     }
 
-    final updatedData = _timeTable
-        .expand((row) => row.asMap().entries.map((e) => {
-              'day': e.key,
-              'timeSlot': _timeTable.indexOf(row),
-              'subject': e.value, // Allow null
-            }))
-        .toList();
+    // Map the timetable into the format expected by the backend
+    final updatedTimeTable = _timeTable.asMap().entries.map((entry) {
+      final timeSlotIndex = entry.key;
+      final timeSlot = entry.value;
 
+      return {
+        'time': 'Time Slot ${timeSlotIndex + 1}',
+        'lectures': timeSlot
+            .asMap()
+            .entries
+            .map((e) {
+              final dayIndex = e.key;
+              final subject = e.value?.trim(); // Trim whitespace
+
+              if (subject == null || subject.isEmpty) {
+                return null; // Ignore empty or whitespace-only entries
+              }
+
+              return {
+                'day': dayIndex,
+                'subject': subject,
+              };
+            })
+            .where((lecture) => lecture != null) // Remove null lectures
+            .toList(),
+      };
+    }).toList();
+
+    // Send the update request
     final response = await http.put(
       Uri.parse('${AppConfig.baseUrl}/api/timetable/update'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'standard': standard,
         'batch': batch.toLowerCase(),
-        'timetable': updatedData,
+        'timetable': updatedTimeTable,
       }),
     );
 
@@ -602,21 +602,15 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
       setState(() {
         isEditable = false; // Exit edit mode after update
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Timetable updated successfully')),
-      );
+      _showSnackBar('Timetable updated successfully');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update timetable')),
-      );
+      _showSnackBar('Failed to update timetable');
     }
   }
 
   Future<void> _deleteTimeTable(String standard, String batch) async {
     if (standard.isEmpty || batch.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Standard and Batch cannot be empty')),
-      );
+      _showSnackBar('Standard and Batch cannot be empty');
       return;
     }
 
@@ -627,37 +621,22 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
     );
 
     if (response.statusCode == 200) {
-      setState(() {
-        _timeTable =
-            List.generate(5, (i) => List.filled(6, null)); // Clear timetable
-        _standardController.clear();
-        _batchController.clear();
-        isEditable = false; // Exit edit mode
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Timetable deleted successfully')),
-      );
+      _resetTimetable();
+      _showSnackBar('Timetable deleted successfully');
     } else {
-      // Handle specific status codes for better debugging
-      String message;
-      if (response.statusCode == 404) {
-        message = 'Timetable not found';
-      } else {
-        message = 'Error: ${response.statusCode}';
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete timetable: $message')),
-      );
+      String message = (response.statusCode == 404)
+          ? 'Timetable not found'
+          : 'Error: ${response.statusCode}';
+      _showSnackBar('Failed to delete timetable: $message');
     }
   }
 
-  void _resetFields() {
-    _standardController.clear();
-    _batchController.clear();
+  void _resetTimetable() {
     setState(() {
       _timeTable =
           List.generate(5, (i) => List.filled(6, null)); // Clear timetable
+      _standardController.clear();
+      _batchController.clear();
       isEditable = false; // Reset edit state
     });
   }
@@ -689,6 +668,29 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
         );
       },
     );
+  }
+
+  void _updateTimeTableFromResponse(http.Response response) {
+    final data = jsonDecode(response.body) as List<dynamic>;
+
+    setState(() {
+      // Initialize the timetable with 5 time slots and 7 periods (for 6 days + timing)
+      _timeTable = List.generate(5, (i) => List.filled(7, null));
+
+      for (var item in data) {
+        int day = item['day'] ?? 0; // Default to 0 if null
+        int timeSlot = item['timeSlot'] ?? 0; // Default to 0 if null
+        if (timeSlot >= 0 && timeSlot < 5 && day >= 0 && day < 6) {
+          _timeTable[timeSlot][day] = item['subject']; // Allow null
+        }
+      }
+      isEditable = false; // Exit edit mode after update
+    });
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -732,16 +734,13 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
                         isEditable = !isEditable;
                       });
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Please enter standard and batch')),
-                      );
+                      _showSnackBar('Please enter standard and batch');
                     }
                   },
                   child: Text(isEditable ? 'Cancel Edit' : 'Edit'),
                 ),
                 ElevatedButton(
-                  onPressed: _resetFields,
+                  onPressed: _resetTimetable,
                   child: const Text('Reset'),
                 ),
               ],
@@ -798,30 +797,27 @@ class _ManageTimeTableScreenState extends State<ManageTimeTableScreen> {
                                 : value; // Update subject to allow null
                           },
                           controller: TextEditingController(
-                            text: _timeTable[timeSlotIndex][dayIndex] ?? '',
+                            text: _timeTable[timeSlotIndex][dayIndex],
                           ),
                         ),
                       ),
-                      if (dayIndex < 5) const SizedBox(width: 10), // Spacing
+                      const SizedBox(width: 10),
                     ],
                   ],
                 );
               },
             ),
             const SizedBox(height: 20),
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: isEditable ? _updateTimeTable : null,
-                  child: const Text('Update Timetable'),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: isEditable ? _confirmDelete : null,
-                  child: const Text('Delete Timetable'),
-                ),
-              ],
-            ),
+            if (isEditable)
+              ElevatedButton(
+                onPressed: _updateTimeTable,
+                child: const Text('Update Timetable'),
+              ),
+            if (!isEditable)
+              ElevatedButton(
+                onPressed: () => _confirmDelete(),
+                child: const Text('Delete Timetable'),
+              ),
           ],
         ),
       ),
