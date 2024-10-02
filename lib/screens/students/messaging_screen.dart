@@ -67,7 +67,7 @@ class SendMessageScreen extends StatelessWidget {
   final TextEditingController _recipientController =
       TextEditingController(); // To enter recipient ID
 
-  // URL for your API (change it to your server address)
+  // URL for your API (using AppConfig for the base URL)
   final String apiUrl =
       '${AppConfig.baseUrl}/api/messageStudent/student/messages';
 
@@ -133,61 +133,17 @@ class SendMessageScreen extends StatelessWidget {
                   sendMessage(subject, message, recipientId).then((response) {
                     if (response['success'] == true) {
                       // Show confirmation dialog
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Message Sent'),
-                          content: const Text(
-                              'Your message has been sent successfully!'),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                Navigator.of(context)
-                                    .pop(); // Close the dialog and navigate back
-                              },
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
+                      _showDialog(context, 'Message Sent',
+                          'Your message has been sent successfully!');
                     } else {
                       // Show error dialog
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Error'),
-                          content: const Text(
-                              'Failed to send the message. Try again later.'),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
+                      _showDialog(context, 'Error',
+                          'Failed to send the message. Try again later.');
                     }
                   });
                 } else {
                   // Show validation error dialog
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Error'),
-                      content: const Text('All fields are required.'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
+                  _showDialog(context, 'Error', 'All fields are required.');
                 }
               },
               child: const Text('Send Message'),
@@ -207,7 +163,7 @@ class SendMessageScreen extends StatelessWidget {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'senderStudentId':
-              'studentId', // Set student ID (replace with actual student ID logic)
+              'studentId', // Replace with actual student ID logic
           'recipientId': recipientId,
           'subject': subject,
           'message': message,
@@ -223,6 +179,27 @@ class SendMessageScreen extends StatelessWidget {
       print(e);
       return {'success': false};
     }
+  }
+
+  // Helper function to show a dialog
+  void _showDialog(BuildContext context, String title, String content) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // Optionally, navigate back if needed
+              // Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

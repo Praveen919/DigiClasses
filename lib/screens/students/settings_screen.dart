@@ -303,20 +303,31 @@ class _ChangePasswordState extends State<ChangePassword> {
       TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false; // To show loading indicator when submitting
+  bool _isLoading = false;
 
-  Future<void> _changePassword() async {
+  Future<void> _changePassword(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       setState(() {
-        _isLoading = true; // Start loading
+        _isLoading = true;
       });
+
       final currentPassword = currentPasswordController.text;
       final newPassword = newPasswordController.text;
-      // Simulated token from authentication system (replace this with actual token retrieval logic)
-      const token = 'user_jwt_token';
+
       try {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? token = prefs.getString('authToken');
+
+        if (token == null) {
+          _showSnackBar(context, 'Authorization token not found');
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/password'),
+          Uri.parse('${AppConfig.baseUrl}/api/password/resetPassword'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -327,38 +338,36 @@ class _ChangePasswordState extends State<ChangePassword> {
           }),
         );
 
-        // Log the response body for debugging
         print(response.body);
 
         if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-            const SnackBar(content: Text('Password changed successfully')),
-          );
+          _showSnackBar(context, 'Password changed successfully');
+          currentPasswordController.clear();
+          newPasswordController.clear();
+          confirmPasswordController.clear();
         } else {
-          // Handle non-200 status codes
-          print('Error: Status code ${response.statusCode}');
-          ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-            const SnackBar(content: Text('An error occurred')),
-          );
+          final responseBody = json.decode(response.body);
+          _showSnackBar(
+              context, responseBody['message'] ?? 'An error occurred');
         }
       } catch (e) {
-        // Handle parsing errors and other exceptions
-        print('Error: $e');
-        ScaffoldMessenger.of(context as BuildContext).showSnackBar(
-          const SnackBar(content: Text('An error occurred')),
-        );
+        _showSnackBar(context, 'An error occurred: $e');
       } finally {
         setState(() {
           _isLoading = false;
-          // Stop loading
         });
       }
     }
   }
 
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   @override
   void dispose() {
-    // Clean up the controllers when the widget is disposed
     currentPasswordController.dispose();
     newPasswordController.dispose();
     confirmPasswordController.dispose();
@@ -367,67 +376,73 @@ class _ChangePasswordState extends State<ChangePassword> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            TextFormField(
-              controller: currentPasswordController,
-              decoration: const InputDecoration(
-                labelText: 'Current Password',
-                border: OutlineInputBorder(),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Change Password'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              TextFormField(
+                controller: currentPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Current Password',
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your current password';
+                  }
+                  return null;
+                },
               ),
-              obscureText: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your current password';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: newPasswordController,
-              decoration: const InputDecoration(
-                labelText: 'New Password',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: newPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'New Password',
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a new password';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
               ),
-              obscureText: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a new password';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: confirmPasswordController,
-              decoration: const InputDecoration(
-                labelText: 'Confirm Password',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: confirmPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password',
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value != newPasswordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
               ),
-              obscureText: true,
-              validator: (value) {
-                if (value != newPasswordController.text) {
-                  return 'Passwords do not match';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-            _isLoading
-                ? const Center(
-                    child:
-                        CircularProgressIndicator()) // Show loading indicator
-                : ElevatedButton(
-                    onPressed: _changePassword,
-                    child: const Text('Change Password'),
-                  ),
-          ],
+              const SizedBox(height: 20),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: () => _changePassword(context),
+                      child: const Text('Change Password'),
+                    ),
+            ],
+          ),
         ),
       ),
     );

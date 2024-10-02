@@ -1205,7 +1205,7 @@ class StatisticsNotifier extends StateNotifier<Statistics> {
 
         // Fetch total students count
         final studentsResponse = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/auth/students/count'),
+          Uri.parse('${AppConfig.baseUrl}/api/registration/students/count'),
           headers: {
             'Authorization': 'Bearer $token',
           },

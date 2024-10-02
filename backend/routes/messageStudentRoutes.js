@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const ObjectId = mongoose.Types.ObjectId;
 const {
   MessageStudent,
   StudentToAdminTeacherMessage,
@@ -39,30 +40,31 @@ router.post('/admin/messages', async (req, res) => {
 
 // POST route to send a message from student to admin/teacher
 router.post('/student/messages', async (req, res) => {
-  const { senderStudentId, recipientId, subject, message } = req.body;
-
-  // Validate input
-  if (!senderStudentId || !recipientId || !subject || !message) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
   try {
-    // Create a new student-to-admin/teacher message
+    const { senderStudentId, recipientId, subject, message } = req.body;
+
+    // Convert senderStudentId and recipientId to ObjectId
+    const senderObjectId = ObjectId.isValid(senderStudentId) ? new ObjectId(senderStudentId) : null;
+    const recipientObjectId = ObjectId.isValid(recipientId) ? new ObjectId(recipientId) : null;
+
+    // Check if senderObjectId and recipientObjectId are valid
+    if (!senderObjectId || !recipientObjectId) {
+      return res.status(400).json({ success: false, message: 'Invalid sender or recipient ID.' });
+    }
+
+    // Create and save the message
     const newMessage = new StudentToAdminTeacherMessage({
-      senderStudentId,
-      recipientId,
+      senderStudentId: senderObjectId,
+      recipientId: recipientObjectId,
       subject,
       message,
     });
 
-    // Save message to the database
     await newMessage.save();
-
-    // Send success response
-    res.status(200).json({ success: true, message: 'Message sent successfully' });
+    res.status(200).json({ success: true, message: 'Message sent successfully.' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error while sending message' });
+    res.status(500).json({ success: false, message: 'Failed to send message.' });
   }
 });
 

@@ -85,6 +85,18 @@ router.get('/students', async (req, res) => {
   }
 });
 
+// @route   GET /api/students/count
+// @desc    Count total number of students
+router.get('/students/count', async (req, res) => {
+  try {
+    const count = await StudentRegistration.countDocuments(); // Count documents in the collection
+    res.status(200).json({ count });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error: Failed to count students' });
+  }
+});
+
 // @route   GET /api/students/:id
 // @desc    Get a student by ID
 router.get('/students/:id', async (req, res) => {
