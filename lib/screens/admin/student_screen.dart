@@ -42,7 +42,7 @@ class _StudentScreenState extends State<StudentScreen> {
       case 'manageStudent':
         return const ManageStudentScreen();
       case 'assignClassBatch':
-        return const AssignClassBatchScreen();
+        return AssignClassBatchScreen();
       case 'studentAttendance':
         return StudentAttendanceScreen();
       case 'shareDocuments':
@@ -992,9 +992,12 @@ class _AddStudentRegistrationScreenState
       Uri.parse('${AppConfig.baseUrl}/api/registration/students'),
     );
 
-    // Add fields to the request
-    request.fields['name'] =
-        '${_firstNameController.text} ${_middleNameController.text} ${_lastNameController.text}';
+    // Combine first name, middle name, and last name
+    request.fields['firstName'] = _firstNameController.text;
+    request.fields['middleName'] = _middleNameController.text;
+    request.fields['lastName'] = _lastNameController.text;
+
+    // Other fields
     request.fields['fatherName'] = _fatherNameController.text;
     request.fields['motherName'] = _motherNameController.text;
     request.fields['fatherMobile'] = _fatherMobileController.text;
@@ -1016,7 +1019,8 @@ class _AddStudentRegistrationScreenState
     // Add image file
     if (_selectedImage != null) {
       request.files.add(
-          await http.MultipartFile.fromPath('image', _selectedImage!.path));
+        await http.MultipartFile.fromPath('image', _selectedImage!.path),
+      );
     }
 
     try {
@@ -1323,9 +1327,6 @@ class _ManageStudentScreenState extends State<ManageStudentScreen> {
 
         if (response.statusCode == 200) {
           List<dynamic> data = json.decode(response.body);
-
-          // Log the data for debugging
-          print('Fetched students: $data');
 
           setState(() {
             students = data
@@ -1795,8 +1796,6 @@ extension DateTimeExtension on DateTime {
 }
 
 class AssignClassBatchScreen extends StatefulWidget {
-  const AssignClassBatchScreen({super.key});
-
   @override
   _AssignClassBatchScreenState createState() => _AssignClassBatchScreenState();
 }
@@ -1821,7 +1820,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
       final allClassBatches = await getAllClassBatches();
 
       setState(() {
-        students = allStudents;
+        students = allStudents; // This should contain student objects
         classBatches = allClassBatches;
         isLoading = false;
       });
@@ -1841,7 +1840,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
     if (token != null) {
       try {
         final response = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/auth/students'),
+          Uri.parse('${AppConfig.baseUrl}/api/registration/students'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -1849,7 +1848,25 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
         );
 
         if (response.statusCode == 200) {
-          return json.decode(response.body);
+          // Decode the response body
+          List<dynamic> students = json.decode(response.body);
+
+          // Map to include the full name and ID
+          List<dynamic> studentData = students.map((student) {
+            String firstName = student['firstName'] ?? '';
+            String middleName = student['middleName'] ?? '';
+            String lastName = student['lastName'] ?? '';
+            String fullName =
+                '$firstName ${middleName.isNotEmpty ? middleName + ' ' : ''}$lastName'
+                    .trim();
+
+            return {
+              '_id': student['_id'],
+              'name': fullName,
+            };
+          }).toList();
+
+          return studentData; // Returning student objects
         } else {
           throw Exception('Failed to load students: ${response.statusCode}');
         }
@@ -1868,7 +1885,8 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
           await http.get(Uri.parse('${AppConfig.baseUrl}/api/class-batch/'));
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        List<dynamic> batches = json.decode(response.body);
+        return batches;
       } else {
         throw Exception('Failed to load class batches');
       }
@@ -1878,14 +1896,13 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
   }
 
   // Assign student to class/batch
-  // Assign student to class/batch with logging
   Future<void> assignStudentToClass() async {
     if (selectedStudentId != null && selectedClassBatchId != null) {
       try {
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/student/assign-class'),
+          Uri.parse('${AppConfig.baseUrl}/api/assignClassBatch/assign'),
           headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
+            'Content-Type': 'application/json',
           },
           body: jsonEncode(<String, String>{
             'studentId': selectedStudentId!,
@@ -1893,26 +1910,18 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
           }),
         );
 
-        // Log response for debugging
-        print('Response status: ${response.statusCode}');
-        print('Response body: ${response.body}');
-
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Student assigned to class/batch successfully.')),
           );
         } else {
-          // Handle error case and log response body
-          print('Error: Failed to assign student to class/batch');
-          print('Response body: ${response.body}');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Failed to assign student to class/batch.')),
           );
         }
       } catch (e) {
-        // Log exception
         print('Exception occurred while assigning student: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1922,24 +1931,20 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
     }
   }
 
-// Remove student from class/batch with logging
+  // Remove student from class/batch
   Future<void> removeStudentFromClass() async {
     if (selectedStudentId != null && selectedClassBatchId != null) {
       try {
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/student/remove-class'),
+          Uri.parse('${AppConfig.baseUrl}/api/assignClassBatch/remove'),
           headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
+            'Content-Type': 'application/json',
           },
           body: jsonEncode(<String, String>{
             'studentId': selectedStudentId!,
             'classBatchId': selectedClassBatchId!,
           }),
         );
-
-        // Log response for debugging
-        print('Response status: ${response.statusCode}');
-        print('Response body: ${response.body}');
 
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1948,16 +1953,12 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                     Text('Student removed from class/batch successfully.')),
           );
         } else {
-          // Handle error case and log response body
-          print('Error: Failed to remove student from class/batch');
-          print('Response body: ${response.body}');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Failed to remove student from class/batch.')),
           );
         }
       } catch (e) {
-        // Log exception
         print('Exception occurred while removing student: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -2012,10 +2013,17 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                       border: OutlineInputBorder(),
                     ),
                     items: classBatches.map<DropdownMenuItem<String>>((batch) {
-                      return DropdownMenuItem<String>(
-                        value: batch['_id'],
-                        child: Text(batch['classBatchName']),
-                      );
+                      // Check if the necessary data exists
+                      if (batch['_id'] != null &&
+                          batch['classBatchName'] != null) {
+                        return DropdownMenuItem<String>(
+                          value: batch['_id'],
+                          child: Text(batch['classBatchName']),
+                        );
+                      }
+                      // Return an empty DropdownMenuItem if data is not valid
+                      return const DropdownMenuItem<String>(
+                          value: null, child: Text('Invalid batch'));
                     }).toList(),
                     onChanged: (value) {
                       setState(() {
