@@ -49,10 +49,8 @@ router.post('/resetPassword', authenticateToken, async (req, res) => {
         if (currentPassword === newPassword) {
             return res.status(400).json({ message: 'New Password cannot be the same as current password' });
         }
-
         // Update the user's password
         user.password = newPassword; // Set the new password
-
         // Save the user document, which triggers the pre-save hook for hashing
         await user.save();
 
@@ -62,7 +60,6 @@ router.post('/resetPassword', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'Failed to reset password' });
     }
 });
-
 // Route to check email existence for password reset
 router.post('/checkEmail', async (req, res) => {
     const { email } = req.body;
@@ -82,5 +79,4 @@ router.post('/checkEmail', async (req, res) => {
         res.status(500).json({ message: 'Failed to check email' });
     }
 });
-
 module.exports = router;
