@@ -101,7 +101,6 @@ router.put('/:examId/questions/:questionId', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 // Delete a question from an exam
 router.delete('/:examId/questions/:questionId', async (req, res) => {
   const { examId, questionId } = req.params;
@@ -122,5 +121,4 @@ router.delete('/:examId/questions/:questionId', async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
-
 module.exports = router;
