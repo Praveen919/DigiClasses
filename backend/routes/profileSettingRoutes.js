@@ -1,7 +1,6 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const ProfileSettings = require('../models/profileSettingModel');
 const User = require('../models/userModel'); 
 const jwt = require('jsonwebtoken');
 
@@ -46,6 +45,8 @@ const upload = multer({
     },
 });
 
+
+
 // Update or create profile settings
 router.post('/', verifyToken, upload.single('profileLogo'), async (req, res) => {
     try {
@@ -73,6 +74,7 @@ router.post('/', verifyToken, upload.single('profileLogo'), async (req, res) => 
             return res.status(400).json({ message: 'User ID is required' });
         }
 
+
         // Check if email is provided and matches the logged-in user's email
         if (!email || email === 'null') {
             return res.status(400).json({ message: 'Email is required and cannot be null' });
@@ -98,18 +100,17 @@ router.post('/', verifyToken, upload.single('profileLogo'), async (req, res) => 
             mobile,
             email,
             profileLogo: req.file ? req.file.path : null, 
-            userId: userId, 
         };
 
         // Check for existing profile settings to prevent null email entry
-        const existingProfile = await ProfileSettings.findOne({ userId });
+        const existingProfile = await User.findOne({ _id: userId });
         if (existingProfile && !existingProfile.email) {
             return res.status(400).json({ message: 'Existing profile settings cannot have a null email' });
         }
 
         // Update or create the existing profile settings
-        const profileSettings = await ProfileSettings.findOneAndUpdate(
-            { userId },
+        const profileSettings = await User.findOneAndUpdate(
+            { _id: userId },
             profileData,
             { new: true, upsert: true }
         );

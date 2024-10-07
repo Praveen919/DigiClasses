@@ -15,19 +15,30 @@ router.get('/classes', async (req, res) => {
   }
 });
 
-// Assign a class/batch to a student
+// Assign a class/batch to a student by full name
 router.post('/assign', async (req, res) => {
-  const { studentId, classBatchId } = req.body;
+  const { fullName, classBatchId } = req.body;
 
   console.log('Assign Request Body:', req.body); // Log the incoming request body
 
   try {
-    // Fetch the student directly using the provided ID
-    const student = await Student.findById(studentId); 
+    // Split the full name into parts (assuming the format is firstName, middleName, lastName)
+    const nameParts = fullName.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
+    const lastName = nameParts[nameParts.length - 1] || '';
+
+    // Fetch the student by their full name (first name, middle name, last name)
+    const student = await Student.findOne({
+      firstName: firstName,
+      middleName: middleName,
+      lastName: lastName
+    });
+
     console.log('Fetched Student:', student); // Log the fetched student
 
     if (!student) {
-      console.error(`Student with ID ${studentId} not found`); // More specific logging
+      console.error(`Student with name ${fullName} not found`); // More specific logging
       return res.status(404).json({ message: 'Student not found' });
     }
 
@@ -45,8 +56,8 @@ router.post('/assign', async (req, res) => {
     await student.save();
 
     // Check if the student is already in assignedStudents
-    if (!classBatch.assignedStudents.includes(studentId)) {
-      classBatch.assignedStudents.push(studentId);
+    if (!classBatch.assignedStudents.includes(student._id)) {
+      classBatch.assignedStudents.push(student._id);
       await classBatch.save();
     }
 

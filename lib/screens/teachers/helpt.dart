@@ -39,10 +39,10 @@ void _openInstagram() async {
   await FlutterWebBrowser.openWebPage(url: instagramUrl);
 }
 
-
 // Function to open the Facebook page
 void _openFacebook() async {
-  const facebookUrl = 'https://www.facebook.com/yourProfileLink'; // Replace with your Facebook profile link
+  const facebookUrl =
+      'https://www.facebook.com/yourProfileLink'; // Replace with your Facebook profile link
   if (await canLaunchUrl(Uri.parse(facebookUrl))) {
     await launchUrl(Uri.parse(facebookUrl));
   } else {
@@ -182,10 +182,14 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   final TextEditingController _commentController = TextEditingController();
 
   Future<void> _sendFeedback() async {
-    final prefs = await SharedPreferences.getInstance(); // Get instance of SharedPreferences
-    final String? token = prefs.getString('token'); // Retrieve token from SharedPreferences
-    final String? userId = prefs.getString('userId'); // Retrieve userId from SharedPreferences
-    final String? role = prefs.getString('role'); // Retrieve role from SharedPreferences
+    final prefs = await SharedPreferences
+        .getInstance(); // Get instance of SharedPreferences
+    final String? token =
+        prefs.getString('token'); // Retrieve token from SharedPreferences
+    final String? userId =
+        prefs.getString('userId'); // Retrieve userId from SharedPreferences
+    final String? role =
+        prefs.getString('role'); // Retrieve role from SharedPreferences
 
     if (token == null || userId == null || role == null) {
       ScaffoldMessenger.of(context).showSnackBar(

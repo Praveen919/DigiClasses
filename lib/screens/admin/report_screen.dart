@@ -198,17 +198,6 @@ class _StudentInquiryReportScreenState
                               return ListTile(
                                 title: Text(
                                     'Student Name: ${inquiry['studentName']}\nStandard: ${inquiry['standard']}\nInquiry Date: ${inquiry['inquiryDate']}\nInquiry Source: ${inquiry['inquirySource']}'),
-                                subtitle: Text((inquiry['status'] ?? false)
-                                    ? 'Solved'
-                                    : 'Unsolved'),
-                                trailing: Icon(
-                                  (inquiry['status'] ?? false)
-                                      ? Icons.check_circle
-                                      : Icons.cancel,
-                                  color: (inquiry['status'] ?? false)
-                                      ? Colors.green
-                                      : Colors.red,
-                                ),
                               );
                             },
                           )

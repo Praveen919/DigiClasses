@@ -129,17 +129,17 @@ router.post('/teacher/staff/messages', async (req, res) => {
 
 // POST route to send a message from admin to staff
 router.post('/admin/staff', async (req, res) => {
-  const { teacherId, subject, message } = req.body;
+  const { staffId, subject, message } = req.body;
 
   // Validate input
-  if (!teacherId || !message) {
+  if (!staffId || !message) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
   try {
     // Create a new admin-to-teacher message
     const newMessage = new AdminToTeacherMessage({
-      teacherId,
+      teacherId:staffId,
       subject: subject || '',
       message,
     });

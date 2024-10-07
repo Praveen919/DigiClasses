@@ -320,7 +320,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               '-- Select --',
               'Office Supplies',
               'Travel',
-              'Meals'
+              'Meals',
+              'Daily Expenses',
+              'Infrastructure Upgrades',
+              'Electricity Bills',
+              'Salaries',
+              'Rent',
+              'Others'
             ].map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,

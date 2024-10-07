@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:testing_app/screens/admin/estudy_screen.dart';
 import 'package:testing_app/screens/admin/exam_screen.dart';
@@ -119,36 +117,6 @@ class SidePanel extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(FontAwesomeIcons.whatsapp),
-                title: const Text('Auto WhatsApp Settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const SettingsScreen(option: 'autoWhatsApp'),
-                    ),
-                  );
-                  // Navigate to Change Password screen
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.notifications_active_outlined),
-                title: const Text('Auto Notification Settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const SettingsScreen(option: 'autoNotification'),
-                    ),
-                  );
-                  // Navigate to Change Password screen
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.person_add_alt),
                 title: const Text('My Referral'),
                 onTap: () {
@@ -253,19 +221,6 @@ class SidePanel extends StatelessWidget {
                   );
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.schedule_outlined),
-                title: const Text('Manage TimeTable'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const SetupScreen(option: 'manageTimeTable')),
-                  );
-                },
-              ),
             ],
           ),
           ExpansionTile(
@@ -312,19 +267,6 @@ class SidePanel extends StatelessWidget {
                   );
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.app_registration),
-                title: const Text('Staff Attendance'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const StaffUserScreen(option: 'staffAttendance')),
-                  );
-                },
-              ),
             ],
           ),
           ExpansionTile(
@@ -358,19 +300,6 @@ class SidePanel extends StatelessWidget {
                   );
                 },
               ),
-              /*ListTile(
-                leading: const Icon(Icons.add_circle_outline_sharp),
-                title: const Text('Import Students'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                        const StudentScreen(option: 'importStudents')),
-                  );
-                },
-              ),*/
               ListTile(
                 leading: const Icon(Icons.person_add_alt),
                 title: const Text('Add Student Registration'),
@@ -407,19 +336,6 @@ class SidePanel extends StatelessWidget {
                     MaterialPageRoute(
                         builder: (context) =>
                             const StudentScreen(option: 'assignClassBatch')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.app_registration_sharp),
-                title: const Text('Student Attendance'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const StudentScreen(option: 'studentAttendance')),
                   );
                 },
               ),
@@ -684,32 +600,6 @@ class SidePanel extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.password_outlined),
-                title: const Text('Send Staff Id/Password'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const MessagingScreen(option: 'staffIdPassword')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.password),
-                title: const Text('Send Student Id/Password'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const MessagingScreen(option: 'studentIdPassword')),
-                  );
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.remember_me),
                 title: const Text('Send Upcoming Exam Reminder'),
                 onTap: () {
@@ -719,45 +609,6 @@ class SidePanel extends StatelessWidget {
                     MaterialPageRoute(
                         builder: (context) =>
                             const MessagingScreen(option: 'examReminder')),
-                  );
-                },
-              ),
-              /*ListTile(
-                leading: const Icon(Icons.score_outlined),
-                title: const Text('Send Exam Marks Message'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                        const MessagingScreen(option: 'examMarks')),
-                  );
-                },
-              ),*/
-              ListTile(
-                leading: const Icon(Icons.query_stats),
-                title: const Text('Send Fee Status Message'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const MessagingScreen(option: 'feeStatus')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.attach_money),
-                title: const Text('Send Fee Reminder'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const MessagingScreen(option: 'feeReminder')),
                   );
                 },
               ),
@@ -809,32 +660,6 @@ class SidePanel extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.add_box_outlined),
-                title: const Text('Add Expense Type'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ExpensesIncomeScreen(
-                            option: 'addExpenseType')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.edit_outlined),
-                title: const Text('Manage Expense Type'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ExpensesIncomeScreen(
-                            option: 'manageExpenseType')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.add_box_outlined),
                 title: const Text('Add Income'),
                 onTap: () {
                   Navigator.pop(context);
@@ -880,71 +705,6 @@ class SidePanel extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.details_rounded),
-                title: const Text('Student Detail Report'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const ReportScreen(option: 'studentDetail')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.grade),
-                title: const Text('Student Card Report'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const ReportScreen(option: 'studentCard')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.edit_calendar_outlined),
-                title: const Text('Student Attendance Report'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const ReportScreen(option: 'studentAttendance')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.menu_book_sharp),
-                title: const Text('Fee Status Report'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const ReportScreen(option: 'feeStatus')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.menu_book_sharp),
-                title: const Text('Fee Collection'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const ReportScreen(option: 'feeCollection')),
-                  );
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.menu_book_sharp),
                 title: const Text('Expense Report'),
                 onTap: () {
@@ -967,19 +727,6 @@ class SidePanel extends StatelessWidget {
                     MaterialPageRoute(
                         builder: (context) =>
                             const ReportScreen(option: 'income')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.menu_book_sharp),
-                title: const Text('Profit/Loss Report'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const ReportScreen(option: 'profitLoss')),
                   );
                 },
               ),
@@ -1099,10 +846,7 @@ class _DashboardTabState extends ConsumerState<DashboardTab>
             inquiriesCount: statistics.inquiriesCount,
             studentsCount: statistics.studentsCount,
             absenteesCount: statistics.absenteesCount,
-          ),
-          const MonthlyFeeCollectionChart(),
-          const FeeStatusCard(),
-          const FinancialSummaryCard(),
+          )
         ],
       ),
     );
@@ -1311,77 +1055,6 @@ class _StatisticsCardState extends ConsumerState<StatisticsCard> {
               backgroundColor: Colors.cyan,
               child: Text(statistics.absenteesCount.toString()),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class MonthlyFeeCollectionChart extends StatelessWidget {
-  const MonthlyFeeCollectionChart({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text('Monthly Fee Collection'),
-            SizedBox(height: 200, child: BarChart(mainBarData())),
-          ],
-        ),
-      ),
-    );
-  }
-
-  BarChartData mainBarData() {
-    return BarChartData(
-        // Implement the bar chart data here
-        );
-  }
-}
-
-class FeeStatusCard extends StatelessWidget {
-  const FeeStatusCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Column(
-        children: [
-          const Text('Fee Status'),
-          const Text('Today Fee Collection: ₹0'),
-          SizedBox(height: 200, child: PieChart(PieChartData())),
-          const ListTile(title: Text('Total Fees'), trailing: Text('₹0')),
-          const ListTile(title: Text('Received Fees'), trailing: Text('₹0')),
-          const ListTile(title: Text('Pending Fees'), trailing: Text('₹0')),
-        ],
-      ),
-    );
-  }
-}
-
-class FinancialSummaryCard extends StatelessWidget {
-  const FinancialSummaryCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Card(
-      child: Column(
-        children: [
-          ListTile(
-            title: Text('Total Income'),
-            trailing: Icon(Icons.attach_money),
-          ),
-          ListTile(
-            title: Text('Total Expense'),
-            trailing: Text('₹0'),
-          ),
-          ListTile(
-            title: Text('Profit/Loss'),
-            trailing: Icon(Icons.attach_money),
           ),
         ],
       ),

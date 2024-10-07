@@ -109,36 +109,6 @@ class SidePanel extends StatelessWidget {
                   // Navigate to Profile Setting screen
                 },
               ),
-              ListTile(
-                leading: const Icon(FontAwesomeIcons.whatsapp),
-                title: const Text('Auto WhatsApp Settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AutoWhatsappSettingScreen(),
-                    ),
-                  );
-                  // Navigate to Change Password screen
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.notifications_active_outlined),
-                title: const Text('Auto Notification Settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const AutoNotificationSettingsScreen(),
-                    ),
-                  );
-                  // Navigate to Change Password screen
-                },
-              ),
-
               // Add more settings options here
             ],
           ),
@@ -147,19 +117,6 @@ class SidePanel extends StatelessWidget {
             leading: const Icon(Icons.people),
             title: const Text('Student'),
             children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.app_registration_sharp),
-                title: const Text('View My Attendance'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            ViewMyAttendanceScreen(classBatchId: '')),
-                  );
-                },
-              ),
               ListTile(
                 leading: const Icon(Icons.add_box_outlined),
                 title: const Text('View Share Documents'),
@@ -278,18 +235,6 @@ class SidePanel extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.password_outlined),
-                title: const Text('Request for Id/Password'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => RequestCredentialsScreen()),
-                  );
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.add_alert),
                 title: const Text('Send Inquiry Message'),
                 onTap: () {
@@ -317,63 +262,12 @@ class SidePanel extends StatelessWidget {
           ),
 
           ExpansionTile(
-            leading: const Icon(Icons.file_open_outlined),
-            title: const Text('Report'),
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.details_rounded),
-                title: const Text('View My Detailed Report'),
-                onTap: () {
-                  // Pop the current screen
-                  Navigator.pop(context);
-
-                  // Retrieve the student ID from your authentication context or provider
-                  String studentId =
-                      AuthProvider.of(context).currentUser?.id ?? '';
-
-                  // Navigate to the ViewDetailReportScreen with the dynamic student ID
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ViewDetailReportScreen(studentId: studentId),
-                    ),
-                  );
-                },
-              ),
-              /*ListTile(
-                leading: Icon(Icons.grade),
-                title: const Text('View My Card Report'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) =>  ViewMyCardReport()),
-
-                  );
-                },
-              ),*/
-              ListTile(
-                leading: const Icon(Icons.edit_calendar_outlined),
-                title: const Text('View Attendance Report'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ViewMyAttendanceReport()),
-                  );
-                },
-              ),
-            ],
-          ),
-          ExpansionTile(
             leading: const Icon(Icons.live_help_outlined),
             title: const Text('Help'),
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.connect_without_contact),
-                title: const Text('Conatct US'),
+                title: const Text('Contact us'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(

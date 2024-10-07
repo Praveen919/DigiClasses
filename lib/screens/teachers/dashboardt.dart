@@ -1,17 +1,13 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:testing_app/screens/config.dart';
 import 'package:testing_app/screens/teachers/estudyt.dart';
 import 'package:testing_app/screens/teachers/examt.dart';
 import 'package:testing_app/screens/teachers/helpt.dart';
-import 'package:testing_app/screens/teachers/logbookt.dart';
 import 'package:testing_app/screens/teachers/messagingt.dart';
-import 'package:testing_app/screens/teachers/reportst.dart';
 import 'package:testing_app/screens/teachers/settingst.dart';
 import 'package:testing_app/screens/teachers/setupt.dart';
 import 'package:testing_app/screens/teachers/studentt.dart';
@@ -115,36 +111,6 @@ class SidePanel extends StatelessWidget {
                   // Navigate to Profile Setting screen
                 },
               ),
-              ListTile(
-                leading: const Icon(FontAwesomeIcons.whatsapp),
-                title: const Text('Auto WhatsApp Settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const SettingsT(option: 'autoWhatsApp'),
-                    ),
-                  );
-                  // Navigate to Change Password screen
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.notifications_active_outlined),
-                title: const Text('Auto Notification Settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const SettingsT(option: 'autoNotification'),
-                    ),
-                  );
-                  // Navigate to Change Password screen
-                },
-              )
             ],
           ),
           ExpansionTile(
@@ -178,38 +144,12 @@ class SidePanel extends StatelessWidget {
                   // Navigate to Change Password screen
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.schedule_outlined),
-                title: const Text('Manage TimeTable'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const SetupT(option: 'manageTimeTable')),
-                  );
-                },
-              ),
             ],
           ),
           ExpansionTile(
             leading: const Icon(Icons.people),
             title: const Text('Student'),
             children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.app_registration_sharp),
-                title: const Text('View Student Attendance'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const StudentT(option: 'studentAttendance')),
-                  );
-                },
-              ),
               ListTile(
                 leading: const Icon(Icons.add_box_outlined),
                 title: const Text('Share Documents'),
@@ -396,24 +336,6 @@ class SidePanel extends StatelessWidget {
             ],
           ),
           ExpansionTile(
-            leading: const Icon(Icons.content_paste_outlined),
-            title: const Text('Logbook'),
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.create),
-                title: const Text('Update My Logbook'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const LogBookScreen()),
-                  );
-                },
-              )
-            ],
-          ),
-          ExpansionTile(
             leading: const Icon(Icons.message_outlined),
             title: const Text('Messaging'),
             children: <Widget>[
@@ -444,19 +366,6 @@ class SidePanel extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.password),
-                title: const Text('Send Student Id/Password'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const MessagingT(option: 'studentIdPassword')),
-                  );
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.remember_me),
                 title: const Text('Send Upcoming Exam Reminder'),
                 onTap: () {
@@ -469,19 +378,6 @@ class SidePanel extends StatelessWidget {
                   );
                 },
               ),
-              /*  ListTile(
-                leading: const Icon(Icons.score_outlined),
-                title: const Text('Send Exam Marks Message'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                        const MessagingT(option: 'examMarks')),
-                  );
-                },
-              ), */
               ListTile(
                 leading: const Icon(Icons.person_remove_alt_1_outlined),
                 title: const Text('Send Absent Student Attendance Message'),
@@ -495,51 +391,6 @@ class SidePanel extends StatelessWidget {
                   );
                 },
               ),
-            ],
-          ),
-          ExpansionTile(
-            leading: const Icon(Icons.file_open_outlined),
-            title: const Text('Report'),
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.details_rounded),
-                title: const Text('Student Detail Report'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const ReportT(option: 'studentDetail')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.grade),
-                title: const Text('Student Card Report'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const ReportT(option: 'studentCard')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.edit_calendar_outlined),
-                title: const Text('Student Attendance Report'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const ReportT(option: 'studentAttendance')),
-                  );
-                },
-              )
             ],
           ),
           ExpansionTile(
@@ -699,7 +550,7 @@ class StatisticsNotifier extends StateNotifier<Statistics> {
       if (token != null) {
         // Fetch total students count
         final studentsResponse = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/auth/students/count'),
+          Uri.parse('${AppConfig.baseUrl}/api/registration/students/count'),
           headers: {
             'Authorization': 'Bearer $token',
           },
@@ -828,36 +679,10 @@ class TeacherTools extends StatelessWidget {
                                     const CreateAssignmentsScreen()));
                       },
                     ),
-                    _buildTableToolItem(
-                      context,
-                      Icons.calendar_today_outlined,
-                      "View Timetable",
-                      () {
-                        // Navigate to view timetable screen
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const ManageTimeTableScreen()));
-                      },
-                    ),
                   ],
                 ),
                 TableRow(
                   children: [
-                    _buildTableToolItem(
-                      context,
-                      Icons.edit_note_outlined,
-                      "Update Attendance",
-                      () {
-                        // Navigate to update attendance screen
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const StudentAttendanceScreen()));
-                      },
-                    ),
                     _buildTableToolItem(
                       context,
                       Icons.book_sharp,
@@ -928,22 +753,6 @@ class Shortcuts extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ListTile(
-          title: const Text("Update my Logbook"),
-          trailing: const CircleAvatar(
-            child: Icon(
-              Icons.arrow_forward_sharp,
-              color: Colors.black,
-            ),
-          ),
-          onTap: () {
-            // Navigate to the Logbook screen
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const LogBookScreen()),
-            );
-          },
-        ),
         ListTile(
           title: const Text("Send Exam Reminder"),
           trailing: const CircleAvatar(

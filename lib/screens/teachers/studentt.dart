@@ -375,13 +375,28 @@ class ShareDocumentsScreen extends StatefulWidget {
 }
 
 class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
-  // Variables to hold selected values
   String _selectedClassBatch = '-- Select --';
+  String _selectedStandard = '-- Select --'; // New variable for standard
   File? _selectedFile;
   String _message = '';
 
-  // List to hold class/batch from the backend
+  // Lists to hold class/batch and standard from the backend
   List<String> _classBatchList = ['-- Select --'];
+  List<String> _standardList = [
+    '-- Select --',
+    '1st',
+    '2nd',
+    '3rd',
+    '4th',
+    '5th',
+    '6th',
+    '7th',
+    '8th',
+    '9th',
+    '10th',
+    '11th',
+    '12th'
+  ];
 
   @override
   void initState() {
@@ -395,10 +410,14 @@ class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
       final response = await http.get(Uri.parse(
           '${AppConfig.baseUrl}/api/class-batch')); // Replace with your backend API URL
       if (response.statusCode == 200) {
-        List<String> classBatches =
-            List<String>.from(jsonDecode(response.body));
+        List<dynamic> classBatches = jsonDecode(response.body);
+
+        // Map the class batches to a List<String>
         setState(() {
-          _classBatchList = ['-- Select --'] + classBatches;
+          _classBatchList = ['-- Select --'] +
+              classBatches
+                  .map((item) => item['classBatchName'] as String)
+                  .toList(); // Cast to String
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -423,8 +442,10 @@ class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
   }
 
   // Method to upload data to the backend
+  // Method to upload data to the backend
   Future<void> _uploadDocument() async {
     if (_selectedClassBatch == '-- Select --' ||
+        _selectedStandard == '-- Select --' || // Check if standard is selected
         _selectedFile == null ||
         _message.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -438,18 +459,38 @@ class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
         Uri.parse(
             '${AppConfig.baseUrl}/api/documents')); // Replace with your API URL
     request.fields['class_batch'] = _selectedClassBatch;
+    request.fields['standard'] = _selectedStandard; // Include standard field
     request.fields['message'] = _message;
     request.files
         .add(await http.MultipartFile.fromPath('file', _selectedFile!.path));
 
-    var response = await request.send();
-    if (response.statusCode == 200) {
+    try {
+      var response = await request.send();
+
+      // Check the response status code
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseBody =
+            await response.stream.bytesToString(); // Read the response body
+        print(
+            'Document uploaded successfully: $responseBody'); // Log success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Document uploaded successfully')),
+        );
+      } else {
+        final responseBody = await response.stream.bytesToString();
+        print('Failed to upload document: ${response.statusCode}');
+        print('Response body: $responseBody');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Failed to upload document: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      print('Error during document upload: $e'); // Log error
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Document uploaded successfully')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to upload document')),
+        const SnackBar(content: Text('An error occurred during upload')),
       );
     }
   }
@@ -459,7 +500,7 @@ class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Share Document'),
-        automaticallyImplyLeading: false, // Move this line to the AppBar
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -485,6 +526,30 @@ class _ShareDocumentsScreenState extends State<ShareDocumentsScreen> {
               },
               decoration: const InputDecoration(
                 labelText: 'Select Class/Batch',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Select Standard
+            const Text('Select Standard',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16.0),
+            DropdownButtonFormField<String>(
+              value: _selectedStandard,
+              items: _standardList.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedStandard = newValue!;
+                });
+              },
+              decoration: const InputDecoration(
+                labelText: 'Select Standard',
                 border: OutlineInputBorder(),
               ),
             ),
