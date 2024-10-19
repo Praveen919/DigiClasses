@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:testing_app/screens/config.dart';
 
 class StudentScreen extends StatelessWidget {
@@ -130,14 +129,27 @@ class _ViewMyAttendanceScreenState extends State<ViewMyAttendanceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Attendance Summary
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
-                      'No Data Available Currently', // Hardcoded message
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Attendance Summary',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8.0),
+                          Text('Total Classes: ${attendanceData.length}'),
+                          Text(
+                              'Classes Attended: ${attendanceData.where((a) => a['status'] == 'Present').length}'),
+                          Text(
+                              'Classes Missed: ${attendanceData.where((a) => a['status'] == 'Absent').length}'),
+                          Text(
+                              'Attendance Percentage: ${((attendanceData.where((a) => a['status'] == 'Present').length / attendanceData.length) * 100).toStringAsFixed(2)}%'),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16.0),
@@ -268,22 +280,12 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
   int _rating = 0; // Track the rating
   String? studentId; // Store the student ID
   String selectedCategory = 'Course'; // Store the selected category
-  String token = '';
 
   @override
   void initState() {
     super.initState();
-    _loadToken();
     // Fetch the studentId from your user management or login state here
     // Example: studentId = Provider.of<UserProvider>(context, listen: false).studentId;
-  }
-
-  // Method to load token from SharedPreferences
-  Future<void> _loadToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      token = prefs.getString('authToken')!; // Ensure token is properly fetched
-    });
   }
 
   @override
@@ -351,11 +353,9 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
             ElevatedButton(
               onPressed: () {
                 String feedbackText = _feedbackController.text;
-                print(feedbackText);
-                print(token);
                 // Check if feedback is not empty
-                if (feedbackText != '') {
-                  submitFeedback(feedbackText, _rating);
+                if (feedbackText.isNotEmpty && studentId != null) {
+                  submitFeedback(feedbackText, _rating, studentId!);
                 } else {
                   // Show an error message if feedback is empty
                   showDialog(
@@ -385,11 +385,12 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
   }
 
   // Method to handle feedback submission
-  void submitFeedback(String feedbackText, int rating) async {
+  void submitFeedback(String feedbackText, int rating, String studentId) async {
     final response = await http.post(
       Uri.parse('${AppConfig.baseUrl}/api/feedbacks'),
-      headers: {'Content-Type': 'application/json', 'authorization': token},
+      headers: {'Content-Type': 'application/json'},
       body: json.encode({
+        'studentId': studentId,
         'subject': selectedCategory, // Use selected category here
         'feedback': feedbackText,
       }),
