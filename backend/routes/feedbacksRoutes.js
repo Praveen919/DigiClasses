@@ -37,30 +37,32 @@ router.get('/', verifyJWT, async (req, res) => {
 
 // Add feedback
 router.post('/', verifyJWT, async (req, res) => {
-    const { studentId, teacherId, staffId, subject, feedback } = req.body;
+    const { studentId, subject, feedback } = req.body;
 
-    if (!subject || !feedback || (!studentId && !teacherId && !staffId)) {
+    if (!subject || !feedback || !studentId ) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
     try {
-        const newFeedback = new Feedback({ studentId, teacherId, staffId, subject, feedback });
+        const newFeedback = new Feedback({ studentId, subject, feedback });
         await newFeedback.save();
         res.status(201).json({ message: 'Feedback submitted successfully' });
     } catch (error) {
         console.error('Error submitting feedback:', error.message);
         res.status(500).json({ message: 'Error submitting feedback' });
+        console.log(error);
     }
 });
 
-router.post('/feedbacks', async (req, res) => {
-    const { studentId, teacherId, staffId, subject, feedback } = req.body;
+router.post('/feedbacks', verifyJWT, async (req, res) => {
+    const { subject, feedback } = req.body;
+    const userId = req.userId;
+    console.log(userId);
 
     // Validate and store feedback
     try {
         const newFeedback = new Feedback({
             studentId,
-            teacherId,
             subject,
             feedback,
             createdAt: new Date(),
@@ -70,6 +72,7 @@ router.post('/feedbacks', async (req, res) => {
         res.status(201).json({ message: 'Feedback submitted successfully', feedback: newFeedback });
     } catch (error) {
         res.status(500).json({ message: 'Error saving feedback', error });
+        console.log(error);
     }
 });
 

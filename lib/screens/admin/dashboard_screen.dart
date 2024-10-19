@@ -877,8 +877,6 @@ class UserInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading:
-            const CircleAvatar(child: Text('Logo')), // Adjust logo as necessary
         title: Text(name), // Display the user's name
         subtitle:
             Text('Branch: $branch\nYear: $year'), // Display branch and year
