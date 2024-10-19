@@ -16,7 +16,7 @@ const studyMaterialRoutes = require('./routes/studyMaterialRoutes');
 const passwordRoutes = require('./routes/passwordRoutes');
 const autoNotificationSettingRoutes = require('./routes/autoNotificationSettingRoutes');
 const classBatchRoutes = require('./routes/classBatchRoutes');
-const manageTimeTableRoutes = require('./routes/manageTimeTableRoutes');
+//const manageTimeTableRoutes = require('./routes/manageTimeTableRoutes');
 
 // Import updated and new routes
 const mcqExamRoutes = require('./routes/mcqExamRoutes');
@@ -30,7 +30,7 @@ const yearRoutes = require('./routes/yearRoutes');
 const assignStandardRoutes = require('./routes/assignStandardRoutes');
 const assignSubjectRoutes = require('./routes/assignSubjectRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
-const expenseTypeRoutes = require('./routes/expenseTypeRoutes');
+//const expenseTypeRoutes = require('./routes/expenseTypeRoutes');
 const incomeRoutes = require('./routes/incomeRoutes');
 const inquiryRoutes = require('./routes/inquiryRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
@@ -40,14 +40,14 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const messageStudentRoutes = require('./routes/messageStudentRoutes');
 const feedbacksRoutes = require('./routes/feedbacksRoutes');
 const studentRightsRoutes = require('./routes/studentRightsRoutes');
-const feeCollectionRoutes = require('./routes/feeCollectionRoutes');
+//const feeCollectionRoutes = require('./routes/feeCollectionRoutes');
 const messageStudentIdPassRoutes = require('./routes/messageStudentIdPassRoutes');
 const inquiriesStudentRoutes = require('./routes/inquiriesStudentRoutes');
 const absenceMessageRoutes = require ('./routes/absenceMessageRoutes');
 //const cardReportRoutes = require('./routes/cardReportRoutes');
 const staffRightsRoutes = require('./routes/staffRightsRoutes');
 const forgotPasswordRoutes = require('./routes/forgotPasswordRoutes');
-const logbookTRoutes = require('./routes/logbookTRoutes');
+//const logbookTRoutes = require('./routes/logbookTRoutes');
 const statisticsRoutes = require('./routes/statisticsRoutes');
 
 // Middleware setup
@@ -67,12 +67,12 @@ app.use('/api/users', staffRoutes); // Adjust if 'users' is different from 'staf
 app.use('/api/study-material', studyMaterialRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/years', yearRoutes);
-app.use('/api/timetable', manageTimeTableRoutes);
-app.use('/api/attendance', attendanceRoutes);
+//app.use('/api/timetable', manageTimeTableRoutes);
+//app.use('/api/attendance', attendanceRoutes);
 // Use updated/new routes
 app.use('/api/profile-settings', profileSettingRoutes); // Updated route for profile settings
 app.use('/api/expenses', expenseRoutes);
-app.use('/api/expense-types', expenseTypeRoutes);
+//app.use('/api/expense-types', expenseTypeRoutes);
 app.use('/api/incomes', incomeRoutes);
 app.use('/api/messageStudent', messageStudentRoutes);
 // Use other new routes
@@ -89,17 +89,17 @@ app.use('/api/assignSubject', assignSubjectRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/registration', registrationRoutes);
 app.use('/api/assignClassBatch', assignClassBatchRoutes);
-app.use('/api/student', studentRoutes);
+//app.use('/api/student', studentRoutes);
 app.use('/api/feedbacks', feedbacksRoutes);
 app.use('/api/assign-rights', studentRightsRoutes);
-app.use('./api/feeCollection', feeCollectionRoutes);
+//app.use('./api/feeCollection', feeCollectionRoutes);
 app.use('/api/messageStudentIdPass', messageStudentIdPassRoutes);
 app.use('/api/inquiriesStudent', inquiriesStudentRoutes);
-app.use('/api/absenceMessage', absenceMessageRoutes);
+//app.use('/api/absenceMessage', absenceMessageRoutes);
 //app.use('/api/cardReport', cardReportRoutes);
 app.use('/api/staff-rights', staffRightsRoutes);
 app.use ('/api/forgotPass', forgotPasswordRoutes);
-app.use('/api/logbook', logbookTRoutes); 
+//app.use('/api/logbook', logbookTRoutes); 
 app.use('/api/statistics', statisticsRoutes);
 
 // Start the server

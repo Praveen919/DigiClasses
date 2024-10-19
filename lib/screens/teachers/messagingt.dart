@@ -69,7 +69,7 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
   Future<void> _fetchStudents() async {
     try {
       final response = await http
-          .get(Uri.parse('${AppConfig.baseUrl}/api/auth/users?role=Student'));
+          .get(Uri.parse('${AppConfig.baseUrl}/api/registration/students'));
 
       if (response.statusCode == 200) {
         setState(() {
@@ -228,23 +228,28 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
     fetchStaffMembers();
   }
 
-  void fetchStaffMembers() async {
+  Future<void> fetchStaffMembers() async {
+    const url =
+        '${AppConfig.baseUrl}/api/staff'; // Replace with actual endpoint
+
     try {
-      final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/staff/teachers')); // Replace with your API endpoint
+      final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
+        final List<dynamic> data = json.decode(response.body);
         setState(() {
           staffList = data.map<Map<String, String>>((staff) {
             return {
-              'id': staff['id'].toString(), // Ensure it's a string
-              'name': staff['name'] ?? 'Unknown', // Handle null name
+              'id': staff['_id'], // Ensure correct ID from response
+              'name':
+                  '${staff['firstName'] ?? ''} ${staff['middleName'] ?? ''} ${staff['lastName'] ?? ''}'
+                      .trim(), // Concatenating first, middle, and last names
             };
           }).toList();
         });
       } else {
         setState(() {
-          errorMessage = 'Failed to load staff members';
+          errorMessage = 'Failed to load staff members: ${response.statusCode}';
         });
       }
     } catch (e) {
