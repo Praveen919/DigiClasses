@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:testing_app/screens/config.dart';
 
 class StudentScreen extends StatelessWidget {
@@ -15,18 +16,6 @@ class StudentScreen extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          ListTile(
-            title: const Text('View My Attendance'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ViewMyAttendanceScreen(
-                          classBatchId: '',
-                        )),
-              );
-            },
-          ),
           ListTile(
             title: const Text('View Share Documents'),
             onTap: () {
@@ -54,127 +43,6 @@ class StudentScreen extends StatelessWidget {
   }
 }
 
-class ViewMyAttendanceScreen extends StatefulWidget {
-  final String classBatchId; // Pass classBatchId from login or state management
-
-  const ViewMyAttendanceScreen({super.key, required this.classBatchId});
-
-  @override
-  _ViewMyAttendanceScreenState createState() => _ViewMyAttendanceScreenState();
-}
-
-class _ViewMyAttendanceScreenState extends State<ViewMyAttendanceScreen> {
-  List<Map<String, dynamic>> attendanceData = [];
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchAttendanceData();
-  }
-
-  Future<void> fetchAttendanceData() async {
-    try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/attendance-data'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'classBatchId':
-              widget.classBatchId, // Use the classBatchId passed to the widget
-          'date': DateTime.now().toIso8601String(), // Adjust date as needed
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          attendanceData = data.map((item) {
-            return {
-              'subject': item[
-                  'classBatchName'], // Adjust based on your response structure
-              'date': item['date'], // Adjust based on your response structure
-              'status': item['status'],
-            };
-          }).toList();
-          isLoading = false;
-        });
-      } else {
-        throw Exception('Failed to load attendance data');
-      }
-    } catch (e) {
-      print(e);
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Attendance'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: fetchAttendanceData,
-          ),
-        ],
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Attendance Summary
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Attendance Summary',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8.0),
-                          Text('Total Classes: ${attendanceData.length}'),
-                          Text(
-                              'Classes Attended: ${attendanceData.where((a) => a['status'] == 'Present').length}'),
-                          Text(
-                              'Classes Missed: ${attendanceData.where((a) => a['status'] == 'Absent').length}'),
-                          Text(
-                              'Attendance Percentage: ${((attendanceData.where((a) => a['status'] == 'Present').length / attendanceData.length) * 100).toStringAsFixed(2)}%'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-
-                  // Detailed Attendance Data
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: attendanceData.length,
-                      itemBuilder: (context, index) {
-                        final attendance = attendanceData[index];
-                        return ListTile(
-                          title: Text(attendance['subject'] ?? 'No Subject'),
-                          subtitle: Text('Date: ${attendance['date']}'),
-                          trailing: Text(attendance['status'] ?? 'Unknown'),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-}
-
 class ViewSharedDocumentsScreen extends StatefulWidget {
   const ViewSharedDocumentsScreen({super.key});
 
@@ -194,8 +62,8 @@ class _ViewSharedDocumentsScreenState extends State<ViewSharedDocumentsScreen> {
   }
 
   Future<void> fetchSharedDocuments() async {
-    final response =
-        await http.get(Uri.parse('${AppConfig.baseUrl}/api/documents'));
+    final response = await http
+        .get(Uri.parse('${AppConfig.baseUrl}/api/documents/documents'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -278,14 +146,84 @@ class GiveFeedbackScreen extends StatefulWidget {
 class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
   final TextEditingController _feedbackController = TextEditingController();
   int _rating = 0; // Track the rating
-  String? studentId; // Store the student ID
   String selectedCategory = 'Course'; // Store the selected category
+  String? _token; // To hold the authentication token
 
   @override
   void initState() {
     super.initState();
-    // Fetch the studentId from your user management or login state here
-    // Example: studentId = Provider.of<UserProvider>(context, listen: false).studentId;
+    _loadToken(); // Load the token during initialization
+  }
+
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('authToken'); // Load the token
+      print('Loaded Token: $_token'); // Debugging: log the loaded token
+    });
+  }
+
+  Future<void> _sendFeedback() async {
+    if (selectedCategory.isEmpty || _feedbackController.text.isEmpty) {
+      // Show an error message if fields are empty
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    const String apiUrl =
+        '${AppConfig.baseUrl}/api/feedbacks'; // Feedback API endpoint
+
+    try {
+      // Build the feedback payload
+      final Map<String, dynamic> feedbackData = {
+        'subject': selectedCategory,
+        'feedback': _feedbackController.text,
+      };
+
+      print(
+          'Sending Feedback Data: $feedbackData'); // Debugging: log feedback data
+      print('Using Token: $_token'); // Debugging: log token being used
+
+      // Make POST request to send feedback
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token', // Add the token to the headers
+        },
+        body: jsonEncode(feedbackData),
+      );
+
+      // Debugging: log the response status code and body
+      print('Response Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 201) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Feedback submitted successfully')),
+        );
+        // Optionally clear form fields
+        setState(() {
+          _rating = 0;
+          selectedCategory = 'Course';
+          _feedbackController.clear();
+        });
+      } else {
+        // Show error message if submission failed
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to submit feedback')),
+        );
+      }
+    } catch (e) {
+      // Show error message on exception
+      print('Error occurred: $e'); // Debugging: log the error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   @override
@@ -311,25 +249,6 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
             ),
             const SizedBox(height: 16.0),
 
-            // Rating System
-            const Text('Rate Your Experience:'),
-            Row(
-              children: List.generate(5, (index) {
-                return IconButton(
-                  icon: Icon(
-                    index < _rating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _rating = index + 1; // Update rating
-                    });
-                  },
-                );
-              }),
-            ),
-            const SizedBox(height: 16.0),
-
             // Feedback Category
             const Text('Feedback Category:'),
             DropdownButton<String>(
@@ -352,29 +271,7 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
             // Submit Button
             ElevatedButton(
               onPressed: () {
-                String feedbackText = _feedbackController.text;
-                // Check if feedback is not empty
-                if (feedbackText.isNotEmpty && studentId != null) {
-                  submitFeedback(feedbackText, _rating, studentId!);
-                } else {
-                  // Show an error message if feedback is empty
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Error'),
-                      content: const Text(
-                          'Please enter your feedback before submitting.'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+                _sendFeedback(); // Use the new logic to send feedback
               },
               child: const Text('Submit Feedback'),
             ),
@@ -382,55 +279,5 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
         ),
       ),
     );
-  }
-
-  // Method to handle feedback submission
-  void submitFeedback(String feedbackText, int rating, String studentId) async {
-    final response = await http.post(
-      Uri.parse('${AppConfig.baseUrl}/api/feedbacks'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'studentId': studentId,
-        'subject': selectedCategory, // Use selected category here
-        'feedback': feedbackText,
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      // Show confirmation message
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Feedback Submitted'),
-          content: const Text('Thank you for your feedback!'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop(); // Optionally navigate back
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      // Show an error message
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Error'),
-          content: const Text('Failed to submit feedback. Please try again.'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
   }
 }

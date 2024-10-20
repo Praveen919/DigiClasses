@@ -1084,66 +1084,6 @@ class _ManageExpenseTypeScreenState extends State<ManageExpenseTypeScreen> {
   }
 }
 
-class Income {
-  final String id;
-  final String incomeType; // Income type
-  final String paymentType;
-  final String? chequeNo; // Nullable
-  final String? bankName; // Nullable
-  final DateTime date; // Change to DateTime
-  final double amount;
-
-  Income({
-    required this.id,
-    required this.incomeType,
-    required this.paymentType,
-    this.chequeNo,
-    this.bankName,
-    required this.date,
-    required this.amount,
-  });
-
-  // Factory constructor to create an Income object from JSON
-  factory Income.fromJson(Map<String, dynamic> json) {
-    String dateString = json['iDate'];
-    DateTime parsedDate;
-
-    // Handle different formats or use try-catch for safety
-    try {
-      parsedDate = DateTime.parse(dateString); // Assume ISO format
-    } catch (e) {
-      print('Error parsing date: $dateString, error: $e');
-      parsedDate =
-          DateTime.now(); // Fallback to current date or handle accordingly
-    }
-
-    return Income(
-      id: json['_id'] ?? '',
-      incomeType: json['incomeType'] ?? 'Unknown',
-      paymentType: json['iPaymentType'] ?? 'Unknown',
-      chequeNo: json['iChequeNumber'],
-      bankName: json['bankName'], // Nullable field for bank name
-      date: parsedDate, // Use the parsed DateTime
-      amount: (json['iAmount'] is int)
-          ? (json['iAmount'] as int).toDouble()
-          : json['iAmount'].toDouble(), // Ensure it's always a double
-    );
-  }
-
-  // Converts an Income object to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      '_id': id,
-      'incomeType': incomeType,
-      'iPaymentType': paymentType,
-      'iChequeNumber': chequeNo,
-      'bankName': bankName, // Nullable field for bank name
-      'iDate': date.toIso8601String(), // Convert DateTime to String
-      'iAmount': amount,
-    };
-  }
-}
-
 class AddIncomeScreen extends StatefulWidget {
   const AddIncomeScreen({super.key});
 
@@ -1386,6 +1326,65 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
   }
 }
 
+class Income {
+  final String id;
+  final String incomeType; // Income type
+  final String paymentType;
+  final String? chequeNo; // Nullable
+  final String? bankName; // Nullable
+  final DateTime date; // Change to DateTime
+  final double amount;
+
+  Income({
+    required this.id,
+    required this.incomeType,
+    required this.paymentType,
+    this.chequeNo,
+    this.bankName,
+    required this.date,
+    required this.amount,
+  });
+
+  // Factory constructor to create an Income object from JSON
+  factory Income.fromJson(Map<String, dynamic> json) {
+    String dateString = json['iDate'];
+    DateTime parsedDate;
+
+    // Handle different formats or use try-catch for safety
+    try {
+      parsedDate = DateTime.parse(dateString); // Assume ISO format
+    } catch (e) {
+      print('Error parsing date: $dateString, error: $e');
+      parsedDate = DateTime.now(); // Fallback to current date
+    }
+
+    return Income(
+      id: json['_id'] ?? '',
+      incomeType: json['incomeType'] ?? 'Unknown',
+      paymentType: json['iPaymentType'] ?? 'Unknown',
+      chequeNo: json['iChequeNumber'],
+      bankName: json['bankName'], // Nullable field for bank name
+      date: parsedDate, // Use the parsed DateTime
+      amount: (json['iAmount'] is int)
+          ? (json['iAmount'] as int).toDouble()
+          : json['iAmount'].toDouble(), // Ensure it's always a double
+    );
+  }
+
+  // Converts an Income object to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'incomeType': incomeType,
+      'iPaymentType': paymentType,
+      'iChequeNumber': chequeNo,
+      'bankName': bankName, // Nullable field for bank name
+      'iDate': date.toIso8601String(), // Convert DateTime to String
+      'iAmount': amount,
+    };
+  }
+}
+
 class ManageIncomeScreen extends StatefulWidget {
   const ManageIncomeScreen({super.key});
 
@@ -1394,7 +1393,7 @@ class ManageIncomeScreen extends StatefulWidget {
 }
 
 class _ManageIncomeScreenState extends State<ManageIncomeScreen> {
-  List<dynamic> incomes = [];
+  List<Income> incomes = [];
   bool _isLoading = true;
 
   @override
@@ -1406,14 +1405,13 @@ class _ManageIncomeScreenState extends State<ManageIncomeScreen> {
   Future<void> _fetchIncomes() async {
     try {
       final response = await http.get(
-        Uri.parse(
-            '${AppConfig.baseUrl}/api/incomes'), // Update with your backend URL
+        Uri.parse('${AppConfig.baseUrl}/api/incomes'),
       );
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         setState(() {
-          incomes = data;
+          incomes = data.map((item) => Income.fromJson(item)).toList();
           _isLoading = false;
         });
       } else {
@@ -1430,13 +1428,12 @@ class _ManageIncomeScreenState extends State<ManageIncomeScreen> {
   Future<void> _deleteIncome(String id) async {
     try {
       final response = await http.delete(
-        Uri.parse(
-            '${AppConfig.baseUrl}:3000/api/incomes/$id'), // Update with your backend URL
+        Uri.parse('${AppConfig.baseUrl}:3000/api/incomes/$id'),
       );
 
       if (response.statusCode == 200) {
         setState(() {
-          incomes.removeWhere((income) => income['_id'] == id);
+          incomes.removeWhere((income) => income.id == id);
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Income Deleted')),
@@ -1490,14 +1487,15 @@ class _ManageIncomeScreenState extends State<ManageIncomeScreen> {
                       itemBuilder: (context, index) {
                         final income = incomes[index];
                         return ListTile(
-                          title: Text('Income Type: ${income['type']}'),
+                          title: Text('Income Type: ${income.incomeType}'),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Payment Type: ${income['paymentType']}'),
-                              Text('Cheque No.: ${income['chequeNo']}'),
-                              Text('Date: ${income['date']}'),
-                              Text('Amount: ${income['amount']}'),
+                              Text('Payment Type: ${income.paymentType}'),
+                              Text('Cheque No.: ${income.chequeNo ?? 'N/A'}'),
+                              Text('Bank Name: ${income.bankName ?? 'N/A'}'),
+                              Text('Date: ${income.date.toLocal()}'),
+                              Text('Amount: \$${income.amount}'),
                             ],
                           ),
                           trailing: Row(
@@ -1511,7 +1509,7 @@ class _ManageIncomeScreenState extends State<ManageIncomeScreen> {
                               ),
                               IconButton(
                                 icon: const Icon(Icons.delete),
-                                onPressed: () => _deleteIncome(income['_id']),
+                                onPressed: () => _deleteIncome(income.id),
                               ),
                             ],
                           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:testing_app/screens/config.dart';
+
 class HelpScreen extends StatelessWidget {
   final String option;
 
@@ -82,7 +83,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     }
 
     // Feedback API endpoint
-    const String apiUrl = '${AppConfig.baseUrl}/api/feedbacks';  // Replace with your backend URL
+    const String apiUrl =
+        '${AppConfig.baseUrl}/api/feedbacks'; // Replace with your backend URL
 
     try {
       // Build the feedback payload
@@ -99,7 +101,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         Uri.parse(apiUrl),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer your-jwt-token',  // Replace with actual JWT token
+          'Authorization':
+              'Bearer your-jwt-token', // Replace with actual JWT token
         },
         body: jsonEncode(feedbackData),
       );
@@ -149,7 +152,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _sendFeedback, // Call the function to send feedback
+                    onPressed:
+                        _sendFeedback, // Call the function to send feedback
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                     ),

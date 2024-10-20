@@ -2548,13 +2548,13 @@ class _ManageSharedDocumentsScreenState
   }
 
   void _editDocument(int index) {
-    TextEditingController _messageController = TextEditingController();
-    TextEditingController _standardController = TextEditingController();
-    TextEditingController _documentController = TextEditingController();
+    TextEditingController messageController = TextEditingController();
+    TextEditingController standardController = TextEditingController();
+    TextEditingController documentController = TextEditingController();
 
-    _messageController.text = _filteredDocuments[index]['message'] ?? '';
-    _standardController.text = _filteredDocuments[index]['standard'];
-    _documentController.text = _filteredDocuments[index]['document'];
+    messageController.text = _filteredDocuments[index]['message'] ?? '';
+    standardController.text = _filteredDocuments[index]['standard'];
+    documentController.text = _filteredDocuments[index]['document'];
 
     showDialog(
       context: context,
@@ -2565,15 +2565,15 @@ class _ManageSharedDocumentsScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: _standardController,
+                controller: standardController,
                 decoration: const InputDecoration(labelText: 'Class/Batch'),
               ),
               TextField(
-                controller: _documentController,
+                controller: documentController,
                 decoration: const InputDecoration(labelText: 'Document Name'),
               ),
               TextField(
-                controller: _messageController,
+                controller: messageController,
                 decoration: const InputDecoration(labelText: 'Message'),
               ),
             ],
@@ -2583,9 +2583,9 @@ class _ManageSharedDocumentsScreenState
               onPressed: () async {
                 await _updateDocument(
                   _filteredDocuments[index]['id'],
-                  _standardController.text,
-                  _documentController.text,
-                  _messageController.text,
+                  standardController.text,
+                  documentController.text,
+                  messageController.text,
                 );
                 Navigator.of(context).pop();
               },
@@ -2607,7 +2607,7 @@ class _ManageSharedDocumentsScreenState
       String id, String standard, String documentName, String message) async {
     try {
       final response = await http.put(
-        Uri.parse('${AppConfig.baseUrl}/api/documents/documents/$id'),
+        Uri.parse('${AppConfig.baseUrl}/api/documents/$id'),
         body: jsonEncode({
           'standard': standard,
           'documentName': documentName,
@@ -2632,7 +2632,7 @@ class _ManageSharedDocumentsScreenState
     try {
       final response = await http.delete(
         Uri.parse(
-            '${AppConfig.baseUrl}/api/documents/documents/${_filteredDocuments[index]['id']}'),
+            '${AppConfig.baseUrl}/api/documents/${_filteredDocuments[index]['id']}'),
       );
       if (response.statusCode == 200) {
         setState(() {

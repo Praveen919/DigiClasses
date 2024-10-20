@@ -29,12 +29,8 @@ class _MessagingScreenState extends State<MessagingT> {
         return const SendStudentMessageScreen();
       case 'staff':
         return const SendStaffMessageScreen();
-      case 'studentIdPassword':
-        return const SendStudentIdPasswordScreen();
       case 'examReminder':
         return const SendExamReminderScreen();
-      /* case 'examMarks':
-        return const SendExamMarksMessageScreen(); */
       case 'absentAttendance':
         return const AbsentAttendanceMessageScreen();
       default:
@@ -69,7 +65,7 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
   Future<void> _fetchStudents() async {
     try {
       final response = await http
-          .get(Uri.parse('${AppConfig.baseUrl}/api/auth/users?role=Student'));
+          .get(Uri.parse('${AppConfig.baseUrl}/api/registration/students'));
 
       if (response.statusCode == 200) {
         setState(() {
@@ -104,7 +100,7 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/messageStudent'),
+        Uri.parse('${AppConfig.baseUrl}/api/messageStudent/teacher/messages'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'studentId': _selectedStudentId,
@@ -228,23 +224,28 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
     fetchStaffMembers();
   }
 
-  void fetchStaffMembers() async {
+  Future<void> fetchStaffMembers() async {
+    const url =
+        '${AppConfig.baseUrl}/api/staff'; // Replace with actual endpoint
+
     try {
-      final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/staff/teachers')); // Replace with your API endpoint
+      final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
+        final List<dynamic> data = json.decode(response.body);
         setState(() {
           staffList = data.map<Map<String, String>>((staff) {
             return {
-              'id': staff['id'].toString(), // Ensure it's a string
-              'name': staff['name'] ?? 'Unknown', // Handle null name
+              'id': staff['_id'], // Ensure correct ID from response
+              'name':
+                  '${staff['firstName'] ?? ''} ${staff['middleName'] ?? ''} ${staff['lastName'] ?? ''}'
+                      .trim(), // Concatenating first, middle, and last names
             };
           }).toList();
         });
       } else {
         setState(() {
-          errorMessage = 'Failed to load staff members';
+          errorMessage = 'Failed to load staff members: ${response.statusCode}';
         });
       }
     } catch (e) {
@@ -267,7 +268,7 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
     try {
       final response = await http.post(
         Uri.parse(
-            '${AppConfig.baseUrl}/api/messageStudent'), // Replace with your API endpoint
+            '${AppConfig.baseUrl}/api/messageStudent/teacher/staff/messages'), // Replace with your API endpoint
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'teacherId': selectedStaffId,
@@ -376,146 +377,6 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
   }
 }
 
-class SendStudentIdPasswordScreen extends StatefulWidget {
-  const SendStudentIdPasswordScreen({super.key});
-
-  @override
-  _SendStudentIdPasswordScreenState createState() =>
-      _SendStudentIdPasswordScreenState();
-}
-
-class _SendStudentIdPasswordScreenState
-    extends State<SendStudentIdPasswordScreen> {
-  List<Student> _students = [];
-  String? _selectedStudentId;
-  String _selectedStudentName = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchStudents();
-  }
-
-  Future<void> _fetchStudents() async {
-    try {
-      final response = await http
-          .get(Uri.parse('${AppConfig.baseUrl}/api/auth/users?role=Student'));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          _students = data.map((student) => Student.fromJson(student)).toList();
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to fetch students')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Error fetching students. Please try again later.')),
-      );
-    }
-  }
-
-  Future<void> _sendMessage(String studentId, String studentPassword) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/messageStudent'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'studentId': studentId,
-          'subject': 'Your Login Details',
-          'message': 'Your User ID: $studentId, Password: $studentPassword',
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Message sent successfully!')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to send message.')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Error sending message. Please try again later.')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Send ID/Password to Student'),
-      ),
-      resizeToAvoidBottomInset: true,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Your login details for SRS Classes is: User ID: SCSTD4659 Password: 8X4X564, download app from http://bit.ly/2Cpwr55 Service by, Viha IT Services',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-
-              DropdownButtonFormField<String>(
-                value: _selectedStudentId,
-                items: _students.map((student) {
-                  return DropdownMenuItem<String>(
-                    value: student.id,
-                    child: Text(student.name),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedStudentId = newValue;
-                    _selectedStudentName = newValue != null
-                        ? _students
-                            .firstWhere((student) => student.id == newValue)
-                            .name
-                        : '';
-                  });
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Select Student',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-
-              // Student ID/Password Details
-              const Text('Student ID/Password Details',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16.0),
-
-              if (_selectedStudentId != null)
-                StudentDetailsCard(
-                  student: _students.firstWhere(
-                      (student) => student.id == _selectedStudentId),
-                  onSendMessage: _sendMessage,
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class Student {
   final String id;
   final String name;
@@ -528,39 +389,6 @@ class Student {
       id: json['id'],
       name: json['name'],
       password: json['password'], // Assuming password is available
-    );
-  }
-}
-
-class StudentDetailsCard extends StatelessWidget {
-  final Student student;
-  final Function(String, String) onSendMessage;
-
-  const StudentDetailsCard(
-      {super.key, required this.student, required this.onSendMessage});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Student Name: ${student.name}'),
-            Text('User ID: ${student.id}'),
-            Text('Password: ${student.password}'),
-
-            // Send Message button
-            ElevatedButton(
-              onPressed: () {
-                onSendMessage(student.id, student.password);
-              },
-              child: const Text('Send Message'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -714,111 +542,6 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
         SnackBar(content: Text('Error: $e')),
       );
     }
-  }
-}
-
-class SendExamMarksMessageScreen extends StatelessWidget {
-  const SendExamMarksMessageScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Send Exam Marks to Student'),
-      ),
-      resizeToAvoidBottomInset:
-          true, // Ensures proper resizing to avoid keyboard overlap
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Standard
-              DropdownButtonFormField<String>(
-                value: 'All',
-                items: <String>['All', '1st Std', '2nd Std', '3rd Std']
-                    .map((String value) => DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        ))
-                    .toList(),
-                onChanged: (String? newValue) {
-                  // Handle dropdown selection change
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Standard',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-
-              // Subject
-              DropdownButtonFormField<String>(
-                value: 'All',
-                items: <String>[
-                  'All',
-                  'English',
-                  'Maths',
-                  'Science',
-                  'Social Science',
-                  'Hindi',
-                  'Marathi'
-                ]
-                    .map((String value) => DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        ))
-                    .toList(),
-                onChanged: (String? newValue) {
-                  // Handle dropdown selection change
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Subject',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-
-              // Exam Name
-              DropdownButtonFormField<String>(
-                value: '-- Select --',
-                items: <String>[
-                  'English',
-                  'Maths',
-                  'Science',
-                  'Social Science',
-                  'Hindi',
-                  'Marathi'
-                ]
-                    .map((String value) => DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        ))
-                    .toList(),
-                onChanged: (String? newValue) {
-                  // Handle dropdown selection change
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Exam Name*',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 32.0),
-
-              // Confirm Button
-              ElevatedButton(
-                onPressed: () {
-                  // Implement confirmation logic here
-                },
-                child: const Text('Confirm'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 

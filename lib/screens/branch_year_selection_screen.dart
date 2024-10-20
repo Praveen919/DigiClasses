@@ -18,14 +18,15 @@ class BranchYearSelectionScreen extends StatefulWidget {
   });
 
   @override
-  _BranchYearSelectionScreenState createState() => _BranchYearSelectionScreenState();
+  _BranchYearSelectionScreenState createState() =>
+      _BranchYearSelectionScreenState();
 }
 
 class _BranchYearSelectionScreenState extends State<BranchYearSelectionScreen> {
   String? selectedBranch;
   String? selectedYear;
-  final List<String> branches = ['Branch 1', 'Branch 2', 'Branch 3'];
-  final List<String> years = ['2022-2023', '2023-2024', '2024-2025'];
+  final List<String> branches = ['Branch 1'];
+  final List<String> years = ['2024-2025'];
 
   @override
   void initState() {
@@ -113,7 +114,8 @@ class _BranchYearSelectionScreenState extends State<BranchYearSelectionScreen> {
                     onPressed: () {
                       if (selectedBranch != null && selectedYear != null) {
                         Widget destinationScreen;
-                        print('Navigating to dashboard for role: ${widget.userRole}'); // Debug print
+                        print(
+                            'Navigating to dashboard for role: ${widget.userRole}'); // Debug print
                         switch (widget.userRole) {
                           case 'Admin':
                             destinationScreen = DashboardScreen(
@@ -152,7 +154,8 @@ class _BranchYearSelectionScreenState extends State<BranchYearSelectionScreen> {
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Please select both branch and year.'),
+                            content:
+                                Text('Please select both branch and year.'),
                           ),
                         );
                       }

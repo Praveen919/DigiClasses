@@ -343,8 +343,6 @@ class UserInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading:
-            const CircleAvatar(child: Text('Logo')), // Adjust logo as necessary
         title: Text(name), // Display the user's name
         subtitle:
             Text('Branch: $branch\nYear: $year'), // Display branch and year
@@ -508,6 +506,10 @@ class StudentTools extends StatelessWidget {
                         );
                       },
                     ),
+                  ],
+                ),
+                TableRow(
+                  children: [
                     _buildTableToolItem(
                       context,
                       Icons.person,
@@ -518,26 +520,6 @@ class StudentTools extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => const ProfileSettings(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                TableRow(
-                  children: [
-                    _buildTableToolItem(
-                      context,
-                      Icons.edit_note_outlined,
-                      "View Attendance",
-                      () {
-                        // Navigate to ViewAttendanceScreen
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ViewMyAttendanceScreen(
-                              classBatchId: '',
-                            ),
                           ),
                         );
                       },
@@ -553,22 +535,6 @@ class StudentTools extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (context) =>
                                 const ViewStudyMaterialScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildTableToolItem(
-                      context,
-                      Icons.details_rounded,
-                      "View My Report",
-                      () {
-                        // Navigate to Report
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ViewDetailReportScreen(
-                              studentId: '',
-                            ),
                           ),
                         );
                       },

@@ -18,14 +18,11 @@ const upload = multer({ storage: storage });
 // POST route to handle absence notifications
 router.post('/absence', upload.single('document'), async (req, res) => {
   try {
-    const { studentName, standard, batch, reason } = req.body;
+    const { reason } = req.body;
     const documentPath = req.file ? req.file.path : null; // If a file is uploaded, save its path
 
     // Create and save the absence entry
     const newAbsence = new Absence({
-      studentName,
-      standard,
-      batch,
       reason,
       document: documentPath,
     });

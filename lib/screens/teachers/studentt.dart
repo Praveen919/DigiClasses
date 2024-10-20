@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 //import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:testing_app/screens/config.dart';
 //import 'package:http_parser/http_parser.dart';
@@ -621,8 +622,8 @@ class _ManageSharedDocumentsScreenState
 
   Future<void> _fetchDocuments() async {
     try {
-      final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/documents'));
+      final response = await http
+          .get(Uri.parse('${AppConfig.baseUrl}/api/documents/documents'));
       if (response.statusCode == 200) {
         final List<dynamic> documents = jsonDecode(response.body);
         setState(() {
@@ -1099,11 +1100,20 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
   List<dynamic> _feedbacks = [];
   List<dynamic> _filteredFeedbacks = [];
   String _searchQuery = '';
+  String? _token;
 
   @override
   void initState() {
     super.initState();
     _fetchFeedbacks();
+    _loadToken();
+  }
+
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('authToken'); // Ensure token is properly fetched
+    });
   }
 
   Future<void> _fetchFeedbacks() async {

@@ -846,7 +846,9 @@ class _DashboardTabState extends ConsumerState<DashboardTab>
             inquiriesCount: statistics.inquiriesCount,
             studentsCount: statistics.studentsCount,
             absenteesCount: statistics.absenteesCount,
-          )
+          ),
+          const AdminTools(),
+          const Shortcuts()
         ],
       ),
     );
@@ -877,8 +879,6 @@ class UserInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading:
-            const CircleAvatar(child: Text('Logo')), // Adjust logo as necessary
         title: Text(name), // Display the user's name
         subtitle:
             Text('Branch: $branch\nYear: $year'), // Display branch and year
@@ -1058,6 +1058,199 @@ class _StatisticsCardState extends ConsumerState<StatisticsCard> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class AdminTools extends StatelessWidget {
+  const AdminTools({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const ListTile(
+              title: Text(
+                "Admin Tools",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+            const Divider(),
+            Table(
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              children: [
+                TableRow(
+                  children: [
+                    _buildTableToolItem(
+                      context,
+                      Icons.person_add_alt,
+                      "Add Student Registration",
+                      () {
+                        // Navigate to CreateManualExamScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const StudentScreen(option: 'addRegistration'),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildTableToolItem(
+                      context,
+                      Icons.person_add,
+                      "Create Staff",
+                      () {
+                        // Navigate to upload assignments screen
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const StaffUserScreen(
+                                    option: 'createStaff')));
+                      },
+                    ),
+                    _buildTableToolItem(
+                      context,
+                      Icons.how_to_reg,
+                      "Manage Staff Rights",
+                      () {
+                        // Navigate to upload assignments screen
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const StaffUserScreen(
+                                    option: 'manageStaffRights')));
+                      },
+                    ),
+                  ],
+                ),
+                TableRow(
+                  children: [
+                    _buildTableToolItem(
+                      context,
+                      Icons.menu_book_sharp,
+                      "Create Fee Structure",
+                      () {
+                        // Navigate to upload notes screen
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const FeeScreen(
+                                    option: 'createFeeStructure')));
+                      },
+                    ),
+                    _buildTableToolItem(
+                      context,
+                      Icons.attach_money,
+                      "Add Expense",
+                      () {
+                        // Navigate to messages screen
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const ExpensesIncomeScreen(
+                                        option: 'addExpense')));
+                      },
+                    ),
+                    _buildTableToolItem(
+                      context,
+                      Icons.add_box_outlined,
+                      "Add Income",
+                      () {
+                        // Navigate to upload assignments screen
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const ExpensesIncomeScreen(
+                                        option: 'addIncome')));
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build table items with navigation
+  Widget _buildTableToolItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.black, size: 30),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class Shortcuts extends StatelessWidget {
+  const Shortcuts({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          title: const Text("Send Message to Student"),
+          trailing: const CircleAvatar(
+            child: Icon(
+              Icons.arrow_forward_sharp,
+              color: Colors.black,
+            ),
+          ),
+          onTap: () {
+            // Navigate to the Reminder screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      const MessagingScreen(option: 'student')),
+            );
+          },
+        ),
+        ListTile(
+          title: const Text("Send Message to Staff"),
+          trailing: const CircleAvatar(
+            child: Icon(
+              Icons.arrow_forward_sharp,
+              color: Colors.black,
+            ),
+          ),
+          onTap: () {
+            // Navigate to the Reminder screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const MessagingScreen(option: 'staff')),
+            );
+          },
+        ),
+      ],
     );
   }
 }
