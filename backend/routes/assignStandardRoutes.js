@@ -1,90 +1,134 @@
+const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
-const AssignedStandard = require('../models/assignStandardModel');
+const ClassBatch = require('../models/classBatchModel');
+const StudentRegistration = require('../models/registrationModel');
 
-// Helper function to sort standards
-const sortStandards = (standards) => {
-  return standards.sort((a, b) => {
-    const numA = parseInt(a) || 0;
-    const numB = parseInt(b) || 0;
+// Fetch all classes/batches
+router.get('/classes', async (req, res) => {
+  try {
+    const classes = await ClassBatch.find();
+    res.json(classes);
+  } catch (error) {
+    console.error('Error fetching classes:', error); // Log the error for debugging
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
 
-    // Sort numerically first; if equal, sort alphabetically
-    return numA - numB || a.localeCompare(b);
-  });
-};
-
-// Save or Update Assigned Standards
 router.post('/assign', async (req, res) => {
+  const { studentId, fullName, classBatchId } = req.body;
+
+  console.log('Assign Request Body:', req.body); // Log the incoming request body
+
+  // Check if classBatchId is provided
+  if (!classBatchId) {
+    console.error('Missing classBatchId');
+    return res.status(400).json({ message: 'Missing classBatchId' });
+  }
+
   try {
-    const { standards } = req.body;
+    let student;
 
-    // Check if there's already an existing entry for assigned standards
-    let assignedStandards = await AssignedStandard.findOne();
-
-    if (assignedStandards) {
-      // Update the existing array by adding new standards (avoiding duplicates)
-      assignedStandards.standards = [...new Set([...assignedStandards.standards, ...standards])];
-    } else {
-      // Create a new record if none exists
-      assignedStandards = new AssignedStandard({
-        standards: [...new Set(standards)], // Avoid duplicates on creation as well
-      });
+    // Validate the studentId format before querying
+    if (studentId && !mongoose.Types.ObjectId.isValid(studentId)) {
+      console.error('Invalid studentId format:', studentId);
+      return res.status(400).json({ message: 'Invalid studentId format' });
     }
 
-    // Sort the standards after updating
-    assignedStandards.standards = sortStandards(assignedStandards.standards);
+    // Fetch the student by studentId if provided
+    if (studentId) {
+      student = await StudentRegistration.findById(studentId); // Update this line
+      console.log(`Fetching student with ID: ${studentId}`); // Log the attempt to fetch the student
+    }
+    // Otherwise, fetch by fullName if provided
+    else if (fullName) {
+      // Assuming `fullName` needs to be split into individual parts for matching
+      const [firstName, lastName] = fullName.split(' '); // Adjust as necessary
+      student = await StudentRegistration.findOne({ firstName, lastName }); // Update this line
+      console.log(`Fetching student with fullName: ${fullName}`); // Log the attempt to fetch by name
+    } else {
+      console.error('Missing studentId or fullName');
+      return res.status(400).json({ message: 'Missing studentId or fullName' });
+    }
 
-    await assignedStandards.save();
-    res.status(201).json({ message: 'Standards assigned successfully!', data: assignedStandards });
+    // Check if student was found
+    if (!student) {
+      console.error(`Student not found. studentId: ${studentId}, fullName: ${fullName}`);
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    console.log('Fetched Student:', student); // Log the fetched student
+
+    // Fetch the class batch directly using the provided ID
+    const classBatch = await ClassBatch.findById(classBatchId);
+    if (!classBatch) {
+      console.error(`ClassBatch with ID ${classBatchId} not found`);
+      return res.status(404).json({ message: `Class/Batch with ID ${classBatchId} not found` });
+    }
+
+    console.log('Fetched ClassBatch:', classBatch); // Log the fetched classBatch
+
+    // Assign the class/batch to the student
+    student.classBatch = classBatchId;
+    await student.save();
+
+    // Check if the student is already in assignedStudents
+    if (!classBatch.assignedStudents.includes(student._id)) {
+      classBatch.assignedStudents.push(student._id);
+      await classBatch.save();
+    }
+
+    console.log(`Class/Batch assigned to student ${student.firstName} successfully.`); // Adjust to use firstName
+    res.json({ message: `Class/Batch assigned to student ${student.firstName} successfully.` });
   } catch (error) {
-    res.status(500).json({ message: 'Error assigning standards', error });
+    console.error('Error in assigning class/batch:', error); // Log error for debugging
+    res.status(500).json({ message: 'Server Error', error });
   }
 });
 
-// Fetch Already Assigned Standards
-router.get('/alreadyAssigned', async (req, res) => {
+// Fetch students assigned to a specific class/batch
+router.get('/students/:classBatchId', async (req, res) => {
+  const { classBatchId } = req.params;
+
   try {
-    const assignedStandards = await AssignedStandard.findOne();
-    
-    if (assignedStandards) {
-      res.status(200).json({ message: 'Successfully fetched assigned standards', standards: assignedStandards.standards });
-    } else {
-      res.status(200).json({ message: 'No standards assigned yet', standards: [] });
-    }
+    const students = await Student.find({ classBatch: classBatchId });
+    res.json(students);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching assigned standards', error });
+    console.error('Error fetching students:', error); // Log the error for debugging
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 
-// Remove Specific Standards
+// Remove a student from a class/batch
 router.post('/remove', async (req, res) => {
+  const { studentId, classBatchId } = req.body;
+
   try {
-    const { standardsToRemove } = req.body;
-
-    let assignedStandards = await AssignedStandard.findOne();
-
-    if (assignedStandards) {
-      const notAssigned = standardsToRemove.filter(standard => !assignedStandards.standards.includes(standard));
-      
-      if (notAssigned.length > 0) {
-        return res.status(400).json({ message: 'Standards not assigned: ' + notAssigned.join(', ') });
-      }
-
-      // Remove specified standards from the array
-      assignedStandards.standards = assignedStandards.standards.filter(
-        standard => !standardsToRemove.includes(standard)
-      );
-
-      // Sort the standards after removal
-      assignedStandards.standards = sortStandards(assignedStandards.standards);
-
-      await assignedStandards.save();
-      res.status(200).json({ message: 'Standards removed successfully', standards: assignedStandards.standards });
-    } else {
-      res.status(404).json({ message: 'No assigned standards found to remove' });
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
     }
+
+    // Check if the student is currently assigned to the specified class/batch
+    if (!student.classBatch || student.classBatch.toString() !== classBatchId) {
+      return res.status(400).json({ message: 'Student not assigned to this class/batch' });
+    }
+
+    // Remove the class/batch assignment
+    student.classBatch = null;
+    await student.save();
+
+    // Remove the studentId from the assignedStudents array
+    const classBatch = await ClassBatch.findById(classBatchId);
+    if (classBatch) {
+      classBatch.assignedStudents.pull(studentId); // Remove studentId from assignedStudents
+      await classBatch.save();
+    }
+
+    res.json({ message: 'Student removed from class/batch successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error removing standards', error });
+    console.error('Error in removing student from class/batch:', error); // Log error for debugging
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 
