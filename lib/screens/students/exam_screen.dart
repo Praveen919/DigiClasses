@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 //import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:testing_app/screens/config.dart';
+import 'package:url_launcher/url_launcher.dart'; // Add this line
 
 class ExamScreen extends StatelessWidget {
   final String option;
@@ -151,58 +152,54 @@ class _ViewManualExamScreenState extends State<ViewManualExamScreen> {
 class ExamDetailsScreen extends StatelessWidget {
   final Exam exam;
 
-  const ExamDetailsScreen({super.key, required this.exam});
+  const ExamDetailsScreen({Key? key, required this.exam}) : super(key: key);
+
+  Future<void> _launchDocumentUrl(String documentPath) async {
+    final baseUrl = "http://192.168.0.109:3000/"; // Replace with your server URL
+    final url = '$baseUrl$documentPath';
+
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(exam.examName),
-      ),
+      appBar: AppBar(title: Text(exam.examName)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Standard: ${exam.standard}',
-                  style: const TextStyle(fontSize: 18)),
-              const SizedBox(height: 8),
-              Text('Subject: ${exam.subject}',
-                  style: const TextStyle(fontSize: 18)),
-              const SizedBox(height: 8),
-              Text('Total Marks: ${exam.totalMarks}',
-                  style: const TextStyle(fontSize: 18)),
-              const SizedBox(height: 8),
-              Text('Exam Date: ${exam.examDate.toLocal().toIso8601String()}',
-                  style: const TextStyle(fontSize: 18)),
-              const SizedBox(height: 8),
-              Text('Time: ${exam.fromTime} - ${exam.toTime}',
-                  style: const TextStyle(fontSize: 18)),
-              const SizedBox(height: 16),
+              Text('Standard: ${exam.standard}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Subject: ${exam.subject}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Total Marks: ${exam.totalMarks}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Exam Date: ${exam.examDate.toLocal()}'.split(' ')[0], style: TextStyle(fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Time: ${exam.fromTime} - ${exam.toTime}', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 16),
               if (exam.note != null) ...[
-                const Text('Note:',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(exam.note!, style: const TextStyle(fontSize: 16)),
-                const SizedBox(height: 16),
+                Text('Note:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(exam.note!, style: TextStyle(fontSize: 16)),
+                SizedBox(height: 16),
               ],
               if (exam.remark != null) ...[
-                const Text('Remark:',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(exam.remark!, style: const TextStyle(fontSize: 16)),
-                const SizedBox(height: 16),
+                Text('Remark:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(exam.remark!, style: TextStyle(fontSize: 16)),
+                SizedBox(height: 16),
               ],
-              if (exam.documentPath != null) ...[
-                const Text('Document:',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              if (exam.documentPath != null && exam.documentPath!.isNotEmpty) ...[
+                Text('Document:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ElevatedButton(
-                  onPressed: () {
-                    // Handle document view or download
-                  },
-                  child: const Text('View Document'),
+                  onPressed: () => _launchDocumentUrl(exam.documentPath!),
+                  child: Text('View Document'),
                 ),
               ],
             ],
@@ -212,7 +209,6 @@ class ExamDetailsScreen extends StatelessWidget {
     );
   }
 }
-
 class ViewMCQExamScreen extends StatefulWidget {
   const ViewMCQExamScreen({super.key});
 
