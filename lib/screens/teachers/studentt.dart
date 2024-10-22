@@ -1105,21 +1105,37 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchFeedbacks();
     _loadToken();
   }
 
   Future<void> _loadToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token =
+        prefs.getString('authToken'); // Ensure token is properly fetched
+    print('Fetched token: $token'); // Log the token for debugging
+
     setState(() {
-      _token = prefs.getString('authToken'); // Ensure token is properly fetched
+      _token = token;
     });
+    if (_token != null) {
+      await _fetchFeedbacks();
+    } else {
+      print(
+          'No token found. User might not be logged in.'); // Log if token is null
+    }
   }
 
   Future<void> _fetchFeedbacks() async {
     try {
-      final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/feedbacks'));
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/feedbacks'),
+        headers: {
+          'Authorization': 'Bearer $_token', // Include token in the request
+        },
+      );
+      print('Response status: ${response.statusCode}'); // Log status code
+      print('Response body: ${response.body}'); // Log response body
+
       if (response.statusCode == 200) {
         final List<dynamic> feedbacks = jsonDecode(response.body);
         setState(() {
@@ -1127,10 +1143,14 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
           _filteredFeedbacks = feedbacks;
         });
       } else {
-        throw Exception('Failed to load feedbacks');
+        print(
+            'Failed to fetch feedbacks: ${response.reasonPhrase}'); // Log reason for failure
+        throw Exception('Failed to load feedbacks: ${response.reasonPhrase}');
       }
     } catch (e) {
-      print(e);
+      print('Error in fetching feedbacks: $e'); // Log error details
+      // Show error message to the user
+      _showErrorDialog('Error fetching feedbacks: ${e.toString()}');
     }
   }
 
@@ -1138,12 +1158,32 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
     setState(() {
       _searchQuery = query;
       _filteredFeedbacks = _feedbacks.where((feedback) {
-        return feedback['studentName']
+        return feedback['studentId']['name']
                 .toLowerCase()
                 .contains(query.toLowerCase()) ||
             feedback['subject'].toLowerCase().contains(query.toLowerCase());
       }).toList();
     });
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -1178,24 +1218,28 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
 
             // Student Feedback List
             Expanded(
-              child: ListView.builder(
-                itemCount: _filteredFeedbacks.length,
-                itemBuilder: (context, index) {
-                  return StudentFeedbackCard(
-                    feedback: _filteredFeedbacks[index],
-                    onViewDetails: () {
-                      // Implement view details functionality
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FeedbackDetailScreen(
-                              feedback: _filteredFeedbacks[index]),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+              child: _filteredFeedbacks.isEmpty
+                  ? Center(
+                      child: Text(
+                          'No feedbacks to show')) // Display message if no feedbacks
+                  : ListView.builder(
+                      itemCount: _filteredFeedbacks.length,
+                      itemBuilder: (context, index) {
+                        return StudentFeedbackCard(
+                          feedback: _filteredFeedbacks[index],
+                          onViewDetails: () {
+                            // Implement view details functionality
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FeedbackDetailScreen(
+                                    feedback: _filteredFeedbacks[index]),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -1209,11 +1253,19 @@ class StudentFeedbackCard extends StatelessWidget {
   final Map<String, dynamic> feedback;
   final VoidCallback onViewDetails;
 
-  const StudentFeedbackCard(
-      {super.key, required this.feedback, required this.onViewDetails});
+  const StudentFeedbackCard({
+    super.key,
+    required this.feedback,
+    required this.onViewDetails,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Convert createdAt to a readable date format
+    DateTime createdAt = DateTime.parse(feedback['createdAt']);
+    String formattedDate =
+        "${createdAt.day}/${createdAt.month}/${createdAt.year}";
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: Padding(
@@ -1222,38 +1274,28 @@ class StudentFeedbackCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Student Name: ${feedback['studentName']}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              'Student: ${feedback['studentId']['name'] ?? 'Unknown'}', // Display student name
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8.0),
             Text(
               'Subject: ${feedback['subject']}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8.0),
             Text(
               'Feedback: ${feedback['feedback']}',
-              style: const TextStyle(
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontSize: 14),
             ),
-            const SizedBox(height: 16.0),
-
-            // Action button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton(
-                  onPressed: onViewDetails,
-                  child: const Text('View Details'),
-                ),
-              ],
+            const SizedBox(height: 8.0),
+            Text(
+              'Date Sent: $formattedDate', // Display formatted date
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 8.0),
+            TextButton(
+              onPressed: onViewDetails,
+              child: const Text('View Details'),
             ),
           ],
         ),
@@ -1262,7 +1304,7 @@ class StudentFeedbackCard extends StatelessWidget {
   }
 }
 
-// Dummy feedback detail screen
+// Feedback detail screen
 class FeedbackDetailScreen extends StatelessWidget {
   final Map<String, dynamic> feedback;
 
@@ -1277,7 +1319,8 @@ class FeedbackDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Student Name: ${feedback['studentName']}'),
+            Text(
+                'Student Name: ${feedback['studentId']['name'] ?? 'Unknown'}'), // Corrected student name display
             Text('Subject: ${feedback['subject']}'),
             Text('Feedback: ${feedback['feedback']}'),
           ],

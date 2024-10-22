@@ -11,6 +11,7 @@ analyzer:
   errors:
     avoid_print: ignore
     library_private_types_in_public_api: ignore
+    must_be_immutable: ignore
     no_leading_underscores_for_local_identifiers: ignore
     unnecessary_null_comparison: ignore
     unused_field: ignore

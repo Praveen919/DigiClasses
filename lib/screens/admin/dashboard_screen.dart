@@ -787,11 +787,12 @@ class SidePanel extends StatelessWidget {
 }
 
 class DashboardTab extends ConsumerStatefulWidget {
+  final unreadMessagesCount = 0;
   final String name;
   final String branch;
   final String year;
 
-  const DashboardTab({
+  DashboardTab({
     super.key,
     required this.name,
     required this.branch,
@@ -804,6 +805,7 @@ class DashboardTab extends ConsumerStatefulWidget {
 
 class _DashboardTabState extends ConsumerState<DashboardTab>
     with WidgetsBindingObserver {
+  int unreadMessagesCount = 0;
   @override
   void initState() {
     super.initState();

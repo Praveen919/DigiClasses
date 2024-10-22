@@ -145,84 +145,81 @@ class GiveFeedbackScreen extends StatefulWidget {
 
 class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
   final TextEditingController _feedbackController = TextEditingController();
-  int _rating = 0; // Track the rating
-  String selectedCategory = 'Course'; // Store the selected category
-  String? _token; // To hold the authentication token
+  String selectedCategory = 'Course';
+  String? _token;
+  bool _isSubmitting = false; // Track submission state
 
   @override
   void initState() {
     super.initState();
-    _loadToken(); // Load the token during initialization
+    _loadToken();
   }
 
   Future<void> _loadToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _token = prefs.getString('authToken'); // Load the token
-      print('Loaded Token: $_token'); // Debugging: log the loaded token
+      _token = prefs.getString('authToken');
+      print('Loaded Token: $_token');
     });
   }
 
   Future<void> _sendFeedback() async {
     if (selectedCategory.isEmpty || _feedbackController.text.isEmpty) {
-      // Show an error message if fields are empty
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
       );
       return;
     }
 
-    const String apiUrl =
-        '${AppConfig.baseUrl}/api/feedbacks'; // Feedback API endpoint
+    if (_isSubmitting) {
+      return; // Prevent multiple submissions
+    }
+
+    setState(() {
+      _isSubmitting = true; // Disable button and show loading indicator
+    });
+
+    const String apiUrl = '${AppConfig.baseUrl}/api/feedbacks';
 
     try {
-      // Build the feedback payload
       final Map<String, dynamic> feedbackData = {
         'subject': selectedCategory,
         'feedback': _feedbackController.text,
       };
 
-      print(
-          'Sending Feedback Data: $feedbackData'); // Debugging: log feedback data
-      print('Using Token: $_token'); // Debugging: log token being used
-
-      // Make POST request to send feedback
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_token', // Add the token to the headers
+          'Authorization': 'Bearer $_token',
         },
         body: jsonEncode(feedbackData),
       );
 
-      // Debugging: log the response status code and body
-      print('Response Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
       if (response.statusCode == 201) {
-        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Feedback submitted successfully')),
         );
-        // Optionally clear form fields
         setState(() {
-          _rating = 0;
           selectedCategory = 'Course';
           _feedbackController.clear();
         });
       } else {
-        // Show error message if submission failed
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to submit feedback')),
+          SnackBar(
+              content: Text(
+                  'Failed to submit feedback: ${responseBody['message']}')),
         );
       }
     } catch (e) {
-      // Show error message on exception
-      print('Error occurred: $e'); // Debugging: log the error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
+    } finally {
+      setState(() {
+        _isSubmitting = false; // Re-enable the button after submission
+      });
     }
   }
 
@@ -270,10 +267,11 @@ class _GiveFeedbackScreenState extends State<GiveFeedbackScreen> {
 
             // Submit Button
             ElevatedButton(
-              onPressed: () {
-                _sendFeedback(); // Use the new logic to send feedback
-              },
-              child: const Text('Submit Feedback'),
+              onPressed:
+                  _isSubmitting ? null : _sendFeedback, // Disable if submitting
+              child: _isSubmitting
+                  ? const CircularProgressIndicator() // Show loading while submitting
+                  : const Text('Submit Feedback'),
             ),
           ],
         ),

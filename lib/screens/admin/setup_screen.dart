@@ -1324,43 +1324,70 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/class-batch/classbatch'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'classBatchName': classBatchName,
-          'strength': strength,
-          'fromTime': fromTime!.format(context),
-          'toTime': toTime!.format(context),
-        }),
-      );
+      try {
+        final response = await http.post(
+          Uri.parse('${AppConfig.baseUrl}/api/class-batch/classbatch'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'classBatchName': classBatchName,
+            'strength': strength,
+            'fromTime': fromTime!.format(context),
+            'toTime': toTime!.format(context),
+          }),
+        );
 
-      if (response.statusCode == 201) {
-        // Successful creation
+        if (response.statusCode == 201) {
+          // Successful creation
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Class/Batch created successfully!')),
+          );
+          _formKey.currentState!.reset();
+          setState(() {
+            fromTime = null;
+            toTime = null;
+          });
+        } else if (response.statusCode == 409) {
+          // Conflict: Class/Batch name already exists
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Class/Batch with that name already exists')),
+          );
+        } else {
+          // Handle other errors
+          _handleError(response);
+        }
+      } catch (e) {
+        // Handle network error or format error
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Class/Batch created successfully!')),
-        );
-        _formKey.currentState!.reset();
-        setState(() {
-          fromTime = null;
-          toTime = null;
-        });
-      } else if (response.statusCode == 409) {
-        // Conflict: Class/Batch name already exists
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Class/Batch with that name already exists')),
-        );
-      } else {
-        // Handle other errors
-        final responseBody = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  responseBody['message'] ?? 'Failed to create Class/Batch')),
+          const SnackBar(content: Text('An error occurred. Please try again.')),
         );
       }
     }
+  }
+
+  void _handleError(http.Response response) {
+    try {
+      final responseBody = jsonDecode(response.body);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                responseBody['message'] ?? 'Failed to create Class/Batch')),
+      );
+    } catch (e) {
+      // Handle case where response is not JSON
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Unexpected error occurred. Please try again.')),
+      );
+    }
+  }
+
+  void _resetForm() {
+    _formKey.currentState!.reset();
+    setState(() {
+      fromTime = null;
+      toTime = null;
+    });
   }
 
   @override
@@ -1467,13 +1494,7 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
                 const SizedBox(width: 20),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      _formKey.currentState!.reset();
-                      setState(() {
-                        fromTime = null;
-                        toTime = null;
-                      });
-                    },
+                    onPressed: _resetForm,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[900],
                     ),
@@ -1514,8 +1535,6 @@ class ClassBatch {
       toTime: json['toTime'],
     );
   }
-
-  get name => null;
 }
 
 // Dialog for editing a class batch
