@@ -1,9 +1,14 @@
 const mongoose = require('mongoose');
 
 const assignedStandardSchema = new mongoose.Schema({
-  standards: { type: [String], required: true },
-});
+  assignedStandards: {
+    type: [String],
+    required: true,
+  },
+  otherRequirements: {
+    type: Boolean,
+    default: false,
+  },
+}, { timestamps: true });
 
-const AssignedStandard = mongoose.model('AssignedStandard', assignedStandardSchema);
-
-module.exports = AssignedStandard;
+module.exports = mongoose.model('AssignedStandard', assignedStandardSchema);

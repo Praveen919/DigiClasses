@@ -178,174 +178,139 @@ class FeedbackScreen extends StatefulWidget {
 }
 
 class _FeedbackScreenState extends State<FeedbackScreen> {
-  String? selectedSubject;
-  final TextEditingController _commentController = TextEditingController();
+  final TextEditingController _feedbackController = TextEditingController();
+  String selectedCategory = 'Course';
+  String? _token;
+  bool _isSubmitting = false; // Track submission state
+
+  @override
+  void initState() {
+    super.initState();
+    _loadToken();
+  }
+
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('authToken');
+      print('Loaded Token: $_token');
+    });
+  }
 
   Future<void> _sendFeedback() async {
-    final prefs = await SharedPreferences
-        .getInstance(); // Get instance of SharedPreferences
-    final String? token =
-        prefs.getString('token'); // Retrieve token from SharedPreferences
-    final String? userId =
-        prefs.getString('userId'); // Retrieve userId from SharedPreferences
-    final String? role =
-        prefs.getString('role'); // Retrieve role from SharedPreferences
-
-    if (token == null || userId == null || role == null) {
+    if (selectedCategory.isEmpty || _feedbackController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User not authenticated!')),
+        const SnackBar(content: Text('Please fill in all fields')),
       );
       return;
     }
 
-    // Prepare the body with dynamic role ID
-    Map<String, dynamic> feedbackData = {
-      'subject': selectedSubject,
-      'feedback': _commentController.text,
-    };
-
-    // Attach userId dynamically based on role
-    if (role == 'student') {
-      feedbackData['studentId'] = userId;
-    } else if (role == 'teacher') {
-      feedbackData['teacherId'] = userId;
-    } else if (role == 'staff') {
-      feedbackData['staffId'] = userId;
+    if (_isSubmitting) {
+      return; // Prevent multiple submissions
     }
 
-    // Send feedback request
-    final response = await http.post(
-      Uri.parse('${AppConfig.baseUrl}/api/feedbacks/feedbacks'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token', // Include Bearer token
-      },
-      body: jsonEncode(feedbackData),
-    );
+    setState(() {
+      _isSubmitting = true; // Disable button and show loading indicator
+    });
 
-    if (response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Feedback submitted successfully')),
+    const String apiUrl = '${AppConfig.baseUrl}/api/feedbacks/admin';
+
+    try {
+      final Map<String, dynamic> feedbackData = {
+        'subject': selectedCategory,
+        'feedback': _feedbackController.text,
+      };
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode(feedbackData),
       );
-      _commentController.clear(); // Clear the form after successful submission
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Feedback submitted successfully')),
+        );
+        setState(() {
+          selectedCategory = 'Course'; // Reset category
+          _feedbackController.clear(); // Clear the feedback text
+        });
+      } else {
+        // Handle different status codes and error messages
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Failed to submit feedback: ${responseBody['message']}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
       setState(() {
-        selectedSubject = null;
+        _isSubmitting = false; // Re-enable the button after submission
       });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error submitting feedback: ${response.body}')),
-      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: SingleChildScrollView(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Give Feedback'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Send Feedback',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            // Feedback Text Field
+            TextField(
+              controller: _feedbackController,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                hintText: 'Enter your feedback here...',
+                border: OutlineInputBorder(),
+                labelText: 'Feedback',
+              ),
             ),
-            const SizedBox(height: 16),
-            _buildDropdownField('Subject *', '--Select--'),
-            const SizedBox(height: 16),
-            _buildCommentField(),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _sendFeedback, // Call the send feedback function
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                    ),
-                    child: const Text('Send'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Reset the form
-                      setState(() {
-                        selectedSubject = null;
-                        _commentController.clear();
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                    ),
-                    child: const Text('Reset'),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 16.0),
+
+            // Feedback Category
+            const Text('Feedback Category:'),
+            DropdownButton<String>(
+              value: selectedCategory,
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedCategory = newValue!;
+                });
+              },
+              items: <String>['Course', 'Instructor', 'App', 'Other']
+                  .map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Submit Button
+            ElevatedButton(
+              onPressed:
+                  _isSubmitting ? null : _sendFeedback, // Disable if submitting
+              child: _isSubmitting
+                  ? const CircularProgressIndicator() // Show loading while submitting
+                  : const Text('Submit Feedback'),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildDropdownField(String label, String hint) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-          ),
-          items: const [
-            DropdownMenuItem(
-              value: 'Subject 1',
-              child: Text('Subject 1'),
-            ),
-            DropdownMenuItem(
-              value: 'Subject 2',
-              child: Text('Subject 2'),
-            ),
-            DropdownMenuItem(
-              value: 'Subject 3',
-              child: Text('Subject 3'),
-            ),
-          ],
-          onChanged: (value) {
-            setState(() {
-              selectedSubject = value;
-            });
-          },
-          hint: Text(hint),
-          value: selectedSubject,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCommentField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Message *',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _commentController,
-          maxLines: 5,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-          ),
-        ),
-      ],
     );
   }
 }

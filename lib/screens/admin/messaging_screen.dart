@@ -30,16 +30,8 @@ class _MessagingScreenState extends State<MessagingScreen> {
         return const SendStudentMessageScreen();
       case 'staff':
         return SendStaffMessageScreen();
-      case 'staffIdPassword':
-        return const SendStaffIdPasswordScreen();
-      case 'studentIdPassword':
-        return const SendStudentIdPasswordScreen();
       case 'examReminder':
         return SendExamReminderScreen();
-      case 'feeStatus':
-        return const SendFeeStatusMessageScreen();
-      case 'feeReminder':
-        return const SendFeeReminderScreen();
       case 'absentAttendance':
         return const AbsentAttendanceMessageScreen();
       default:
@@ -860,12 +852,32 @@ class StudentDetailsCard extends StatelessWidget {
 
 class Exam {
   final String id;
+  final String examName; // Use examName instead of paperName
+  final String examPaperType;
+
+  Exam({
+    required this.id,
+    required this.examName,
+    required this.examPaperType,
+  });
+
+  factory Exam.fromJson(Map<String, dynamic> json) {
+    return Exam(
+      id: json['_id'],
+      examName: json['examName'] ?? 'N/A',
+      examPaperType: 'Manual', // Specify as manual
+    );
+  }
+}
+
+class MCQExam {
+  final String id;
   final String paperName;
   final String standard;
   final String subject;
   final String examPaperType;
 
-  Exam({
+  MCQExam({
     required this.id,
     required this.paperName,
     required this.standard,
@@ -873,13 +885,13 @@ class Exam {
     required this.examPaperType,
   });
 
-  factory Exam.fromJson(Map<String, dynamic> json, String type) {
-    return Exam(
+  factory MCQExam.fromJson(Map<String, dynamic> json) {
+    return MCQExam(
       id: json['_id'],
       paperName: json['paperName'] ?? 'N/A',
       standard: json['standard'] ?? 'N/A',
       subject: json['subject'] ?? 'N/A',
-      examPaperType: type,
+      examPaperType: json['examPaperType'] ?? 'N/A',
     );
   }
 }
@@ -895,15 +907,15 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
   String selectedExamName = '';
   List<String> alreadyAssignedStandards = [];
   List<String> alreadyAssignedSubjects = [];
-  List<Exam> examNames = [];
-  bool isLoading = true;
+  List<dynamic> allExams = [];
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _fetchAlreadyAssignedStandards();
     _fetchAlreadyAssignedSubjects();
-    _fetchExams();
+    _fetchAllExams();
   }
 
   @override
@@ -921,18 +933,20 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
             children: [
               // Standard Dropdown
               DropdownButtonFormField<String>(
-                value: alreadyAssignedStandards.isNotEmpty
-                    ? selectedStandard
-                    : null,
-                items: alreadyAssignedStandards
-                    .map((String value) => DropdownMenuItem<String>(
+                value: selectedStandard.isNotEmpty ? selectedStandard : null,
+                items: alreadyAssignedStandards.isNotEmpty
+                    ? alreadyAssignedStandards.map((String value) {
+                        return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
-                        ))
-                    .toList(),
+                        );
+                      }).toList()
+                    : null,
                 onChanged: (String? newValue) {
                   setState(() {
-                    selectedStandard = newValue!;
+                    selectedStandard = newValue ?? '';
+                    selectedSubject = '';
+                    selectedExamName = '';
                   });
                 },
                 decoration: const InputDecoration(
@@ -944,17 +958,19 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
 
               // Subject Dropdown
               DropdownButtonFormField<String>(
-                value:
-                    alreadyAssignedSubjects.isNotEmpty ? selectedSubject : null,
-                items: alreadyAssignedSubjects
-                    .map((String value) => DropdownMenuItem<String>(
+                value: selectedSubject.isNotEmpty ? selectedSubject : null,
+                items: alreadyAssignedSubjects.isNotEmpty
+                    ? alreadyAssignedSubjects.map((String value) {
+                        return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
-                        ))
-                    .toList(),
+                        );
+                      }).toList()
+                    : null,
                 onChanged: (String? newValue) {
                   setState(() {
-                    selectedSubject = newValue!;
+                    selectedSubject = newValue ?? '';
+                    selectedExamName = '';
                   });
                 },
                 decoration: const InputDecoration(
@@ -966,16 +982,23 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
 
               // Exam Name Dropdown
               DropdownButtonFormField<String>(
-                value: examNames.isNotEmpty ? selectedExamName : null,
-                items: examNames.map((exam) {
-                  return DropdownMenuItem<String>(
-                    value: exam.id,
-                    child: Text('${exam.paperName} (${exam.examPaperType})'),
-                  );
-                }).toList(),
+                value: selectedExamName.isNotEmpty ? selectedExamName : null,
+                items: allExams.isNotEmpty
+                    ? allExams.map((exam) {
+                        String examType =
+                            (exam is MCQExam) ? '(MCQ)' : '(Manual)';
+                        String displayName = (exam is MCQExam)
+                            ? exam.paperName
+                            : exam.examName; // Use correct field
+                        return DropdownMenuItem<String>(
+                          value: exam.id,
+                          child: Text('$displayName $examType'),
+                        );
+                      }).toList()
+                    : null,
                 onChanged: (String? newValue) {
                   setState(() {
-                    selectedExamName = newValue!;
+                    selectedExamName = newValue ?? '';
                   });
                 },
                 decoration: const InputDecoration(
@@ -987,10 +1010,7 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
 
               // Send Button
               ElevatedButton(
-                onPressed: () async {
-                  await sendExamNotification();
-                  _clearFields(); // Clear fields after sending notification
-                },
+                onPressed: _sendNotification, // Call the send function
                 child: const Text('Send'),
               ),
             ],
@@ -1011,14 +1031,13 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
         if (data['standards'] is List) {
           setState(() {
             alreadyAssignedStandards = List<String>.from(data['standards']);
-            // No default selection to keep dropdown empty initially
           });
         } else {
           _showMessage('Unexpected data format');
         }
       } else {
         _showMessage(
-            'Failed to load already assigned standards: ${response.reasonPhrase}');
+            'Failed to load already assigned standards: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       _showMessage('Error loading assigned standards: $e');
@@ -1036,7 +1055,6 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
         if (data['subjects'] is List) {
           setState(() {
             alreadyAssignedSubjects = List<String>.from(data['subjects']);
-            // No default selection to keep dropdown empty initially
           });
         } else {
           _showMessage('Unexpected data format');
@@ -1050,46 +1068,25 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
     }
   }
 
-  Future<void> _fetchExams() async {
+  Future<void> _fetchMCQExams() async {
     setState(() {
       isLoading = true;
     });
     try {
-      // Fetch MCQ Exams
-      final mcqResponse =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/'));
-      // Fetch Manual Exams
-      final manualResponse =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/exams'));
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/'),
+      );
 
-      List<Exam> mcqExams = [];
-      List<Exam> manualExams = [];
-
-      if (mcqResponse.statusCode == 200) {
-        final List<dynamic> mcqData = json.decode(mcqResponse.body);
-        mcqExams =
-            mcqData.map<Exam>((exam) => Exam.fromJson(exam, 'MCQ')).toList();
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          allExams.addAll(data.map((exam) => MCQExam.fromJson(exam)).toList());
+        });
       } else {
-        _showMessage('Failed to load MCQ exams: ${mcqResponse.statusCode}');
+        _showMessage('Failed to load MCQ exams: ${response.statusCode}');
       }
-
-      if (manualResponse.statusCode == 200) {
-        final List<dynamic> manualData = json.decode(manualResponse.body);
-        manualExams = manualData
-            .map<Exam>((exam) => Exam.fromJson(exam, 'Manual'))
-            .toList();
-      } else {
-        _showMessage(
-            'Failed to load manual exams: ${manualResponse.statusCode}');
-      }
-
-      // Combine both exam lists
-      setState(() {
-        examNames = [...mcqExams, ...manualExams];
-        // No default selection to keep dropdown empty initially
-      });
     } catch (error) {
-      _showMessage('Error fetching exams: $error');
+      _showMessage('Error fetching MCQ exams: $error');
     } finally {
       setState(() {
         isLoading = false;
@@ -1097,261 +1094,78 @@ class _SendExamReminderScreenState extends State<SendExamReminderScreen> {
     }
   }
 
-  Future<void> sendExamNotification() async {
+  Future<void> _fetchManualExams() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/exams'),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          allExams.addAll(data.map((exam) => Exam.fromJson(exam)).toList());
+        });
+      } else {
+        _showMessage('Failed to load manual exams: ${response.statusCode}');
+      }
+    } catch (error) {
+      _showMessage('Error fetching manual exams: $error');
+    }
+  }
+
+  Future<void> _fetchAllExams() async {
+    await Future.wait([_fetchMCQExams(), _fetchManualExams()]);
+  }
+
+  Future<void> _sendNotification() async {
+    // Validate if the necessary fields are selected
     if (selectedStandard.isEmpty ||
         selectedSubject.isEmpty ||
         selectedExamName.isEmpty) {
-      _showMessage('Please select all fields before sending.');
+      _showMessage('Please select standard, subject, and exam name.');
       return;
     }
+
+    // Construct the notification message
+    String examName =
+        allExams.firstWhere((exam) => exam.id == selectedExamName).examName;
+    String message = '$examName upcoming';
+
+    // Prepare the data to send
+    final notificationData = {
+      'standard': selectedStandard,
+      'subject': selectedSubject,
+      'examName': examName,
+      'date': DateTime.now()
+          .toIso8601String(), // You can modify this based on your requirements
+    };
 
     try {
       final response = await http.post(
         Uri.parse('${AppConfig.baseUrl}/api/messageStudent/exam/notifications'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, dynamic>{
-          'standard': selectedStandard,
-          'subject': selectedSubject,
-          'examName': selectedExamName,
-          'date': DateTime.now().toIso8601String(),
-        }),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(notificationData),
       );
 
       if (response.statusCode == 200) {
-        _showMessage('Exam notification sent successfully');
+        _showMessage('Notification sent successfully');
+        // Clear the selections after sending
+        setState(() {
+          selectedStandard = '';
+          selectedSubject = '';
+          selectedExamName = '';
+        });
       } else {
-        _showMessage('Failed to send notification: ${response.reasonPhrase}');
+        _showMessage('Failed to send notification: ${response.body}');
       }
-    } catch (e) {
-      _showMessage('Error sending notification: $e');
+    } catch (error) {
+      _showMessage('Error sending notification: $error');
     }
-  }
-
-  void _clearFields() {
-    setState(() {
-      selectedStandard = '';
-      selectedSubject = '';
-      selectedExamName = '';
-    });
   }
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
-    );
-  }
-}
-
-class SendFeeStatusMessageScreen extends StatelessWidget {
-  const SendFeeStatusMessageScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Send Fee Status Message to Student'),
-      ),
-      resizeToAvoidBottomInset:
-          true, // Ensures proper resizing to avoid keyboard overlap
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Sample Message Format
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Dear John, Your fee status is: Total fees amount - 5000, Total received amount - 1000. Total pending amount - 4000. Thank you, SRS Classes. Service by, Viha IT Services',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-
-              // Search Bar
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search',
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: () {
-                      // Implement search functionality here
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-
-              // Students with Pending Fees
-              const Text('Students with Pending Fees',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16.0),
-
-              // List of students with pending fees
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount:
-                    1, // Replace with actual number of students with pending fees
-                itemBuilder: (context, index) {
-                  return const StudentWithPendingFeeCard(
-                      // Pass student data here
-                      );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Custom widget for each student with pending fees
-class StudentWithPendingFeeCard extends StatelessWidget {
-  const StudentWithPendingFeeCard({super.key});
-
-  // Add necessary properties for student data
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Student Name: XXXXXX'),
-            const Text('Standard: XX'),
-            const Text('Batch: XX'),
-
-            // Send Message button
-            ElevatedButton(
-              onPressed: () {
-                // Implement send message functionality
-              },
-              child: const Text('Send Message'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SendFeeReminderScreen extends StatelessWidget {
-  const SendFeeReminderScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Send Fee Reminder to Student'),
-      ),
-      resizeToAvoidBottomInset:
-          true, // Ensures proper resizing to avoid keyboard overlap
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Sample Message Format
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Dear John, Your fee payment is due at SRS Classes. This is a friendly reminder to submit it and ignore it if you already processed it. Total pending amount is 4000. Thank you, SRS Classes. Service by, Viha IT Services',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-
-              // With Total Pending Amount
-              CheckboxListTile(
-                title: const Text('With Total Pending Amount'),
-                value: false, // Set initial value to false
-                onChanged: (bool? value) {
-                  // Handle checkbox change
-                },
-              ),
-              const SizedBox(height: 16.0),
-
-              // Search Bar
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search',
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: () {
-                      // Implement search functionality here
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-
-              // Students with Pending Fees
-              const Text('Students with Pending Fees',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16.0),
-
-              // List of students with pending fees
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount:
-                    1, // Replace with actual number of students with pending fees
-                itemBuilder: (context, index) {
-                  return const StudentWithPendingFeeCard(
-                      // Pass student data here
-                      );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Custom widget for each student with pending fees
-class StudentWithPendingFeeCard1 extends StatelessWidget {
-  const StudentWithPendingFeeCard1({super.key});
-
-  // Add necessary properties for student data
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Student Name: XXXXXX'),
-            const Text('Standard: XX'),
-            const Text('Batch: XX'),
-
-            // Send Message button
-            ElevatedButton(
-              onPressed: () {
-                // Implement send message functionality
-              },
-              child: const Text('Send Message'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -1366,8 +1180,10 @@ class AbsentAttendanceMessageScreen extends StatefulWidget {
 
 class _AbsentAttendanceMessageScreenState
     extends State<AbsentAttendanceMessageScreen> {
-  List<String> absentees = [];
-  List<String> filteredAbsentees = [];
+  List<AbsentMessage> absentees = [];
+  List<AbsentMessage> filteredAbsentees = [];
+  bool isLoading = true; // Track loading state
+  String errorMessage = ''; // Track error message
 
   @override
   void initState() {
@@ -1377,27 +1193,48 @@ class _AbsentAttendanceMessageScreenState
 
   // Function to fetch absentees from the API
   Future<void> fetchAbsentees() async {
-    final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/api/absenceMessage/absences/today'));
+    setState(() {
+      isLoading = true; // Set loading state to true
+      errorMessage = ''; // Reset error message
+    });
 
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
+    try {
+      final response = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/absenceMessage/absences/today'));
 
-      // Extract the required data (assuming the response has a 'reason' field or any other you need)
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+
+        setState(() {
+          if (data.isEmpty) {
+            errorMessage = 'No absentees found';
+          } else {
+            absentees =
+                data.map((item) => AbsentMessage.fromJson(item)).toList();
+            filteredAbsentees = absentees;
+          }
+          isLoading = false; // Set loading state to false
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Failed to fetch absentees: ${response.body}';
+          isLoading = false; // Set loading state to false
+        });
+      }
+    } catch (error) {
       setState(() {
-        absentees = data.map((item) => "${item['reason']}").toList();
-        filteredAbsentees = absentees;
+        errorMessage = 'Network error: $error';
+        isLoading = false; // Set loading state to false
       });
-    } else {
-      print('Failed to fetch absentees');
     }
   }
 
   void _filterAbsentees(String query) {
     setState(() {
       filteredAbsentees = absentees
-          .where(
-              (student) => student.toLowerCase().contains(query.toLowerCase()))
+          .where((absent) =>
+              absent.reason.toLowerCase().contains(query.toLowerCase()) ||
+              absent.studentName.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -1420,7 +1257,7 @@ class _AbsentAttendanceMessageScreenState
               TextField(
                 decoration: InputDecoration(
                   hintText: 'Search',
-                  suffixIcon: Icon(Icons.search),
+                  suffixIcon: const Icon(Icons.search),
                 ),
                 onChanged: (query) {
                   _filterAbsentees(query);
@@ -1433,19 +1270,28 @@ class _AbsentAttendanceMessageScreenState
                   style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
-              // List of Today's Absentees
-              filteredAbsentees.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: filteredAbsentees.length,
-                      itemBuilder: (context, index) {
-                        return AbsentStudentCard(
-                          studentName: filteredAbsentees[index],
-                        );
-                      },
-                    ),
+              // Loading Indicator or Error Message
+              if (isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (errorMessage.isNotEmpty)
+                Center(
+                    child:
+                        Text(errorMessage, style: TextStyle(color: Colors.red)))
+              else
+                filteredAbsentees.isEmpty
+                    ? const Center(child: Text('No absentees found'))
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filteredAbsentees.length,
+                        itemBuilder: (context, index) {
+                          return AbsentStudentCard(
+                            studentName: filteredAbsentees[index].studentName,
+                            reason: filteredAbsentees[index].reason,
+                            date: filteredAbsentees[index].createdAt,
+                          );
+                        },
+                      ),
             ],
           ),
         ),
@@ -1454,18 +1300,62 @@ class _AbsentAttendanceMessageScreenState
   }
 }
 
+// Model class for absent messages
+class AbsentMessage {
+  final String studentName;
+  final String reason;
+  final DateTime createdAt;
+  final String? document; // Change to nullable String
+
+  AbsentMessage({
+    required this.studentName,
+    required this.reason,
+    required this.createdAt,
+    this.document, // Optional parameter
+  });
+
+  factory AbsentMessage.fromJson(Map<String, dynamic> json) {
+    return AbsentMessage(
+      studentName:
+          json['studentName'] ?? 'Unknown', // Default to 'Unknown' if null
+      reason: json['reason'] ??
+          'No reason provided', // Default to a message if null
+      createdAt: DateTime.parse(json['createdAt']),
+      document: json['document'], // Keep it nullable
+    );
+  }
+}
+
 // Custom widget for each absent student
 class AbsentStudentCard extends StatelessWidget {
   final String studentName;
+  final String reason;
+  final DateTime date;
 
-  const AbsentStudentCard({super.key, required this.studentName});
+  const AbsentStudentCard({
+    super.key,
+    required this.studentName,
+    required this.reason,
+    required this.date,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Text(studentName),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(studentName,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4.0),
+            Text(reason),
+            const SizedBox(height: 4.0),
+            Text(
+                'Date: ${date.toLocal().toString().split(' ')[0]}'), // Display the date
+          ],
+        ),
       ),
     );
   }

@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
 const absenceSchema = new mongoose.Schema({
-  studentName: { type: String, required: false },
+  student: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
   standard: { type: String, required: false },
   batch: { type: String, required: false },
   reason: { type: String, required: true },
-  document: { type: String }, // URL to the document file (if uploaded)
+  document: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 

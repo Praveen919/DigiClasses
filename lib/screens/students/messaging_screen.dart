@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:testing_app/screens/config.dart';
 
@@ -494,7 +495,6 @@ class SendInquiryMessageScreen extends StatelessWidget {
   }
 }
 
-// Example of SendInquiryMessage widget
 class TodaysAbsenceMessageScreen extends StatefulWidget {
   const TodaysAbsenceMessageScreen({super.key});
 
@@ -507,6 +507,116 @@ class _TodaysAbsenceMessageScreenState
     extends State<TodaysAbsenceMessageScreen> {
   final TextEditingController _reasonController = TextEditingController();
   String? _filePath;
+  String? _token;
+  bool _isSubmitting = false; // Track submission state
+
+  @override
+  void initState() {
+    super.initState();
+    _loadToken();
+  }
+
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('authToken');
+    });
+  }
+
+  Future<void> sendAbsenceNotification(String reason, String? filePath) async {
+    if (reason.isEmpty) {
+      _showErrorDialog('Please provide a reason for your absence.');
+      return;
+    }
+
+    if (_isSubmitting) {
+      return; // Prevent multiple submissions
+    }
+
+    setState(() {
+      _isSubmitting = true; // Disable button and show loading indicator
+    });
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse(
+          '${AppConfig.baseUrl}/api/absenceMessage/absence'), // Update with your actual endpoint
+    );
+
+    request.headers['Authorization'] = 'Bearer $_token';
+    request.fields['reason'] = reason;
+
+    if (filePath != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('document', filePath));
+    }
+
+    try {
+      var response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        _showSuccessDialog(
+            'Your absence notification has been sent successfully.');
+        _reasonController.clear(); // Clear the text field after submission
+        setState(() {
+          _filePath = null; // Reset the file path
+        });
+      } else {
+        if (response.statusCode == 401) {
+          _showErrorDialog('Invalid token. Please log in again.');
+        } else {
+          _showErrorDialog(
+              'Failed to send absence notification: ${response.statusCode}');
+        }
+        print(
+            'Response body: $responseBody'); // Log the response body for debugging
+      }
+    } catch (e) {
+      _showErrorDialog('Error: $e');
+    } finally {
+      setState(() {
+        _isSubmitting = false; // Re-enable the button after submission
+      });
+    }
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Success'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop(); // Optionally navigate back
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -519,15 +629,12 @@ class _TodaysAbsenceMessageScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Instructions
             const Text(
               'If you are absent today, please provide the reason for your absence below. '
               'You may also upload any supporting documents if needed.',
               style: TextStyle(fontSize: 16.0),
             ),
             const SizedBox(height: 16.0),
-
-            // Reason Field
             TextField(
               controller: _reasonController,
               decoration: const InputDecoration(
@@ -538,8 +645,6 @@ class _TodaysAbsenceMessageScreenState
               maxLines: 4,
             ),
             const SizedBox(height: 16.0),
-
-            // Optional Upload Field
             Row(
               children: [
                 ElevatedButton(
@@ -554,91 +659,32 @@ class _TodaysAbsenceMessageScreenState
                   child: const Text('Upload Supporting Document'),
                 ),
                 const SizedBox(width: 10.0),
-                Text(_filePath != null
-                    ? 'File: ${_filePath!.split('/').last}'
-                    : 'No file selected'),
+                Expanded(
+                  child: Text(
+                    _filePath != null
+                        ? 'File: ${_filePath!.split('/').last}'
+                        : 'No file selected',
+                    overflow: TextOverflow.ellipsis, // Prevent overflow
+                    maxLines: 1, // Limit to one line
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16.0),
-
-            // Send Button
             ElevatedButton(
-              onPressed: () {
-                String reason = _reasonController.text;
-
-                // Validate input
-                if (reason.isNotEmpty) {
-                  // Process the absence notification
-                  sendAbsenceNotification(reason, _filePath);
-
-                  // Show confirmation message
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Absence Notification Sent'),
-                      content: const Text(
-                          'Your absence notification has been sent successfully.'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            Navigator.of(context)
-                                .pop(); // Optionally navigate back
-                          },
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  // Show error message
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Error'),
-                      content: const Text(
-                          'Please provide a reason for your absence.'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-              child: const Text('Send Notification'),
+              onPressed: _isSubmitting
+                  ? null
+                  : () {
+                      String reason = _reasonController.text;
+                      sendAbsenceNotification(reason, _filePath);
+                    },
+              child: _isSubmitting
+                  ? const CircularProgressIndicator() // Show loading while submitting
+                  : const Text('Send Notification'),
             ),
           ],
         ),
       ),
     );
-  }
-
-  // Example method to handle absence notification
-  void sendAbsenceNotification(String reason, String? filePath) async {
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse(
-          '${AppConfig.baseUrl}/api/absenceMessage/absence'), // Replace with your backend URL
-    );
-
-    request.fields['reason'] = reason;
-
-    if (filePath != null) {
-      request.files
-          .add(await http.MultipartFile.fromPath('document', filePath));
-    }
-
-    var response = await request.send();
-
-    if (response.statusCode == 200) {
-      print('Absence notification sent successfully');
-    } else {
-      print('Failed to send absence notification');
-    }
   }
 }

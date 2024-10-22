@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:testing_app/screens/config.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,7 +27,7 @@ class HelpScreen extends StatelessWidget {
       case 'contactUs':
         return const ContactUsScreen();
       case 'viewFeedback':
-        return const ViewFeedbackScreen();
+        return const ViewTeacherFeedbackScreen();
       default:
         return const Center(child: Text('Unknown Option'));
     }
@@ -169,57 +170,95 @@ class ContactUsScreen extends StatelessWidget {
   }
 }
 
-class ViewFeedbackScreen extends StatefulWidget {
-  const ViewFeedbackScreen({super.key});
+class ViewTeacherFeedbackScreen extends StatefulWidget {
+  const ViewTeacherFeedbackScreen({super.key});
 
   @override
-  _ViewFeedbackScreenState createState() => _ViewFeedbackScreenState();
+  _ViewTeacherFeedbackScreenState createState() =>
+      _ViewTeacherFeedbackScreenState();
 }
 
-class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
-  final TextEditingController _searchController = TextEditingController();
+class _ViewTeacherFeedbackScreenState extends State<ViewTeacherFeedbackScreen> {
   List<dynamic> _feedbacks = [];
   List<dynamic> _filteredFeedbacks = [];
-  bool _isLoading = true;
+  String _searchQuery = '';
+  String? _token;
 
   @override
   void initState() {
     super.initState();
-    _fetchFeedbacks(); // Fetch feedbacks from the backend on screen load
+    _loadToken();
+  }
+
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('authToken');
+    });
+    if (_token != null) {
+      await _fetchFeedbacks();
+    } else {
+      print('No token found. User might not be logged in.');
+    }
   }
 
   Future<void> _fetchFeedbacks() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AppConfig.baseUrl}/api/feedbacks/admin/feedbacks'));
+      final response = await http.get(
+        Uri.parse(
+            '${AppConfig.baseUrl}/api/feedbacks/admin'), // Assuming this endpoint returns teacher feedback
+        headers: {
+          'Authorization': 'Bearer $_token',
+        },
+      );
+
       if (response.statusCode == 200) {
+        final List<dynamic> feedbacks = jsonDecode(response.body);
         setState(() {
-          _feedbacks = jsonDecode(response.body);
-          _filteredFeedbacks = _feedbacks;
-          _isLoading = false;
+          _feedbacks = feedbacks;
+          _filteredFeedbacks = feedbacks; // Initial filtering set to all
         });
       } else {
-        print('Failed to load feedbacks. Status code: ${response.statusCode}');
+        print('Failed to load feedbacks: ${response.reasonPhrase}');
+        throw Exception('Failed to load feedbacks: ${response.reasonPhrase}');
       }
-    } catch (error) {
-      print('Error fetching feedbacks: $error');
+    } catch (e) {
+      print('Error in fetching feedbacks: $e');
+      _showErrorDialog('Error fetching feedbacks: ${e.toString()}');
     }
   }
 
-  void _searchFeedbacks(String query) {
+  void _filterFeedbacks(String query) {
     setState(() {
-      _filteredFeedbacks = _feedbacks
-          .where((feedback) =>
-              feedback['comment']
-                  .toString()
-                  .toLowerCase()
-                  .contains(query.toLowerCase()) ||
-              feedback['subject']
-                  .toString()
-                  .toLowerCase()
-                  .contains(query.toLowerCase()))
-          .toList();
+      _searchQuery = query;
+      _filteredFeedbacks = _feedbacks.where((feedback) {
+        String teacherName =
+            feedback['teacherId']['name'] ?? 'Unknown'; // Changed to teacherId
+        String subject = feedback['subject'] ?? 'No Subject';
+        return teacherName.toLowerCase().contains(query.toLowerCase()) ||
+            subject.toLowerCase().contains(query.toLowerCase());
+      }).toList();
     });
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -227,64 +266,136 @@ class _ViewFeedbackScreenState extends State<ViewFeedbackScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('View Feedbacks'),
+        title: const Text('View Teacher Feedbacks'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSearchBar(),
-            const SizedBox(height: 16),
+            // Search Bar
+            TextField(
+              onChanged: _filterFeedbacks,
+              decoration: InputDecoration(
+                hintText: 'Search by Teacher Name or Subject',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {},
+                ),
+                border: const OutlineInputBorder(),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Feedback List
             Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child:
-                          CircularProgressIndicator()) // Show loading spinner while fetching data
-                  : _buildFeedbackList(),
+              child: _filteredFeedbacks.isEmpty
+                  ? Center(child: Text('No feedbacks to show'))
+                  : ListView.builder(
+                      itemCount: _filteredFeedbacks.length,
+                      itemBuilder: (context, index) {
+                        return TeacherFeedbackCard(
+                          feedback: _filteredFeedbacks[index],
+                          onViewDetails: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FeedbackDetailScreen(
+                                    feedback: _filteredFeedbacks[index]),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildSearchBar() {
-    return TextField(
-      controller: _searchController,
-      decoration: InputDecoration(
-        labelText: 'Search Feedbacks',
-        border: const OutlineInputBorder(),
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: _searchController.text.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: () {
-                  setState(() {
-                    _searchController.clear();
-                    _filteredFeedbacks = _feedbacks;
-                  });
-                },
-              )
-            : null,
+// Custom widget for each teacher feedback
+class TeacherFeedbackCard extends StatelessWidget {
+  final Map<String, dynamic> feedback;
+  final VoidCallback onViewDetails;
+
+  const TeacherFeedbackCard({
+    super.key,
+    required this.feedback,
+    required this.onViewDetails,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Convert createdAt to a readable date format
+    DateTime createdAt = DateTime.parse(feedback['createdAt']);
+    String formattedDate =
+        "${createdAt.day}/${createdAt.month}/${createdAt.year}";
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Teacher: ${feedback['teacherId']['name'] ?? 'Unknown'}', // Changed to teacherId
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              'Subject: ${feedback['subject']}',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              'Feedback: ${feedback['feedback']}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              'Date Sent: $formattedDate',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 8.0),
+            TextButton(
+              onPressed: onViewDetails,
+              child: const Text('View Details'),
+            ),
+          ],
+        ),
       ),
-      onChanged: _searchFeedbacks,
     );
   }
+}
 
-  Widget _buildFeedbackList() {
-    return ListView.builder(
-      itemCount: _filteredFeedbacks.length,
-      itemBuilder: (context, index) {
-        final feedback = _filteredFeedbacks[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: ListTile(
-            title: Text(feedback['subject'] ?? 'No Subject'),
-            subtitle: Text(feedback['comment'] ?? 'No Comment'),
-            trailing: Text(feedback['date'] ?? 'Unknown Date'),
-          ),
-        );
-      },
+// Feedback detail screen
+class FeedbackDetailScreen extends StatelessWidget {
+  final Map<String, dynamic> feedback;
+
+  const FeedbackDetailScreen({super.key, required this.feedback});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Feedback Details')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'Teacher Name: ${feedback['teacherId']['name'] ?? 'Unknown'}'), // Changed to teacherId
+            Text('Subject: ${feedback['subject']}'),
+            Text('Feedback: ${feedback['feedback']}'),
+          ],
+        ),
+      ),
     );
   }
 }

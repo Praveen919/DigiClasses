@@ -85,7 +85,7 @@ app.use('/api/class-batch', classBatchRoutes);
 app.use('/api/notification-settings', autoNotificationSettingRoutes);
 app.use('/api/whatsapp-settings', autoWhatsappSettingRoutes);
 app.use('/api/assignStandard', assignStandardRoutes);
-//app.use('/api/assignSubject', assignSubjectRoutes);
+app.use('/api/assignSubject', assignSubjectRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/registration', registrationRoutes);
 app.use('/api/assignClassBatch', assignClassBatchRoutes);
