@@ -30,7 +30,7 @@ const verifyStudentToken = async (req, res, next) => {
       return res.status(403).json({ message: 'Access denied. Only students can submit absence messages.' });
     }
 
-    req.studentId = user._id;
+    req.studentId = user._id; // Set studentId for future use
     next();
   });
 };
@@ -38,7 +38,7 @@ const verifyStudentToken = async (req, res, next) => {
 // POST route to handle absence notifications
 router.post('/absence', verifyStudentToken, upload.single('document'), async (req, res) => {
   try {
-    const { reason } = req.body;
+    const { reason, standard, batch } = req.body; // Extract standard and batch from request
     const documentPath = req.file ? req.file.path : null;
     const studentId = req.studentId;
 
@@ -46,12 +46,13 @@ router.post('/absence', verifyStudentToken, upload.single('document'), async (re
       reason,
       document: documentPath,
       student: studentId,
+      standard, // Include standard if provided
+      batch,    // Include batch if provided
     });
 
     await newAbsence.save();
 
     console.log('Absence notification sent to admin and teachers');
-
     res.status(200).json({ message: 'Absence notification submitted successfully' });
   } catch (error) {
     console.error('Error submitting absence notification:', error);
@@ -70,15 +71,25 @@ router.get('/absences/today', async (req, res) => {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
       },
-    }).populate('student', 'name'); // Populate the student field directly during the query
+    }).populate('student', 'name'); // Populate the student field
 
-    console.log('Fetched absentees:', absentees); // Log fetched absentees
+    // Format the response with studentName field
+    const formattedAbsentees = absentees.map(absentee => ({
+      studentName: absentee.student ? absentee.student.name : 'Unknown', // Fallback to 'Unknown'
+      reason: absentee.reason,
+      createdAt: absentee.createdAt,
+      document: absentee.document,
+      standard: absentee.standard, // Include standard in response if needed
+      batch: absentee.batch,       // Include batch in response if needed
+    }));
 
-    if (absentees.length === 0) {
+    console.log('Fetched absentees:', formattedAbsentees);
+
+    if (formattedAbsentees.length === 0) {
       return res.status(404).json({ message: 'No absentees found for today.' });
     }
 
-    res.status(200).json(absentees);
+    res.status(200).json(formattedAbsentees); // Return formatted absentees
   } catch (error) {
     console.error('Error fetching today\'s absentees:', error);
     res.status(500).json({ message: 'Failed to fetch absentees' });
