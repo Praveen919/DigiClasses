@@ -1302,12 +1302,13 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
   int? strength;
   TimeOfDay? fromTime;
   TimeOfDay? toTime;
+  bool _isLoading = false;
 
   Future<void> _selectTime(BuildContext context, bool isFromTime) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime:
-          isFromTime ? fromTime ?? TimeOfDay.now() : toTime ?? TimeOfDay.now(),
+      isFromTime ? fromTime ?? TimeOfDay.now() : toTime ?? TimeOfDay.now(),
     );
     if (picked != null) {
       setState(() {
@@ -1324,9 +1325,13 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
+      setState(() {
+        _isLoading = true;
+      });
+
       try {
         final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/class-batch/classbatch'),
+          Uri.parse('${AppConfig.baseUrl}/api/class-batch'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'classBatchName': classBatchName,
@@ -1336,8 +1341,11 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
           }),
         );
 
+        // Log the full response for debugging
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+
         if (response.statusCode == 201) {
-          // Successful creation
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Class/Batch created successfully!')),
           );
@@ -1347,48 +1355,35 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
             toTime = null;
           });
         } else if (response.statusCode == 409) {
-          // Conflict: Class/Batch name already exists
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Class/Batch with that name already exists')),
           );
         } else {
-          // Handle other errors
-          _handleError(response);
+          // Log error response
+          print('Error: ${response.statusCode}');
+          print('Error message: ${response.body}');
+
+          final responseBody = jsonDecode(response.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    responseBody['message'] ?? 'Failed to create Class/Batch')),
+          );
         }
-      } catch (e) {
-        // Handle network error or format error
+      } catch (error) {
+        print('Exception caught: $error');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occurred. Please try again.')),
+          const SnackBar(content: Text('An unexpected error occurred.')),
         );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
 
-  void _handleError(http.Response response) {
-    try {
-      final responseBody = jsonDecode(response.body);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                responseBody['message'] ?? 'Failed to create Class/Batch')),
-      );
-    } catch (e) {
-      // Handle case where response is not JSON
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Unexpected error occurred. Please try again.')),
-      );
-    }
-  }
-
-  void _resetForm() {
-    _formKey.currentState!.reset();
-    setState(() {
-      fromTime = null;
-      toTime = null;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1484,17 +1479,30 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _saveClassBatch,
+                    onPressed: _isLoading ? null : _saveClassBatch,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal,
                     ),
-                    child: const Text('SAVE'),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(
+                      valueColor:
+                      AlwaysStoppedAnimation<Color>(Colors.white),
+                    )
+                        : const Text('SAVE'),
                   ),
                 ),
                 const SizedBox(width: 20),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _resetForm,
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                      _formKey.currentState!.reset();
+                      setState(() {
+                        fromTime = null;
+                        toTime = null;
+                      });
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[900],
                     ),
@@ -1509,6 +1517,7 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
     );
   }
 }
+
 
 // Model class for ClassBatch
 class ClassBatch {
@@ -1535,6 +1544,8 @@ class ClassBatch {
       toTime: json['toTime'],
     );
   }
+
+  get name => null;
 }
 
 // Dialog for editing a class batch
