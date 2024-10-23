@@ -90,17 +90,70 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
   String logoDisplay = 'Yes';
   String chatOption = 'Yes';
   XFile? selectedImage; // Store the picked image file
+  bool isLoading = false; // For loading state
 
   final String apiUrl = '${AppConfig.baseUrl}/api/profile-settings';
+  String? authToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfileSettings();
+    fetchToken();// Fetch profile data on load
+  }
+  Future<void> fetchToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      authToken = prefs.getString('authToken'); // Retrieve the token
+    });
+    _fetchProfileSettings(); // Fetch profile data after fetching token
+  }
+  // Fetch existing profile settings from the server
+  Future<void> _fetchProfileSettings() async {
+    try {
+      final response = await http.get(Uri.parse(apiUrl), headers: {
+        'Authorization': 'Bearer $authToken', // Add your JWT token
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+
+        // Prepopulate the form fields with fetched data
+        setState(() {
+          instituteNameController.text = data['instituteName'] ?? '';
+          countryController.text = data['country'] ?? '';
+          cityController.text = data['city'] ?? '';
+          branchNameController.text = data['branchName'] ?? '';
+          branchAddressController.text = data['branchAddress'] ?? '';
+          logoDisplay = data['logoDisplay'] ?? 'Yes';
+          chatOption = data['chatOption'] ?? 'Yes';
+          nameController.text = data['name'] ?? '';
+          mobileController.text = data['mobile'] ?? '';
+          emailController.text = data['email'] ?? '';
+          isLoading = false; // Turn off loading state
+        });
+      } else {
+        // Handle failure
+        throw Exception('Failed to load profile settings');
+      }
+    } catch (error) {
+      print('Error: $error');
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+        const SnackBar(content: Text('Failed to load profile settings')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Wrap the screen with Scaffold
       appBar: AppBar(
         title: const Text('Profile Settings'),
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator()) // Loading spinner
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -109,7 +162,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
             children: <Widget>[
               const Text(
                 'Coaching Class Detail',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               _buildTextField('Institute Name', instituteNameController, true),
@@ -132,7 +186,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
                 'Display logo on receipt?',
                 logoDisplay,
                 ['Yes', 'No'],
-                (value) {
+                    (value) {
                   setState(() {
                     logoDisplay = value!;
                   });
@@ -142,7 +196,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
                 'Allow students to chat?',
                 chatOption,
                 ['Yes', 'No'],
-                (value) {
+                    (value) {
                   setState(() {
                     chatOption = value!;
                   });
