@@ -45,6 +45,22 @@ const upload = multer({
     },
 });
 
+// Fetch profile settings
+router.get('/', verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const profile = await User.findById(userId);
+
+        if (!profile) {
+            return res.status(404).json({ message: 'Profile not found' });
+        }
+
+        res.status(200).json(profile);
+    } catch (error) {
+        console.error('Error fetching profile settings:', error);
+        res.status(500).json({ message: 'Error fetching profile settings', error: error.message });
+    }
+});
 
 
 // Update or create profile settings
