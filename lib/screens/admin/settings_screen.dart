@@ -70,6 +70,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
 
   final String apiUrl = '${AppConfig.baseUrl}/api/profile-settings';
   String? authToken;
+  bool isLoading = true; // Add loading state
 
   @override
   void initState() {
@@ -82,11 +83,56 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
     setState(() {
       authToken = prefs.getString('authToken'); // Retrieve the token
     });
+    fetchProfileData(); // Fetch profile data after fetching token
+  }
+
+  Future<void> fetchProfileData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final response = await http.get(
+      Uri.parse(apiUrl),
+      headers: {
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final profileData = json.decode(response.body);
+
+      setState(() {
+        instituteNameController.text = profileData['instituteName'] ?? '';
+        countryController.text = profileData['country'] ?? '';
+        cityController.text = profileData['city'] ?? '';
+        branchNameController.text = profileData['branchName'] ?? '';
+        feeRecHeaderController.text = profileData['feeRecHeader'] ?? '';
+        branchAddressController.text = profileData['branchAddress'] ?? '';
+        taxNoController.text = profileData['taxNo'] ?? '';
+        feeFooterController.text = profileData['feeFooter'] ?? '';
+        nameController.text = profileData['name'] ?? '';
+        mobileController.text = profileData['mobile'] ?? '';
+        emailController.text = profileData['email'] ?? '';
+        logoDisplay = profileData['logoDisplay'] ?? 'Yes';
+        feeStatusDisplay = profileData['feeStatusDisplay'] ?? 'Yes';
+        chatOption = profileData['chatOption'] ?? 'Yes';
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch profile data')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return isLoading
+        ? Center(child: CircularProgressIndicator()) // Show loader while fetching data
+        : SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Form(
         key: _formKey,
@@ -119,23 +165,23 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
             const SizedBox(height: 20),
             _buildDropdown(
                 'Display logo on receipt?', logoDisplay, ['Yes', 'No'],
-                (value) {
-              setState(() {
-                logoDisplay = value!;
-              });
-            }),
+                    (value) {
+                  setState(() {
+                    logoDisplay = value!;
+                  });
+                }),
             _buildDropdown('Display fee status on receipt?', feeStatusDisplay,
                 ['Yes', 'No'], (value) {
-              setState(() {
-                feeStatusDisplay = value!;
-              });
-            }),
+                  setState(() {
+                    feeStatusDisplay = value!;
+                  });
+                }),
             _buildDropdown('Allow students to chat?', chatOption, ['Yes', 'No'],
-                (value) {
-              setState(() {
-                chatOption = value!;
-              });
-            }),
+                    (value) {
+                  setState(() {
+                    chatOption = value!;
+                  });
+                }),
             const SizedBox(height: 20),
             const Text(
               'Personal Details',
