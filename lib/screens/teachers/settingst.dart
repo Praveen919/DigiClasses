@@ -94,6 +94,55 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
   XFile? selectedImage; // Store the picked image file
 
   final String apiUrl = '${AppConfig.baseUrl}/api/profile-settings';
+  String? authToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfileData();
+    fetchToken();// Fetch profile data on load
+  }
+  Future<void> fetchToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      authToken = prefs.getString('authToken'); // Retrieve the token
+    });
+    _fetchProfileData(); // Fetch profile data after fetching token
+  }
+  Future<void> _fetchProfileData() async {
+    try {
+      final response = await http.get(Uri.parse(apiUrl), headers: {
+        'Authorization': 'Bearer $authToken', // Add your JWT token
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Populate form fields with data
+        setState(() {
+          instituteNameController.text = data['instituteName'] ?? '';
+          countryController.text = data['country'] ?? '';
+          cityController.text = data['city'] ?? '';
+          branchNameController.text = data['branchName'] ?? '';
+          branchAddressController.text = data['branchAddress'] ?? '';
+          nameController.text = data['name'] ?? '';
+          mobileController.text = data['mobile'] ?? '';
+          emailController.text = data['email'] ?? '';
+          logoDisplay = data['logoDisplay'] ?? 'Yes';
+          chatOption = data['chatOption'] ?? 'Yes';
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fetched profile settings.')),
+        );
+      }
+    } catch (error) {
+      print('Error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occurred. Please try again.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,17 +176,17 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
             const SizedBox(height: 20),
             _buildDropdown(
                 'Display logo on receipt?', logoDisplay, ['Yes', 'No'],
-                (value) {
-              setState(() {
-                logoDisplay = value!;
-              });
-            }),
+                    (value) {
+                  setState(() {
+                    logoDisplay = value!;
+                  });
+                }),
             _buildDropdown('Allow students to chat?', chatOption, ['Yes', 'No'],
-                (value) {
-              setState(() {
-                chatOption = value!;
-              });
-            }),
+                    (value) {
+                  setState(() {
+                    chatOption = value!;
+                  });
+                }),
             const SizedBox(height: 20),
             const Text(
               'Personal Details',
