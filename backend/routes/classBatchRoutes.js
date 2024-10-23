@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const ClassBatch = require('../models/classBatchModel');
@@ -14,11 +13,12 @@ router.post('/', async (req, res) => {
             return res.status(409).json({ message: 'Class/Batch with that name already exists' });
         }
 
-        // Create and save new ClassBatch instance
+        // Create new ClassBatch instance
         const newClassBatch = new ClassBatch({ classBatchName, strength, fromTime, toTime });
-        await newClassBatch.save();
 
-        res.status(201).json({ message: 'Class/Batch created successfully!' });
+        // Save the new class/batch
+        await newClassBatch.save();
+        res.status(201).json({ message: 'Class/Batch created successfully!', classBatch: newClassBatch });
     } catch (error) {
         res.status(400).json({ message: 'Error creating class/batch', error: error.message });
     }
@@ -30,33 +30,37 @@ router.get('/', async (req, res) => {
         const classBatches = await ClassBatch.find();
         res.json(classBatches);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching class/batches', error: error.message });
+        res.status(500).json({ message: error.message });
     }
 });
 
 // Get a specific class/batch by ID
 router.get('/:id', async (req, res) => {
     try {
-        const classBatch = await ClassBatch.findById(req.params.id).populate('assignedStudents');
+        const classBatch = await ClassBatch.findById(req.params.id).populate('assignedStudents'); // Populate students
         if (!classBatch) {
             return res.status(404).json({ message: 'ClassBatch not found' });
         }
         res.json(classBatch);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching class/batch', error: error.message });
+        res.status(500).json({ message: error.message });
     }
 });
 
 // Update a class/batch by ID
 router.put('/:id', async (req, res) => {
     try {
-        const updatedClassBatch = await ClassBatch.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        const updatedClassBatch = await ClassBatch.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
         if (!updatedClassBatch) {
             return res.status(404).json({ message: 'ClassBatch not found' });
         }
         res.json(updatedClassBatch);
     } catch (error) {
-        res.status(400).json({ message: 'Error updating class/batch', error: error.message });
+        res.status(400).json({ message: error.message });
     }
 });
 
@@ -69,7 +73,7 @@ router.delete('/:id', async (req, res) => {
         }
         res.json({ message: 'ClassBatch deleted' });
     } catch (error) {
-        res.status(500).json({ message: 'Error deleting class/batch', error: error.message });
+        res.status(500).json({ message: error.message });
     }
 });
 
@@ -89,7 +93,7 @@ router.post('/:id/add-students', async (req, res) => {
 
         res.json({ message: 'Students added successfully', classBatch });
     } catch (error) {
-        res.status(400).json({ message: 'Error adding students', error: error.message });
+        res.status(400).json({ message: error.message });
     }
 });
 
