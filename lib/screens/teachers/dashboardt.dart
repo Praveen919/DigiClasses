@@ -406,14 +406,14 @@ class SidePanel extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.person_remove_alt_1_outlined),
-                title: const Text('Send Absent Student Attendance Message'),
+                title: const Text('View Absent Student Message'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                            const MessagingT(option: 'absentAttendance')),
+                            const MessagingT(option: 'absentStudents')),
                   );
                 },
               ),
