@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:testing_app/screens/students/help_screen.dart';
 import 'package:testing_app/screens/students/estudy_screen.dart';
 import 'package:testing_app/screens/students/exam_screen.dart';
 import 'package:testing_app/screens/students/messaging_screen.dart';
+import 'package:testing_app/screens/students/report_screen.dart';
 import 'package:testing_app/screens/students/settings_screen.dart';
 import 'package:testing_app/screens/students/student_screen.dart';
 import 'package:http/http.dart' as http;
@@ -123,8 +125,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            const ViewSharedDocumentsScreen()),
+                        builder: (context) => ViewSharedDocumentsScreen()),
                   );
                 },
               ),
@@ -136,7 +137,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const GiveFeedbackScreen()),
+                        builder: (context) => GiveFeedbackScreen()),
                   );
                 },
               ),
@@ -154,7 +155,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ExamScreen()),
+                    MaterialPageRoute(builder: (context) => ExamScreen()),
                   );
                   // Navigate to Student management
                 },
@@ -167,7 +168,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const ViewMCQExamScreen()),
+                        builder: (context) => ViewMCQExamScreen()),
                   );
                 },
               ),
@@ -179,7 +180,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const ViewAssignmentsScreen()),
+                        builder: (context) => ViewAssignmentsScreen()),
                   );
                 },
               ),
@@ -253,8 +254,31 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            const TodaysAbsenceMessageScreen()),
+                        builder: (context) => TodaysAbsenceMessageScreen()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.message_outlined),
+                title: const Text('View Messages for me'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => MessageReceivingScreen()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.message_outlined),
+                title: const Text('View Messages for me from teacher'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => MessageReceivingTeacherScreen()),
                   );
                 },
               ),
