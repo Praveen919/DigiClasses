@@ -57,8 +57,6 @@ router.post('/', verifyJWT, async (req, res) => {
         });
 
         await feedbackDoc.save();
-        console.log('Feedback saved:', feedbackDoc); // Log the saved feedback
-
         return res.status(201).json({ message: 'Feedback submitted successfully', feedback: feedbackDoc });
     } catch (error) {
         console.error('Error submitting feedback:', error); // Log the error
@@ -66,17 +64,16 @@ router.post('/', verifyJWT, async (req, res) => {
     }
 });
 
-// Fetch all feedbacks (Admin and Teacher)
+// Fetch all feedbacks from Students
 router.get('/', verifyJWT, async (req, res) => {
-    console.log(`User role: ${req.role}`); // Log user role
-
     // Allow both admin and teacher roles to access this route
     if (!['admin', 'Admin', 'teacher', 'Teacher'].includes(req.role)) {
         return res.status(403).json({ message: 'Access denied' });
     }
 
     try {
-        const feedbacks = await Feedback.find()
+        // Fetch only feedbacks submitted by students
+        const feedbacks = await Feedback.find({ teacherId: null }) // Assuming teacherId is null for student feedback
             .populate('studentId', 'name'); // Populate student name
         return res.status(200).json(feedbacks);
     } catch (error) {
@@ -125,7 +122,6 @@ router.post('/admin', verifyJWT, async (req, res) => {
 
 // Fetch all feedbacks from Teachers (Only Admin can access)
 router.get('/admin', verifyJWT, async (req, res) => {
-    console.log('User Role:', req.role); // Log the user role to check
 
     // Allow only admin roles to access this route
     if (!['admin', 'Admin'].includes(req.role)) {

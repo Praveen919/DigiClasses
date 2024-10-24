@@ -14,6 +14,13 @@ const userSchema = new mongoose.Schema({
     branch: { type: String },  // Optional field for branch
     year: { type: String },    // Optional field for year
 
+    // Class batch field, optional
+    classBatch: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ClassBatch',
+        default: null // Default to null if not assigned
+    },
+
     // Password reset fields
     resetPasswordToken: String,
     resetPasswordExpires: Date

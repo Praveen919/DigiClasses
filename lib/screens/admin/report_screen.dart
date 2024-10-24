@@ -697,49 +697,41 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
   bool isLoading = false;
 
   Future<void> _fetchUsers() async {
+    const url = '${AppConfig.baseUrl}/api/staff-rights/rights'; // Updated URL
+
     setState(() {
       isLoading = true;
     });
 
-    final response = await http
-        .get(Uri.parse('${AppConfig.baseUrl}/api/auth?role=$selectedRights'));
+    try {
+      final response = await http.get(Uri.parse(url));
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      users = List<Map<String, dynamic>>.from(data);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          users = data
+              .where((user) =>
+                  user['role'] == selectedRights && user['staffId'] != null)
+              .map((user) => {
+                    'id': user['staffId']
+                        ['_id'], // Adjust based on your structure
+                    'firstName': user['staffId']['firstName'] ?? '',
+                    'middleName': user['staffId']['middleName'] ?? '',
+                    'lastName': user['staffId']['lastName'] ?? '',
+                    'role': user['role'] ?? '', // Ensure role is captured
+                  })
+              .toList();
+        });
+      } else {
+        print('Error fetching users: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
     }
 
     setState(() {
       isLoading = false;
     });
-  }
-
-  Future<void> _deleteUser(String userId) async {
-    final response =
-        await http.delete(Uri.parse('${AppConfig.baseUrl}/api/auth/$userId'));
-
-    if (response.statusCode == 200) {
-      setState(() {
-        users.removeWhere((user) => user['id'] == userId);
-      });
-    }
-  }
-
-  Future<void> _updateUserRole(String userId, String newRole) async {
-    final response = await http.put(
-      Uri.parse('${AppConfig.baseUrl}/api/auth/$userId'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'role': newRole}),
-    );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        final index = users.indexWhere((user) => user['id'] == userId);
-        if (index != -1) {
-          users[index]['role'] = newRole; // Update locally
-        }
-      });
-    }
   }
 
   @override
@@ -757,7 +749,7 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                _fetchUsers();
+                _fetchUsers(); // Fetch users when the button is pressed
               },
               style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.black, backgroundColor: Colors.white),
@@ -772,7 +764,6 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
               groupValue: selectedRights,
               onChanged: (value) => setState(() {
                 selectedRights = value.toString();
-                _fetchUsers(); // Fetch users when the radio button is changed
               }),
             ),
             RadioListTile(
@@ -781,7 +772,6 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
               groupValue: selectedRights,
               onChanged: (value) => setState(() {
                 selectedRights = value.toString();
-                _fetchUsers(); // Fetch users when the radio button is changed
               }),
             ),
             RadioListTile(
@@ -790,7 +780,6 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
               groupValue: selectedRights,
               onChanged: (value) => setState(() {
                 selectedRights = value.toString();
-                _fetchUsers(); // Fetch users when the radio button is changed
               }),
             ),
             const SizedBox(height: 16),
@@ -807,82 +796,21 @@ class _AppAccessRightsScreenState extends State<AppAccessRightsScreen> {
                 itemCount: users.length,
                 itemBuilder: (context, index) {
                   final user = users[index];
+                  final fullName =
+                      '${user['firstName']} ${user['middleName']} ${user['lastName']}';
                   return ListTile(
                     leading: CircleAvatar(child: Text('U${index + 1}')),
-                    title: Text(user['name']),
+                    title: Text(fullName.isNotEmpty
+                        ? fullName
+                        : 'Unnamed User'), // Handle null names
                     subtitle: Text('Role: ${user['role']}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            // Show a dialog to edit the role
-                            _showEditRoleDialog(user['id'], user['role']);
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            _deleteUser(user['id']);
-                          },
-                        ),
-                      ],
-                    ),
                   );
                 },
               ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Implement any additional functionality here
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-              child: const Text('Update'),
-            ),
           ],
         ),
       ),
-    );
-  }
-
-  void _showEditRoleDialog(String userId, String currentRole) {
-    String newRole = currentRole; // Default to current role
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit User Role'),
-          content: DropdownButton<String>(
-            value: newRole,
-            items: <String>['Admin', 'Teacher', 'Student']
-                .map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: (String? value) {
-              if (value != null) {
-                newRole = value;
-              }
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                _updateUserRole(userId, newRole);
-                Navigator.of(context).pop();
-              },
-              child: const Text('Update'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
     );
   }
 }

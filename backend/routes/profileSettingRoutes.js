@@ -47,6 +47,7 @@ const upload = multer({
 
 // Fetch profile settings
 router.get('/', verifyToken, async (req, res) => {
+    console.log('User ID:', req.user.id); // Log user ID
     try {
         const userId = req.user.id;
         const profile = await User.findById(userId);
@@ -62,10 +63,14 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-
 // Update or create profile settings
 router.post('/', verifyToken, upload.single('profileLogo'), async (req, res) => {
     try {
+        console.log('Request received to update profile settings.');
+
+        // Log the incoming request body
+        console.log('Request body:', req.body);
+
         const {
             instituteName,
             country,
@@ -83,19 +88,23 @@ router.post('/', verifyToken, upload.single('profileLogo'), async (req, res) => 
             email,
         } = req.body;
 
-        const userId = req.user.id; 
+        const userId = req.user.id;
 
         // Validate user ID
         if (!userId) {
+            console.error('Validation error: User ID is required.');
             return res.status(400).json({ message: 'User ID is required' });
         }
-
+        
+        console.log('User ID:', userId);
 
         // Check if email is provided and matches the logged-in user's email
         if (!email || email === 'null') {
+            console.error('Validation error: Email is required and cannot be null.');
             return res.status(400).json({ message: 'Email is required and cannot be null' });
         }
         if (email !== req.user.email) {
+            console.error('Validation error: Email must match the logged-in user. Expected:', req.user.email, 'Received:', email);
             return res.status(400).json({ message: 'Email must match the logged-in user' });
         }
 
@@ -115,12 +124,17 @@ router.post('/', verifyToken, upload.single('profileLogo'), async (req, res) => 
             name,
             mobile,
             email,
-            profileLogo: req.file ? req.file.path : null, 
+            profileLogo: req.file ? req.file.path : null,
         };
+
+        console.log('Profile data prepared for update:', profileData);
 
         // Check for existing profile settings to prevent null email entry
         const existingProfile = await User.findOne({ _id: userId });
+        console.log('Existing profile found:', existingProfile);
+
         if (existingProfile && !existingProfile.email) {
+            console.error('Validation error: Existing profile settings cannot have a null email.');
             return res.status(400).json({ message: 'Existing profile settings cannot have a null email' });
         }
 
@@ -131,6 +145,9 @@ router.post('/', verifyToken, upload.single('profileLogo'), async (req, res) => 
             { new: true, upsert: true }
         );
 
+        console.log('Profile settings updated successfully:', profileSettings);
+
+        // Log the successful response
         res.status(200).json({
             message: 'Profile settings updated successfully',
             profileSettings,
@@ -138,6 +155,7 @@ router.post('/', verifyToken, upload.single('profileLogo'), async (req, res) => 
 
     } catch (error) {
         console.error('Error saving profile settings:', error);
+        console.error('Error stack trace:', error.stack); // Log the stack trace for debugging
         res.status(500).json({ message: 'Error saving profile settings', error: error.message });
     }
 });

@@ -1,4 +1,3 @@
-// models/StudentRights.js
 const mongoose = require('mongoose');
 
 // Define the schema for user roles and rights
@@ -11,6 +10,7 @@ const studentRightsSchema = new mongoose.Schema({
   rights: {
     type: Map,
     of: Boolean,
+    default: {},
   },
 });
 

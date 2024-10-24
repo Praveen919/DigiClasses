@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-//import 'package:file_picker/file_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:testing_app/screens/config.dart';
 import 'package:url_launcher/url_launcher.dart'; // Add this line
 
@@ -152,11 +150,10 @@ class _ViewManualExamScreenState extends State<ViewManualExamScreen> {
 class ExamDetailsScreen extends StatelessWidget {
   final Exam exam;
 
-  const ExamDetailsScreen({Key? key, required this.exam}) : super(key: key);
+  const ExamDetailsScreen({super.key, required this.exam});
 
   Future<void> _launchDocumentUrl(String documentPath) async {
-    final baseUrl = "http://192.168.0.109:3000/"; // Replace with your server URL
-    final url = '$baseUrl$documentPath';
+    final url = '${AppConfig.baseUrl}$documentPath';
 
     if (await canLaunch(url)) {
       await launch(url);
@@ -175,31 +172,43 @@ class ExamDetailsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Standard: ${exam.standard}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 8),
-              Text('Subject: ${exam.subject}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 8),
-              Text('Total Marks: ${exam.totalMarks}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 8),
-              Text('Exam Date: ${exam.examDate.toLocal()}'.split(' ')[0], style: TextStyle(fontSize: 18)),
-              SizedBox(height: 8),
-              Text('Time: ${exam.fromTime} - ${exam.toTime}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 16),
+              Text('Standard: ${exam.standard}',
+                  style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Subject: ${exam.subject}',
+                  style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Total Marks: ${exam.totalMarks}',
+                  style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Exam Date: ${exam.examDate.toLocal()}'.split(' ')[0],
+                  style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Time: ${exam.fromTime} - ${exam.toTime}',
+                  style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 16),
               if (exam.note != null) ...[
-                Text('Note:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(exam.note!, style: TextStyle(fontSize: 16)),
-                SizedBox(height: 16),
+                const Text('Note:',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(exam.note!, style: const TextStyle(fontSize: 16)),
+                const SizedBox(height: 16),
               ],
               if (exam.remark != null) ...[
-                Text('Remark:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(exam.remark!, style: TextStyle(fontSize: 16)),
-                SizedBox(height: 16),
+                const Text('Remark:',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(exam.remark!, style: const TextStyle(fontSize: 16)),
+                const SizedBox(height: 16),
               ],
-              if (exam.documentPath != null && exam.documentPath!.isNotEmpty) ...[
-                Text('Document:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              if (exam.documentPath != null &&
+                  exam.documentPath!.isNotEmpty) ...[
+                const Text('Document:',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ElevatedButton(
                   onPressed: () => _launchDocumentUrl(exam.documentPath!),
-                  child: Text('View Document'),
+                  child: const Text('View Document'),
                 ),
               ],
             ],
@@ -209,6 +218,7 @@ class ExamDetailsScreen extends StatelessWidget {
     );
   }
 }
+
 class ViewMCQExamScreen extends StatefulWidget {
   const ViewMCQExamScreen({super.key});
 
@@ -217,6 +227,158 @@ class ViewMCQExamScreen extends StatefulWidget {
 }
 
 class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
+  List<Map<String, dynamic>> exams = [];
+  bool isLoading = false;
+  String searchTerm = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExams();
+  }
+
+  Future<void> _fetchExams() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/'),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          exams = data.map((exam) {
+            return {
+              'id': exam['_id'],
+              'paperName': exam['paperName'] ?? 'N/A',
+              'standard': exam['standard'] ?? 'N/A',
+              'subject': exam['subject'] ?? 'N/A',
+              'examPaperType': exam['examPaperType'] ?? 'N/A',
+            };
+          }).toList();
+        });
+      } else {
+        _showErrorSnackbar('Failed to load exams: ${response.statusCode}');
+      }
+    } catch (error) {
+      _showErrorSnackbar('Error fetching exams: $error');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  // Navigate to the ViewMCQsScreen for a specific exam
+  void _navigateToViewMCQsScreen(String examId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ViewMCQsScreen(examId: examId),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text('Manage MCQ Exams'),
+        backgroundColor: Colors.teal,
+      ),
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            color: Colors.grey[200],
+            child: const Text(
+              'Select MCQ Exam',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  searchTerm = value.toLowerCase();
+                });
+              },
+            ),
+          ),
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : exams.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No MCQ Exams found',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: exams.length,
+                        itemBuilder: (context, index) {
+                          final exam = exams[index];
+                          if (!exam['paperName']
+                              .toLowerCase()
+                              .contains(searchTerm)) {
+                            return const SizedBox.shrink();
+                          }
+                          return Card(
+                            margin: const EdgeInsets.all(8.0),
+                            child: ListTile(
+                              title: Text(exam['paperName']),
+                              subtitle: Text(
+                                  'Standard: ${exam['standard']} \nSubject: ${exam['subject']}'),
+                              trailing: IconButton(
+                                icon: const Icon(
+                                    Icons.arrow_forward), // Navigate button
+                                onPressed: () {
+                                  _navigateToViewMCQsScreen(
+                                      exam['id']); // Pass examId correctly
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ViewMCQsScreen extends StatefulWidget {
+  final String examId;
+
+  const ViewMCQsScreen({super.key, required this.examId});
+
+  @override
+  _ViewMCQsScreenState createState() => _ViewMCQsScreenState();
+}
+
+class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
   int currentQuestionIndex = 0;
   Map<int, String?> selectedAnswers =
       {}; // Stores selected answers for each question
@@ -224,7 +386,6 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   List<List<String>> options = [];
   String paperName = '';
   String subject = '';
-  String examId = '';
   bool isLoading = true;
 
   // Timer and Exam Duration
@@ -242,8 +403,9 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   // Fetch the exam from the server
   Future<void> fetchMCQExam() async {
     try {
-      final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/mcq-exams/$examId')); // Update EXAM_ID dynamically
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/${widget.examId}'),
+      ); // Fetch based on examId
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -253,7 +415,6 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
               List<String>.from(data['questions'].map((q) => q['question']));
           options = List<List<String>>.from(
               data['questions'].map((q) => List<String>.from(q['options'])));
-          examId = data['_id']; // Store exam ID for submitting later
           examEndTime = DateTime.now().add(examDuration); // Set exam timer
           updateTimer();
           isLoading = false;
@@ -313,7 +474,7 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   // Submit the exam answers to the server
   void submitExam() async {
     final submissionData = {
-      'examId': examId,
+      'examId': widget.examId,
       'answers': selectedAnswers.entries
           .map((e) => {'questionIndex': e.key, 'answer': e.value})
           .toList(),
@@ -321,14 +482,21 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
 
     try {
       final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/submit'),
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode(submissionData));
+        Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/submit'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(submissionData),
+      );
 
       if (response.statusCode == 200) {
         print('Exam submitted successfully');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Exam submitted successfully')),
+        );
       } else {
         print('Failed to submit exam');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to submit exam')),
+        );
       }
     } catch (error) {
       print('Error submitting exam: $error');
@@ -356,34 +524,29 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
                     style: const TextStyle(
                         fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8.0),
+                  const SizedBox(height: 10),
                   Text(
                     'Subject: $subject',
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(fontSize: 18),
                   ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    'Time Remaining: $timerDisplay',
-                    style: const TextStyle(fontSize: 16, color: Colors.red),
-                  ),
-                  const SizedBox(height: 16.0),
+                  const SizedBox(height: 10),
 
-                  // Question Progress
+                  // Timer display
                   Text(
-                    'Question ${currentQuestionIndex + 1} of ${questions.length}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 16.0),
-
-                  // Question Display
-                  Text(
-                    questions[currentQuestionIndex],
+                    'Time remaining: $timerDisplay',
                     style: const TextStyle(
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 16.0),
+                  const SizedBox(height: 20),
 
-                  // Answer Choices
+                  // Question display
+                  Text(
+                    'Question ${currentQuestionIndex + 1}/${questions.length}: ${questions[currentQuestionIndex]}',
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Options display
                   ...options[currentQuestionIndex].map((option) {
                     return RadioListTile<String>(
                       title: Text(option),
@@ -395,8 +558,9 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
                     );
                   }),
 
+                  const SizedBox(height: 20),
+
                   // Navigation Buttons
-                  const SizedBox(height: 16.0),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -410,14 +574,11 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16.0),
-
+                  const SizedBox(height: 10),
                   // Submit Button
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: submitExam,
-                      child: const Text('Submit'),
-                    ),
+                  ElevatedButton(
+                    onPressed: submitExam,
+                    child: const Text('Submit Exam'),
                   ),
                 ],
               ),

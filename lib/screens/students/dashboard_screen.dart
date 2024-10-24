@@ -125,7 +125,8 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ViewSharedDocumentsScreen()),
+                        builder: (context) =>
+                            const ViewSharedDocumentsScreen()),
                   );
                 },
               ),
@@ -137,7 +138,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => GiveFeedbackScreen()),
+                        builder: (context) => const GiveFeedbackScreen()),
                   );
                 },
               ),
@@ -155,7 +156,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => ExamScreen()),
+                    MaterialPageRoute(builder: (context) => const ExamScreen()),
                   );
                   // Navigate to Student management
                 },
@@ -168,7 +169,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ViewMCQExamScreen()),
+                        builder: (context) => const ViewMCQExamScreen()),
                   );
                 },
               ),
@@ -180,7 +181,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ViewAssignmentsScreen()),
+                        builder: (context) => const ViewAssignmentsScreen()),
                   );
                 },
               ),
@@ -254,7 +255,8 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => TodaysAbsenceMessageScreen()),
+                        builder: (context) =>
+                            const TodaysAbsenceMessageScreen()),
                   );
                 },
               ),

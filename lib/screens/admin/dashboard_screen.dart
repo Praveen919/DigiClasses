@@ -366,19 +366,6 @@ class SidePanel extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.message_outlined),
-                title: const Text('Chat with Students'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const StudentScreen(option: 'chatWithStudents')),
-                  );
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.feedback_outlined),
                 title: const Text('Students Feedback'),
                 onTap: () {

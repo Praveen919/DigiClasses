@@ -26,15 +26,15 @@ class ExamScreen extends StatelessWidget {
   Widget _buildContent() {
     switch (option) {
       case 'createManualExam':
-        return CreateManualExamScreen();
+        return const CreateManualExamScreen();
       case 'manageManualExam':
-        return ManageManualExamScreen();
+        return const ManageManualExamScreen();
       case 'createMCQExam':
         return const CreateMCQExamScreen();
       case 'manageMCQExam':
         return const ManageMCQExamScreen();
       case 'createAssignments':
-        return CreateAssignmentsScreen();
+        return const CreateAssignmentsScreen();
       case 'manageAssignments':
         return const ManageAssignmentsScreen();
 
@@ -990,7 +990,7 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                     minimumSize:
                         const Size(double.infinity, 50), // Full-width button
                   ),
-                  child: Text('Save Questions'),
+                  child: const Text('Save Questions'),
                 ),
                 const SizedBox(height: 16.0),
                 ElevatedButton(
@@ -999,7 +999,7 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                     minimumSize:
                         const Size(double.infinity, 50), // Full-width button
                   ),
-                  child: Text('Reset'),
+                  child: const Text('Reset'),
                 ),
               ],
             ),

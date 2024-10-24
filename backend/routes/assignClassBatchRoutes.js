@@ -2,7 +2,25 @@ const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const ClassBatch = require('../models/classBatchModel');
-const Student = require('../models/studentModel');
+const User = require('../models/userModel'); // Assuming you have a User model
+const jwt = require('jsonwebtoken');
+
+// JWT verification middleware
+const verifyJWT = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1]; // Extract token from Authorization header
+
+  if (!token) {
+    return res.status(403).json({ message: 'No token provided' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    req.userId = decoded.id; // Store the user ID (student) in the request
+    next(); // Proceed to the next middleware or route handler
+  });
+};
 
 // Fetch all classes/batches
 router.get('/classes', async (req, res) => {
@@ -15,102 +33,100 @@ router.get('/classes', async (req, res) => {
   }
 });
 
-// Assign a class/batch to a student by full name
-router.post('/assign', async (req, res) => {
-  const { fullName, classBatchId } = req.body;
-
-  console.log('Assign Request Body:', req.body); // Log the incoming request body
-
+// Assign a class/batch to a user (student) by user ID from the token
+router.post('/assign', verifyJWT, async (req, res) => {
+  const { classBatchId } = req.body; // Get classBatchId from request body
+  const userId = req.userId; // Get userId from the authenticated user's token
   try {
-    // Split the full name into parts (assuming the format is firstName, middleName, lastName)
-    const nameParts = fullName.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
-    const lastName = nameParts[nameParts.length - 1] || '';
+    // Fetch the user (student) by ID from the token
+    const user = await User.findById(userId);
 
-    // Fetch the student by their full name (first name, middle name, last name)
-    const student = await Student.findOne({
-      firstName: firstName,
-      middleName: middleName,
-      lastName: lastName
-    });
-
-    console.log('Fetched Student:', student); // Log the fetched student
-
-    if (!student) {
-      console.error(`Student with name ${fullName} not found`); // More specific logging
-      return res.status(404).json({ message: 'Student not found' });
+    if (!user) {
+      console.error(`User with ID ${userId} not found`); // More specific logging
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Fetch the class batch directly using the provided ID
-    const classBatch = await ClassBatch.findById(classBatchId); 
-    console.log('Fetched ClassBatch:', classBatch); // Log the fetched classBatch
+    const classBatch = await ClassBatch.findById(classBatchId);
 
     if (!classBatch) {
       console.error(`ClassBatch with ID ${classBatchId} not found`); // More specific logging
       return res.status(404).json({ message: 'Class/Batch not found' });
     }
 
-    // Update the student's class/batch assignment
-    student.classBatch = classBatchId;
-    await student.save();
+    // Check if the user is already assigned to the specified class/batch
+    if (user.classBatch && user.classBatch.toString() === classBatchId) {
+      return res.status(400).json({ message: 'Student is already assigned to this class/batch' });
+    }
 
-    // Check if the student is already in assignedStudents
-    if (!classBatch.assignedStudents.includes(student._id)) {
-      classBatch.assignedStudents.push(student._id);
+    // Update the user's class/batch assignment
+    user.classBatch = classBatchId; // If you're keeping this in User model as well
+    await user.save();
+
+    // Check if the user is already in assignedStudents
+    if (!classBatch.assignedStudents.includes(user._id)) {
+      classBatch.assignedStudents.push(user._id);
       await classBatch.save();
     }
 
-    res.json({ message: 'Class/Batch assigned to student successfully' });
+    res.json({ message: 'Class/Batch assigned to user successfully' });
   } catch (error) {
     console.error('Error in assigning class/batch:', error); // Log error for debugging
     res.status(500).json({ message: 'Server Error' });
   }
 });
 
-// Fetch students assigned to a specific class/batch
+// Fetch users (students) assigned to a specific class/batch
 router.get('/students/:classBatchId', async (req, res) => {
   const { classBatchId } = req.params;
 
   try {
-    const students = await Student.find({ classBatch: classBatchId });
-    res.json(students);
+    const users = await User.find({ classBatch: classBatchId });
+    res.json(users);
   } catch (error) {
     console.error('Error fetching students:', error); // Log the error for debugging
     res.status(500).json({ message: 'Server Error' });
   }
 });
 
-// Remove a student from a class/batch
-router.post('/remove', async (req, res) => {
-  const { studentId, classBatchId } = req.body;
+// Remove a user (student) from a class/batch
+router.post('/remove', verifyJWT, async (req, res) => {
+  const { classBatchId } = req.body; // Get classBatchId from request body
+  const userId = req.userId; // Get userId from the authenticated user's token
 
   try {
-    const student = await Student.findById(studentId); // no need for mongoose.Types.ObjectId
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
-    }
+      // Fetch the user by ID using userId from the User model
+      const user = await User.findById(userId); // Use userId to find the User
 
-    // Check if the student is currently assigned to the specified class/batch
-    if (!student.classBatch || student.classBatch.toString() !== classBatchId) {
-      return res.status(400).json({ message: 'Student not assigned to this class/batch' });
-    }
+      if (!user) {
+          console.error(`User with ID ${userId} not found`); // Log if user not found
+          return res.status(404).json({ message: 'User not found' });
+      }
 
-    // Remove the class/batch assignment
-    student.classBatch = null; // or any value indicating no assignment
-    await student.save();
+      // Check if the user is currently assigned to the specified class/batch
+      if (!user.classBatch || user.classBatch.toString() !== classBatchId) {
+          return res.status(400).json({ message: 'Student is not assigned to this class/batch' });
+      }
 
-    // Remove the studentId from the assignedStudents array
-    const classBatch = await ClassBatch.findById(classBatchId);
-    if (classBatch) {
-      classBatch.assignedStudents.pull(studentId); // Remove studentId from assignedStudents
+      // Remove the class/batch assignment
+      user.classBatch = null; // Indicating no assignment
+      await user.save();
+
+      // Fetch the class batch to remove the user from assignedStudents array
+      const classBatch = await ClassBatch.findById(classBatchId);
+      if (!classBatch) {
+          console.error(`ClassBatch with ID ${classBatchId} not found`); // Log if classBatch not found
+          return res.status(404).json({ message: 'Class/Batch not found' });
+      }
+
+      // Remove the userId from the assignedStudents array
+      classBatch.assignedStudents.pull(user._id); // Use user._id here for consistency
       await classBatch.save();
-    }
 
-    res.json({ message: 'Student removed from class/batch successfully' });
+      res.json({ message: 'User removed from class/batch successfully' });
   } catch (error) {
-    console.error('Error in removing student from class/batch:', error); // Log error for debugging
-    res.status(500).json({ message: 'Server Error' });
+      console.error('Error in removing user from class/batch:', error); // Log error for debugging
+      res.status(500).json({ message: 'Server Error' });
   }
 });
 

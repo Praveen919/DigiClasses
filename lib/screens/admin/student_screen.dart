@@ -43,14 +43,10 @@ class _StudentScreenState extends State<StudentScreen> {
         return const ManageStudentScreen();
       case 'assignClassBatch':
         return AssignClassBatchScreen();
-      case 'studentAttendance':
-        return StudentAttendanceScreen();
       case 'shareDocuments':
         return const ShareDocumentsScreen();
       case 'manageSharedDocuments':
         return const ManageSharedDocumentsScreen();
-      case 'chatWithStudents':
-        return const ChatWithStudentsScreen();
       case 'studentsFeedback':
         return const StudentsFeedbackScreen();
       case 'studentRights':
@@ -1898,14 +1894,17 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
   // Assign student to class/batch
   Future<void> assignStudentToClass() async {
     if (selectedStudentId != null && selectedClassBatchId != null) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('authToken');
+
       try {
         final response = await http.post(
           Uri.parse('${AppConfig.baseUrl}/api/assignClassBatch/assign'),
           headers: <String, String>{
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
           },
           body: jsonEncode(<String, String>{
-            'studentId': selectedStudentId!,
             'classBatchId': selectedClassBatchId!,
           }),
         );
@@ -1914,6 +1913,11 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Student assigned to class/batch successfully.')),
+          );
+        } else if (response.statusCode == 400) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Student already assigned to Class/Batch.')),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1934,14 +1938,17 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
   // Remove student from class/batch
   Future<void> removeStudentFromClass() async {
     if (selectedStudentId != null && selectedClassBatchId != null) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('authToken');
+
       try {
         final response = await http.post(
           Uri.parse('${AppConfig.baseUrl}/api/assignClassBatch/remove'),
           headers: <String, String>{
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
           },
           body: jsonEncode(<String, String>{
-            'studentId': selectedStudentId!,
             'classBatchId': selectedClassBatchId!,
           }),
         );
@@ -1951,6 +1958,11 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
             const SnackBar(
                 content:
                     Text('Student removed from class/batch successfully.')),
+          );
+        } else if (response.statusCode == 400) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Student not assigned to Class/Batch.')),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -2013,17 +2025,10 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                       border: OutlineInputBorder(),
                     ),
                     items: classBatches.map<DropdownMenuItem<String>>((batch) {
-                      // Check if the necessary data exists
-                      if (batch['_id'] != null &&
-                          batch['classBatchName'] != null) {
-                        return DropdownMenuItem<String>(
-                          value: batch['_id'],
-                          child: Text(batch['classBatchName']),
-                        );
-                      }
-                      // Return an empty DropdownMenuItem if data is not valid
-                      return const DropdownMenuItem<String>(
-                          value: null, child: Text('Invalid batch'));
+                      return DropdownMenuItem<String>(
+                        value: batch['_id'],
+                        child: Text(batch['classBatchName']),
+                      );
                     }).toList(),
                     onChanged: (value) {
                       setState(() {
@@ -2054,271 +2059,6 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
                 ],
               ),
             ),
-    );
-  }
-}
-
-class StudentAttendanceScreen extends StatefulWidget {
-  const StudentAttendanceScreen({super.key});
-
-  @override
-  _StudentAttendanceScreenState createState() =>
-      _StudentAttendanceScreenState();
-}
-
-class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
-  String _selectedMonth = DateFormat('MMMM').format(DateTime.now());
-  String _day = DateFormat('d').format(DateTime.now());
-  String _year = DateFormat('y').format(DateTime.now());
-  String? _selectedClassBatch;
-  bool isLoading = true;
-  bool _attendanceTaken = false;
-
-  List<String> _classBatches = [];
-  List<dynamic> students = [];
-  List<Map<String, dynamic>> attendanceData = [];
-
-  @override
-  void initState() {
-    super.initState();
-    fetchData();
-  }
-
-  Future<void> fetchData() async {
-    setState(() => isLoading = true);
-    try {
-      final allStudents = await getAllStudents();
-      final allClassBatches = await getAllClassBatches();
-      setState(() {
-        students = allStudents;
-        _classBatches =
-            allClassBatches.map((batch) => batch['name'] as String).toList();
-        isLoading = false;
-      });
-    } catch (e) {
-      print('Error fetching data: $e');
-      setState(() => isLoading = false);
-    }
-  }
-
-  Future<List<dynamic>> getAllStudents() async {
-    final token = await _getAuthToken();
-    final response = await http.get(
-      Uri.parse('${AppConfig.baseUrl}/api/auth/students'),
-      headers: _getHeaders(token),
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load students');
-    }
-  }
-
-  Future<List<dynamic>> getAllClassBatches() async {
-    final token = await _getAuthToken();
-    final response = await http.get(
-      Uri.parse('${AppConfig.baseUrl}/api/class-batch'),
-      headers: _getHeaders(token),
-    );
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load class batches');
-    }
-  }
-
-  Future<String?> _getAuthToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('authToken');
-  }
-
-  Map<String, String> _getHeaders(String? token) {
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
-  }
-
-  Future<void> _fetchAttendanceData() async {
-    final token = await _getAuthToken();
-    final response = await http.get(
-      Uri.parse(
-          '${AppConfig.baseUrl}/api/attendance?month=$_selectedMonth&day=$_day&year=$_year&classBatch=$_selectedClassBatch'),
-      headers: _getHeaders(token),
-    );
-
-    if (response.statusCode == 200) {
-      attendanceData =
-          List<Map<String, dynamic>>.from(json.decode(response.body));
-      _attendanceTaken = true;
-      setState(() {});
-    } else {
-      throw Exception('Failed to load attendance data');
-    }
-  }
-
-  Future<void> _updateAttendance() async {
-    // Your existing implementation...
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Student Attendance'),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: _attendanceTaken
-                  ? _buildAttendanceTable()
-                  : _buildAttendanceForm(),
-            ),
-    );
-  }
-
-  Widget _buildAttendanceForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Take Student Attendance',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16.0),
-        _buildDatePicker(),
-        const SizedBox(height: 16.0),
-        _buildClassBatchDropdown(),
-        const SizedBox(height: 16.0),
-        _buildButtons(),
-      ],
-    );
-  }
-
-  Widget _buildDatePicker() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          Flexible(flex: 3, child: _buildMonthDropdown()),
-          const SizedBox(width: 8.0),
-          Flexible(flex: 1, child: _buildDayField()),
-          const SizedBox(width: 8.0),
-          Flexible(flex: 2, child: _buildYearField()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMonthDropdown() {
-    return DropdownButtonFormField<String>(
-      value: _selectedMonth,
-      items: List.generate(12, (index) {
-        String monthName = DateFormat('MMMM').format(DateTime(0, index + 1));
-        return DropdownMenuItem<String>(
-          value: monthName,
-          child: Text(monthName),
-        );
-      }),
-      onChanged: (String? newValue) {
-        setState(() {
-          _selectedMonth = newValue!;
-        });
-      },
-      decoration: const InputDecoration(
-        labelText: 'Month',
-        border: OutlineInputBorder(),
-      ),
-    );
-  }
-
-  Widget _buildDayField() {
-    return TextFormField(
-      decoration: const InputDecoration(
-        labelText: 'Day',
-        border: OutlineInputBorder(),
-      ),
-      keyboardType: TextInputType.number,
-      initialValue: _day,
-      onChanged: (value) {
-        setState(() {
-          _day = value;
-        });
-      },
-    );
-  }
-
-  Widget _buildYearField() {
-    return TextFormField(
-      decoration: const InputDecoration(
-        labelText: 'Year',
-        border: OutlineInputBorder(),
-      ),
-      keyboardType: TextInputType.number,
-      initialValue: _year,
-      onChanged: (value) {
-        setState(() {
-          _year = value;
-        });
-      },
-    );
-  }
-
-  Widget _buildClassBatchDropdown() {
-    return DropdownButtonFormField<String>(
-      decoration: const InputDecoration(
-        labelText: 'Select Class/Batch',
-        border: OutlineInputBorder(),
-      ),
-      value: _selectedClassBatch,
-      items: _classBatches.map<DropdownMenuItem<String>>((batch) {
-        return DropdownMenuItem<String>(
-          value: batch,
-          child: Text(batch),
-        );
-      }).toList(),
-      onChanged: (value) {
-        setState(() {
-          _selectedClassBatch = value;
-        });
-      },
-    );
-  }
-
-  Widget _buildButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        ElevatedButton(
-          onPressed: () {
-            _fetchAttendanceData();
-          },
-          child: const Text('Fetch Attendance'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            _updateAttendance();
-          },
-          child: const Text('Update Attendance'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAttendanceTable() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: const [
-          DataColumn(label: Text('Student Name')),
-          DataColumn(label: Text('Attendance Status')),
-        ],
-        rows: attendanceData.map((attendance) {
-          return DataRow(cells: [
-            DataCell(Text(attendance['studentName'])),
-            DataCell(Text(attendance['status'])),
-          ]);
-        }).toList(),
-      ),
     );
   }
 }
@@ -2757,227 +2497,6 @@ class SharedDocumentCard extends StatelessWidget {
   }
 }
 
-class ChatWithStudentsScreen extends StatefulWidget {
-  const ChatWithStudentsScreen({super.key});
-
-  @override
-  _ChatWithStudentsScreenState createState() => _ChatWithStudentsScreenState();
-}
-
-class _ChatWithStudentsScreenState extends State<ChatWithStudentsScreen> {
-  List<Map<String, dynamic>> _students = [];
-  List<Map<String, dynamic>> _filteredStudents = [];
-  String? _selectedStudent;
-  final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _subjectController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchStudents();
-    _searchController.addListener(_filterStudents);
-  }
-
-  Future<void> _fetchStudents() async {
-    try {
-      final response = await http.get(Uri.parse(
-          '${AppConfig.baseUrl}/api/students/all')); //if this not works change it to (Uri.parse('${AppConfig.baseUrl}/api/users?role=Student'));
-      if (response.statusCode == 200) {
-        final List<dynamic> students = jsonDecode(response.body);
-        setState(() {
-          _students = students
-              .map((student) => {
-                    'id': student['_id'],
-                    'name': student['name'],
-                  })
-              .toList();
-          _filteredStudents = _students;
-        });
-      } else {
-        throw Exception('Failed to load students');
-      }
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  void _filterStudents() {
-    String query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredStudents = _students.where((student) {
-        return student['name'].toLowerCase().contains(query);
-      }).toList();
-    });
-  }
-
-  void _selectStudent(String studentName) {
-    setState(() {
-      _selectedStudent = studentName;
-      _searchController.text =
-          studentName; // Set the search bar with the selected student's name
-    });
-  }
-
-  Future<void> _sendMessage() async {
-    if (_selectedStudent != null &&
-        _subjectController.text.isNotEmpty &&
-        _messageController.text.isNotEmpty) {
-      try {
-        final student = _students
-            .firstWhere((student) => student['name'] == _selectedStudent);
-        final response = await http.post(
-          Uri.parse('${AppConfig.baseUrl}/api/messageStudent/student/messages'),
-          body: jsonEncode({
-            'studentId': student['id'],
-            'subject': _subjectController.text,
-            'message': _messageController.text,
-          }),
-          headers: {'Content-Type': 'application/json'},
-        );
-        if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Message sent successfully')),
-          );
-          _resetForm();
-        } else {
-          throw Exception('Failed to send message');
-        }
-      } catch (e) {
-        print(e);
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all the fields')),
-      );
-    }
-  }
-
-  void _resetForm() {
-    setState(() {
-      _selectedStudent = null;
-      _subjectController.clear();
-      _messageController.clear();
-      _searchController.clear();
-    });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _subjectController.dispose();
-    _messageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Chat With Students'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar
-            TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Search Student',
-                suffixIcon: Icon(Icons.search),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Dropdown for Student Names
-            DropdownButtonFormField<String>(
-              value: _selectedStudent,
-              items: _filteredStudents.map((student) {
-                return DropdownMenuItem<String>(
-                  value: student['name'],
-                  child: Text(student['name']),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                _selectStudent(newValue!);
-              },
-              decoration: const InputDecoration(
-                labelText: 'Student Name*',
-                border: OutlineInputBorder(),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Subject/Topic
-            TextFormField(
-              controller: _subjectController,
-              decoration: const InputDecoration(
-                labelText: 'Subject/Topic*',
-                border: OutlineInputBorder(),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Message
-            TextFormField(
-              controller: _messageController,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                labelText: 'Message*',
-                border: OutlineInputBorder(),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              ),
-            ),
-            const SizedBox(height: 32.0),
-
-            // Send and Cancel buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: ElevatedButton(
-                      onPressed: _sendMessage,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      ),
-                      child: const Text('Send', style: TextStyle(fontSize: 16)),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: ElevatedButton(
-                      onPressed: _resetForm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey,
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      ),
-                      child:
-                          const Text('Cancel', style: TextStyle(fontSize: 16)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class StudentsFeedbackScreen extends StatefulWidget {
   const StudentsFeedbackScreen({super.key});
 
@@ -3019,11 +2538,11 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
       final response = await http.get(
         Uri.parse('${AppConfig.baseUrl}/api/feedbacks'),
         headers: {
-          'Authorization': 'Bearer $_token',
+          'Authorization': 'Bearer $_token', // Include token in the request
         },
       );
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      print('Response status: ${response.statusCode}'); // Log status code
+      print('Response body: ${response.body}'); // Log response body
 
       if (response.statusCode == 200) {
         final List<dynamic> feedbacks = jsonDecode(response.body);
@@ -3031,15 +2550,13 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
           _feedbacks = feedbacks;
           _filteredFeedbacks = feedbacks;
         });
-      } else if (response.statusCode == 403) {
-        print('Access denied: ${response.reasonPhrase}');
-        _showErrorDialog('Access denied. Please check your permissions.');
       } else {
-        print('Failed to fetch feedbacks: ${response.reasonPhrase}');
+        print(
+            'Failed to fetch feedbacks: ${response.reasonPhrase}'); // Log reason for failure
         throw Exception('Failed to load feedbacks: ${response.reasonPhrase}');
       }
     } catch (e) {
-      print('Error in fetching feedbacks: $e');
+      print('Error in fetching feedbacks: $e'); // Log error details
       _showErrorDialog('Error fetching feedbacks: ${e.toString()}');
     }
   }
@@ -3048,9 +2565,9 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
     setState(() {
       _searchQuery = query;
       _filteredFeedbacks = _feedbacks.where((feedback) {
-        return feedback['studentId']['name']
-                .toLowerCase()
-                .contains(query.toLowerCase()) ||
+        // Add proper null check for 'studentId' and 'name'
+        final studentName = feedback['studentId']?['name'] ?? 'Unknown';
+        return studentName.toLowerCase().contains(query.toLowerCase()) ||
             feedback['subject'].toLowerCase().contains(query.toLowerCase());
       }).toList();
     });
@@ -3095,9 +2612,7 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
                 hintText: 'Search by Student Name or Subject',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
-                  onPressed: () {
-                    // Implement search functionality here if needed
-                  },
+                  onPressed: () {},
                 ),
                 border: const OutlineInputBorder(),
                 contentPadding: const EdgeInsets.symmetric(
@@ -3109,7 +2624,7 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
             // Student Feedback List
             Expanded(
               child: _filteredFeedbacks.isEmpty
-                  ? Center(
+                  ? const Center(
                       child: Text(
                           'No feedbacks to show')) // Display message if no feedbacks
                   : ListView.builder(
@@ -3118,7 +2633,6 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
                         return StudentFeedbackCard(
                           feedback: _filteredFeedbacks[index],
                           onViewDetails: () {
-                            // Implement view details functionality
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -3164,7 +2678,7 @@ class StudentFeedbackCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Student: ${feedback['studentId']['name'] ?? 'Unknown'}', // Display student name
+              'Student: ${feedback['studentId']?['name'] ?? 'Unknown'}', // Corrected student name handling
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8.0),
@@ -3210,7 +2724,7 @@ class FeedbackDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Student Name: ${feedback['studentId']['name'] ?? 'Unknown'}'), // Corrected student name display
+                'Student Name: ${feedback['studentId']?['name'] ?? 'Unknown'}'), // Corrected student name display
             Text('Subject: ${feedback['subject']}'),
             Text('Feedback: ${feedback['feedback']}'),
           ],
@@ -3350,7 +2864,8 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
               onPressed: () {
                 setState(() {
                   if (type == 'Activity') {
-                    _activityChecks[controller.text] = false;
+                    _activityChecks[controller.text] =
+                        false; // Initialize as unchecked
                   }
                 });
                 Navigator.of(context).pop();
@@ -3370,20 +2885,55 @@ class _StudentRightsScreenState extends State<StudentRightsScreen> {
         ..._reportChecks,
       };
 
-      // Send to backend
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/assign-rights/assign-rights'),
+      // Separate rights into add and remove based on their current state
+      List<String> rightsToAdd = selectedRights.entries
+          .where((entry) => entry.value)
+          .map((entry) => entry.key)
+          .toList();
+
+      List<String> rightsToRemove = selectedRights.entries
+          .where((entry) => !entry.value)
+          .map((entry) => entry.key)
+          .toList();
+
+      // Send to backend for adding rights
+      await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/assign-rights'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'role': 'Student', 'rights': selectedRights}),
+        body: jsonEncode({
+          'role': 'Student',
+          'rights': rightsToAdd,
+          'action': 'add',
+        }),
       );
 
-      if (response.statusCode == 200) {
-        print('Rights saved successfully');
-      } else {
-        throw Exception('Failed to save rights');
-      }
+      // Send to backend for removing rights
+      await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/assign-rights'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'role': 'Student',
+          'rights': rightsToRemove,
+          'action': 'remove',
+        }),
+      );
+
+      // Show Snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Rights saved successfully'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     } catch (e) {
       print('Error: $e');
+      // Optionally, show an error Snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 }
