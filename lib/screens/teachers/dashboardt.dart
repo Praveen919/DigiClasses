@@ -340,6 +340,19 @@ class SidePanel extends StatelessWidget {
             title: const Text('Messaging'),
             children: <Widget>[
               ListTile(
+                leading: const Icon(Icons.person_sharp),
+                title: const Text('Send message to Admin'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                        const MessagingT(option: 'admin')),
+                  );
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.person),
                 title: const Text('Send message to Student'),
                 onTap: () {
@@ -379,6 +392,19 @@ class SidePanel extends StatelessWidget {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.message_outlined),
+                title: const Text('View Messages for me'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                        const MessagingT(option: 'receivedMessage')),
+                  );
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.person_remove_alt_1_outlined),
                 title: const Text('Send Absent Student Attendance Message'),
                 onTap: () {
@@ -393,6 +419,7 @@ class SidePanel extends StatelessWidget {
               ),
             ],
           ),
+
           ExpansionTile(
             leading: const Icon(Icons.live_help_outlined),
             title: const Text('Help'),
