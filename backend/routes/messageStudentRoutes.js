@@ -169,33 +169,44 @@ router.get('/teacher/admin/messages', verifyJWT, async (req, res) => {
 
 
 // POST route to send a message from teacher to student
-router.post('/teacher/messages', async (req, res) => {
-  const { studentId, title, message } = req.body;  //teacherId
+router.post('/teacher/messages', verifyJWT, async (req, res) => {
+  const { studentId, title, message } = req.body;
 
-  // Validate input
-  if ( !studentId || !title || !message) {
+  // Log the incoming request data
+  console.log('Received message request from teacher:', { studentId, title, message });
+
+  // Validate required fields
+  if (!studentId || !title || !message) {
     return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Check user role (only teachers can send messages)
+  if (req.role.toLowerCase() !== 'teacher') {
+    console.error('Access denied: User is not a teacher');
+    return res.status(403).json({ message: 'Access denied. Only teachers can send messages.' });
   }
 
   try {
     // Create a new teacher-to-student message
     const newMessage = new TeacherToStudentMessage({
-      //teacherId,
       studentId,
       title,
       message,
+      teacherId: req.userId, // Store the teacher's ID
+      createdAt: new Date(),
     });
 
     // Save message to the database
     await newMessage.save();
 
     // Send success response
-    res.status(200).json({ success: true, message: 'Message sent successfully' });
+    res.status(201).json({ success: true, message: 'Message sent successfully', message: newMessage });
   } catch (err) {
-    console.error(err);
+    console.error('Error sending message to student:', err);
     res.status(500).json({ error: 'Server error while sending message' });
   }
 });
+
 
 // POST route to send a message from teacher to staff
 router.post('/teacher/staff/messages', async (req, res) => {
@@ -371,32 +382,6 @@ router.get('/student/to-admin-teacher/messages/:studentId', async (req, res) => 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error retrieving student to admin/teacher messages' });
-  }
-});
-
-// GET route for retrieving messages sent to a specific teacher
-router.get('/teacher/messages/:teacherId', async (req, res) => {
-  const { teacherId } = req.params;
-
-  try {
-    const messages = await TeacherToStudentMessage.find({ teacherId }).populate('studentId');
-    res.status(200).json(messages);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error retrieving messages for teacher' });
-  }
-});
-
-// GET route for retrieving messages sent to a specific staff member
-router.get('/staff/messages/:staffId', async (req, res) => {
-  const { staffId } = req.params;
-
-  try {
-    const messages = await TeacherToStaffMessage.find({ staffId }).populate('teacherId');
-    res.status(200).json(messages);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error retrieving messages for staff' });
   }
 });
 
