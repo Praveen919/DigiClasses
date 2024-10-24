@@ -34,7 +34,7 @@ class _MessagingScreenState extends State<MessagingT> {
         return const SendStaffMessageScreen();
       case 'examReminder':
         return const SendExamReminderScreen();
-      case 'absentAttendance':
+      case 'absentStudents':
         return const AbsentAttendanceMessageScreen();
       case 'receivedMessage':
         return const MessageReceivingScreen();
@@ -756,8 +756,10 @@ class AbsentAttendanceMessageScreen extends StatefulWidget {
 
 class _AbsentAttendanceMessageScreenState
     extends State<AbsentAttendanceMessageScreen> {
-  List<String> absentees = [];
-  List<String> filteredAbsentees = [];
+  List<AbsentMessage> absentees = [];
+  List<AbsentMessage> filteredAbsentees = [];
+  bool isLoading = true; // Track loading state
+  String errorMessage = ''; // Track error message
 
   @override
   void initState() {
@@ -767,27 +769,48 @@ class _AbsentAttendanceMessageScreenState
 
   // Function to fetch absentees from the API
   Future<void> fetchAbsentees() async {
-    final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/api/absenceMessage/absences/today'));
+    setState(() {
+      isLoading = true; // Set loading state to true
+      errorMessage = ''; // Reset error message
+    });
 
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
+    try {
+      final response = await http.get(
+          Uri.parse('${AppConfig.baseUrl}/api/absenceMessage/absences/today'));
 
-      // Extract the required data (assuming the response has a 'reason' field or any other you need)
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+
+        setState(() {
+          if (data.isEmpty) {
+            errorMessage = 'No absentees found';
+          } else {
+            absentees =
+                data.map((item) => AbsentMessage.fromJson(item)).toList();
+            filteredAbsentees = absentees;
+          }
+          isLoading = false; // Set loading state to false
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Failed to fetch absentees: ${response.body}';
+          isLoading = false; // Set loading state to false
+        });
+      }
+    } catch (error) {
       setState(() {
-        absentees = data.map((item) => "${item['reason']}").toList();
-        filteredAbsentees = absentees;
+        errorMessage = 'Network error: $error';
+        isLoading = false; // Set loading state to false
       });
-    } else {
-      print('Failed to fetch absentees');
     }
   }
 
   void _filterAbsentees(String query) {
     setState(() {
       filteredAbsentees = absentees
-          .where(
-              (student) => student.toLowerCase().contains(query.toLowerCase()))
+          .where((absent) =>
+      absent.reason.toLowerCase().contains(query.toLowerCase()) ||
+          absent.studentName.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -808,9 +831,9 @@ class _AbsentAttendanceMessageScreenState
             children: [
               // Search Bar
               TextField(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Search',
-                  suffixIcon: Icon(Icons.search),
+                  suffixIcon: const Icon(Icons.search),
                 ),
                 onChanged: (query) {
                   _filterAbsentees(query);
@@ -823,19 +846,29 @@ class _AbsentAttendanceMessageScreenState
                   style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16.0),
 
-              // List of Today's Absentees
-              filteredAbsentees.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: filteredAbsentees.length,
-                      itemBuilder: (context, index) {
-                        return AbsentStudentCard(
-                          studentName: filteredAbsentees[index],
-                        );
-                      },
-                    ),
+              // Loading Indicator or Error Message
+              if (isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (errorMessage.isNotEmpty)
+                Center(
+                    child:
+                    Text(errorMessage, style: const TextStyle(color: Colors.red)))
+              else
+                filteredAbsentees.isEmpty
+                    ? const Center(child: Text('No absentees found'))
+                    : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: filteredAbsentees.length,
+                  itemBuilder: (context, index) {
+                    return AbsentStudentCard(
+                      studentName: filteredAbsentees[index].studentName,
+                      reason: filteredAbsentees[index].reason,
+                      date: filteredAbsentees[index].createdAt,
+                      document: filteredAbsentees[index].document, // Include document
+                    );
+                  },
+                ),
             ],
           ),
         ),
@@ -844,18 +877,71 @@ class _AbsentAttendanceMessageScreenState
   }
 }
 
+// Model class for absent messages
+class AbsentMessage {
+  final String studentName;
+  final String reason;
+  final DateTime createdAt;
+  final String? document; // Change to nullable String
+
+  AbsentMessage({
+    required this.studentName,
+    required this.reason,
+    required this.createdAt,
+    this.document, // Optional parameter
+  });
+
+  factory AbsentMessage.fromJson(Map<String, dynamic> json) {
+    return AbsentMessage(
+      studentName: json['studentName'] ?? 'Unknown', // Default to 'Unknown' if null
+      reason: json['reason'] ?? 'No reason provided', // Default to a message if null
+      createdAt: DateTime.parse(json['createdAt']),
+      document: json['document'], // Keep it nullable
+    );
+  }
+}
+
 // Custom widget for each absent student
 class AbsentStudentCard extends StatelessWidget {
   final String studentName;
+  final String reason;
+  final DateTime date;
+  final String? document; // Add document field
 
-  const AbsentStudentCard({super.key, required this.studentName});
+  const AbsentStudentCard({
+    super.key,
+    required this.studentName,
+    required this.reason,
+    required this.date,
+    this.document, // Add document as optional
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Text(studentName),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(studentName,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4.0),
+            Text(reason),
+            const SizedBox(height: 4.0),
+            Text(
+              'Date: ${date.toLocal().toString().split(' ')[0]}', // Display the date
+            ),
+            if (document != null && document!.isNotEmpty) // Show document if it exists
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  'Document: $document',
+                  style: const TextStyle(color: Colors.blue),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
