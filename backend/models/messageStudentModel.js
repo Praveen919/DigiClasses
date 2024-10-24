@@ -30,7 +30,7 @@ const TeacherToAdminMessageSchema = new mongoose.Schema({
 
 // Schema for messages sent from teacher to student
 const TeacherToStudentMessageSchema = new mongoose.Schema({
-  //teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher', required: true },
+  teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
   title: { type: String, required: true },
   message: { type: String, required: true },
