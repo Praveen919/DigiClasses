@@ -8,8 +8,8 @@ const {
   TeacherToStudentMessage,
   TeacherToStaffMessage,
   ExamNotification,
-  AdminToTeacherMessage // Assuming you need this model for admin-to-teacher messages
-} = require('../models/messageStudentModel'); // Import models
+  AdminToTeacherMessage // Import the model for admin-to-teacher messages
+} = require('../models/messageStudentModel'); // Ensure the correct path to your model
 
 // POST route to send a message from admin to student
 router.post('/admin/messages', async (req, res) => {
@@ -71,19 +71,19 @@ router.post('/student/messages', async (req, res) => {
 
 // POST route to send a message from teacher to student
 router.post('/teacher/messages', async (req, res) => {
-  const { teacherId, studentId, subject, message } = req.body;
+  const { studentId, title, message } = req.body;  //teacherId
 
   // Validate input
-  if (!teacherId || !studentId || !subject || !message) {
+  if ( !studentId || !title || !message) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
   try {
     // Create a new teacher-to-student message
     const newMessage = new TeacherToStudentMessage({
-      teacherId,
+      //teacherId,
       studentId,
-      subject,
+      title,
       message,
     });
 
@@ -100,10 +100,10 @@ router.post('/teacher/messages', async (req, res) => {
 
 // POST route to send a message from teacher to staff
 router.post('/teacher/staff/messages', async (req, res) => {
-  const { teacherId, staffId, subject, message } = req.body;
+  const { teacherId,  title, message } = req.body; //staffId
 
   // Validate input
-  if (!teacherId || !staffId || !subject || !message) {
+  if (!teacherId || !title || !message) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
@@ -111,8 +111,8 @@ router.post('/teacher/staff/messages', async (req, res) => {
     // Create a new teacher-to-staff message
     const newMessage = new TeacherToStaffMessage({
       teacherId,
-      staffId,
-      subject,
+     // staffId,
+      title,
       message,
     });
 
@@ -137,9 +137,9 @@ router.post('/admin/staff', async (req, res) => {
   }
 
   try {
-    // Create a new admin-to-teacher message
+    // Create a new admin-to-staff message
     const newMessage = new AdminToTeacherMessage({
-      teacherId:staffId,
+      teacherId: staffId,
       subject: subject || '',
       message,
     });
@@ -160,7 +160,7 @@ router.post('/exam/notifications', async (req, res) => {
   const { standard, subject, examName, date } = req.body;
 
   // Validate input
-  if (!standard || !subject || !examName || !date) {
+  if (!standard || !subject || !examName) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
@@ -180,7 +180,87 @@ router.post('/exam/notifications', async (req, res) => {
     res.status(200).json({ success: true, message: 'Exam notification sent successfully' });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error while sending notification' });
+    res.status(500).json({ error: 'Server error while sending exam notification' });
+  }
+});
+
+// GET route to retrieve messages for a specific admin
+router.get('/admin/messages/:adminId', async (req, res) => {
+  const { adminId } = req.params;
+
+  try {
+    // Find all messages sent to this admin
+    const messages = await AdminToTeacherMessage.find({ recipientId: adminId }).populate('teacherId');
+
+    // Return the messages
+    res.status(200).json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving messages' });
+  }
+});
+
+// GET route for retrieving messages sent to a specific student
+router.get('/student/messages/:studentId', async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    const messages = await MessageStudent.find({ studentId }).populate('studentId');
+    res.status(200).json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving student messages' });
+  }
+});
+
+
+// GET route for retrieving messages sent from a student to admin/teacher
+router.get('/student/to-admin-teacher/messages/:studentId', async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    const messages = await StudentToAdminTeacherMessage.find({ senderStudentId: studentId }).populate('recipientId');
+    res.status(200).json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving student to admin/teacher messages' });
+  }
+});
+
+// GET route for retrieving messages sent to a specific teacher
+router.get('/teacher/messages/:teacherId', async (req, res) => {
+  const { teacherId } = req.params;
+
+  try {
+    const messages = await TeacherToStudentMessage.find({ teacherId }).populate('studentId');
+    res.status(200).json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving messages for teacher' });
+  }
+});
+
+// GET route for retrieving messages sent to a specific staff member
+router.get('/staff/messages/:staffId', async (req, res) => {
+  const { staffId } = req.params;
+
+  try {
+    const messages = await TeacherToStaffMessage.find({ staffId }).populate('teacherId');
+    res.status(200).json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving messages for staff' });
+  }
+});
+
+// GET route for retrieving exam notifications
+router.get('/exam/notifications', async (req, res) => {
+  try {
+    const notifications = await ExamNotification.find();
+    res.status(200).json(notifications);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving exam notifications' });
   }
 });
 
