@@ -4,6 +4,12 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:testing_app/screens/config.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart'; // For handling permissions
+import 'package:open_file/open_file.dart';
+import 'dart:io';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class StudentScreen extends StatelessWidget {
   const StudentScreen({super.key});
@@ -51,9 +57,11 @@ class ViewSharedDocumentsScreen extends StatefulWidget {
       _ViewSharedDocumentsScreenState();
 }
 
-class _ViewSharedDocumentsScreenState extends State<ViewSharedDocumentsScreen> {
+class _ViewSharedDocumentsScreenState
+    extends State<ViewSharedDocumentsScreen> {
   List<Map<String, dynamic>> sharedDocuments = [];
   bool isLoading = true;
+  final Dio dio = Dio(); // Instance of Dio for file downloading
 
   @override
   void initState() {
@@ -72,8 +80,7 @@ class _ViewSharedDocumentsScreenState extends State<ViewSharedDocumentsScreen> {
           return {
             'id': item['_id'],
             'title': item['documentName'],
-            'type':
-                item['documentPath'].split('.').last, // Extracting file type
+            'type': item['documentPath'].split('.').last, // Extracting file type
             'url': item['documentPath'],
             'message': item['message'],
             'dateAdded': item['uploadedAt'],
@@ -86,6 +93,57 @@ class _ViewSharedDocumentsScreenState extends State<ViewSharedDocumentsScreen> {
         isLoading = false;
       });
       // Handle error
+    }
+  }
+
+  Future<void> downloadFile(String filePath, String fileName) async {
+    try {
+      // Request storage permission
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Storage permission is required')));
+        return;
+      }
+
+      // Format file path and construct the download URL
+      final String normalizedFilePath = filePath.replaceAll('\\', '/');
+      final String fileUrl = '${AppConfig.baseUrl}/$normalizedFilePath';
+
+      print('Attempting to download from: $fileUrl');
+
+      // Get the path for the Downloads directory
+      Directory? downloadsDirectory = Directory('/storage/emulated/0/Download');
+
+      // Ensure the Downloads directory exists
+      if (!downloadsDirectory.existsSync()) {
+        downloadsDirectory.createSync();
+      }
+
+      final String filePathToSave = "${downloadsDirectory.path}/$fileName";
+
+      await dio.download(fileUrl, filePathToSave,
+          onReceiveProgress: (received, total) {
+        if (total != -1) {
+          print('Downloading: ${(received / total * 100).toStringAsFixed(0)}%');
+        }
+      });
+
+      print('Download complete: $filePathToSave');
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Download complete: $fileName')));
+
+      // Show toast and optionally open the file
+      Fluttertoast.showToast(
+          msg: "File downloaded to: $filePathToSave",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM);
+
+      OpenFile.open(filePathToSave);
+    } catch (e) {
+      print('Download failed: $e');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Download failed')));
     }
   }
 
@@ -121,8 +179,8 @@ class _ViewSharedDocumentsScreenState extends State<ViewSharedDocumentsScreen> {
                           trailing: IconButton(
                             icon: const Icon(Icons.download),
                             onPressed: () {
-                              // Handle document download or view action
-                              // Use document['url'] for the download link
+                              // Handle document download
+                              downloadFile(document['url'], document['title']);
                             },
                           ),
                         );
