@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:testing_app/screens/students/help_screen.dart';
 import 'package:testing_app/screens/students/estudy_screen.dart';
 import 'package:testing_app/screens/students/exam_screen.dart';
 import 'package:testing_app/screens/students/messaging_screen.dart';
-import 'package:testing_app/screens/students/report_screen.dart';
 import 'package:testing_app/screens/students/settings_screen.dart';
 import 'package:testing_app/screens/students/student_screen.dart';
 import 'package:http/http.dart' as http;

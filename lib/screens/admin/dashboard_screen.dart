@@ -621,7 +621,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingScreen(option: 'receivedMessage')),
+                            const MessagingScreen(option: 'receivedMessage')),
                   );
                 },
               ),
@@ -961,7 +961,8 @@ class StatisticsNotifier extends StateNotifier<Statistics> {
 
         // Fetch today's absentees count
         final absenteesResponse = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/statistics/absentees/count'),
+          Uri.parse(
+              '${AppConfig.baseUrl}/api/absenceMessage/absences/today/count'),
           headers: {
             'Authorization': 'Bearer $token',
           },

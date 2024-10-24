@@ -64,12 +64,16 @@ router.post('/absence', verifyStudentToken, upload.single('document'), async (re
 router.get('/absences/today', async (req, res) => {
   try {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0); // Set to the start of the day (midnight)
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1); // Set to the start of the next day
 
+    // Find absences where the createdAt field is between today and tomorrow
     const absentees = await Absence.find({
       createdAt: {
         $gte: today,
-        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        $lt: tomorrow,
       },
     }).populate('student', 'name'); // Populate the student field
 
@@ -93,6 +97,30 @@ router.get('/absences/today', async (req, res) => {
   } catch (error) {
     console.error('Error fetching today\'s absentees:', error);
     res.status(500).json({ message: 'Failed to fetch absentees' });
+  }
+});
+
+// GET route to fetch today's absentees count
+router.get('/absences/today/count', async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of the day
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1); // Start of the next day
+
+    // Count absences where the createdAt field is between today and tomorrow
+    const absenteesCount = await Absence.countDocuments({
+      createdAt: {
+        $gte: today,
+        $lt: tomorrow,
+      },
+    });
+
+    res.status(200).json({ count: absenteesCount });
+  } catch (error) {
+    console.error('Error fetching absentees count:', error.message);
+    res.status(500).json({ message: 'Failed to fetch absentees count', error: error.message });
   }
 });
 

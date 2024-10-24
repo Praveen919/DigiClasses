@@ -83,132 +83,180 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
   TextEditingController countryController = TextEditingController();
   TextEditingController cityController = TextEditingController();
   TextEditingController branchNameController = TextEditingController();
+  TextEditingController feeRecHeaderController = TextEditingController();
   TextEditingController branchAddressController = TextEditingController();
+  TextEditingController taxNoController = TextEditingController();
+  TextEditingController feeFooterController = TextEditingController();
   TextEditingController nameController = TextEditingController();
   TextEditingController mobileController = TextEditingController();
   TextEditingController emailController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
   String logoDisplay = 'Yes';
+  String feeStatusDisplay = 'Yes';
   String chatOption = 'Yes';
-  XFile? selectedImage; // Store the picked image file
+  XFile? selectedImage;
 
   final String apiUrl = '${AppConfig.baseUrl}/api/profile-settings';
   String? authToken;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchProfileData();
-    fetchToken();// Fetch profile data on load
+    fetchToken();
   }
+
   Future<void> fetchToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      authToken = prefs.getString('authToken'); // Retrieve the token
+      authToken = prefs.getString('authToken');
     });
-    _fetchProfileData(); // Fetch profile data after fetching token
+    print('Fetched auth token: $authToken'); // Log the fetched token
+    fetchProfileData();
   }
-  Future<void> _fetchProfileData() async {
+
+  Future<void> fetchProfileData() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      final response = await http.get(Uri.parse(apiUrl), headers: {
-        'Authorization': 'Bearer $authToken', // Add your JWT token
-      });
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $authToken',
+        },
+      );
+
+      print(
+          'Profile data fetch response status: ${response.statusCode}'); // Log response status
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final profileData = json.decode(response.body);
+        print(
+            'Profile data fetched successfully: $profileData'); // Log the profile data
 
-        // Populate form fields with data
         setState(() {
-          instituteNameController.text = data['instituteName'] ?? '';
-          countryController.text = data['country'] ?? '';
-          cityController.text = data['city'] ?? '';
-          branchNameController.text = data['branchName'] ?? '';
-          branchAddressController.text = data['branchAddress'] ?? '';
-          nameController.text = data['name'] ?? '';
-          mobileController.text = data['mobile'] ?? '';
-          emailController.text = data['email'] ?? '';
-          logoDisplay = data['logoDisplay'] ?? 'Yes';
-          chatOption = data['chatOption'] ?? 'Yes';
+          instituteNameController.text = profileData['instituteName'] ?? '';
+          countryController.text = profileData['country'] ?? '';
+          cityController.text = profileData['city'] ?? '';
+          branchNameController.text = profileData['branchName'] ?? '';
+          feeRecHeaderController.text = profileData['feeRecHeader'] ?? '';
+          branchAddressController.text = profileData['branchAddress'] ?? '';
+          taxNoController.text = profileData['taxNo'] ?? '';
+          feeFooterController.text = profileData['feeFooter'] ?? '';
+          logoDisplay = profileData['logoDisplay'] ?? 'Yes';
+          feeStatusDisplay = profileData['feeStatusDisplay'] ?? 'Yes';
+          chatOption = profileData['chatOption'] ?? 'Yes';
+          nameController.text = profileData['name'] ?? '';
+          mobileController.text = profileData['mobile'] ?? '';
+          emailController.text = profileData['email'] ?? '';
+          isLoading = false;
         });
       } else {
+        print(
+            'Failed to fetch profile data: ${response.body}'); // Log error message
+        setState(() {
+          isLoading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fetched profile settings.')),
+          SnackBar(content: Text('Failed to fetch profile data')),
         );
       }
     } catch (error) {
-      print('Error: $error');
+      print('Error fetching profile data: $error'); // Log any error that occurs
+      setState(() {
+        isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred. Please try again.')),
+        SnackBar(
+            content: Text('An error occurred while fetching profile data')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const Text(
-              'Coaching Class Detail',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'Coaching Class Detail',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildTextField(
+                      'Institute Name', instituteNameController, true),
+                  _buildTextField('Country', countryController, true),
+                  _buildTextField('City', cityController, true),
+                  _buildTextField('Branch Name', branchNameController, true),
+                  _buildTextField(
+                      'Fee Rec. Header', feeRecHeaderController, true),
+                  _buildTextField(
+                      'Branch Address', branchAddressController, true),
+                  _buildTextField('Tax No.', taxNoController, true),
+                  _buildTextField('Fee Footer', feeFooterController, true),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Profile Logo',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: _pickImage,
+                    child: const Text('Select Image'),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildDropdown(
+                      'Display logo on receipt?', logoDisplay, ['Yes', 'No'],
+                      (value) {
+                    setState(() {
+                      logoDisplay = value!;
+                    });
+                  }),
+                  _buildDropdown('Display fee status on receipt?',
+                      feeStatusDisplay, ['Yes', 'No'], (value) {
+                    setState(() {
+                      feeStatusDisplay = value!;
+                    });
+                  }),
+                  _buildDropdown(
+                      'Allow students to chat?', chatOption, ['Yes', 'No'],
+                      (value) {
+                    setState(() {
+                      chatOption = value!;
+                    });
+                  }),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Personal Details',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  _buildTextField('Name', nameController, true),
+                  _buildTextField('Mobile No.', mobileController, true,
+                      isNumeric: true),
+                  _buildTextField('Email', emailController, true,
+                      isEmail: true),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        _submitData(); // Call the submit function
+                      }
+                    },
+                    child: const Text('Submit'),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            _buildTextField('Institute Name', instituteNameController, true),
-            _buildTextField('Country', countryController, true),
-            _buildTextField('City', cityController, true),
-            _buildTextField('Branch Name', branchNameController, true),
-            _buildTextField('Branch Address', branchAddressController, true),
-            const SizedBox(height: 20),
-            const Text(
-              'Profile Logo',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: const Text('Select Image'),
-            ),
-            const SizedBox(height: 20),
-            _buildDropdown(
-                'Display logo on receipt?', logoDisplay, ['Yes', 'No'],
-                    (value) {
-                  setState(() {
-                    logoDisplay = value!;
-                  });
-                }),
-            _buildDropdown('Allow students to chat?', chatOption, ['Yes', 'No'],
-                    (value) {
-                  setState(() {
-                    chatOption = value!;
-                  });
-                }),
-            const SizedBox(height: 20),
-            const Text(
-              'Personal Details',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            _buildTextField('Name', nameController, true),
-            _buildTextField('Mobile No.', mobileController, true,
-                isNumeric: true),
-            _buildTextField('Email', emailController, true, isEmail: true),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _submitData(); // Call the submit function
-                }
-              },
-              child: const Text('Submit'),
-            ),
-          ],
-        ),
-      ),
-    );
+          );
   }
 
   Future<void> _submitData() async {
@@ -220,8 +268,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
     request.fields['country'] = countryController.text;
     request.fields['city'] = cityController.text;
     request.fields['branchName'] = branchNameController.text;
+    request.fields['feeRecHeader'] = feeRecHeaderController.text;
     request.fields['branchAddress'] = branchAddressController.text;
+    request.fields['taxNo'] = taxNoController.text;
+    request.fields['feeFooter'] = feeFooterController.text;
     request.fields['logoDisplay'] = logoDisplay;
+    request.fields['feeStatusDisplay'] = feeStatusDisplay;
     request.fields['chatOption'] = chatOption;
     request.fields['name'] = nameController.text;
     request.fields['mobile'] = mobileController.text;
@@ -238,82 +290,95 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
           filename: selectedImage!.name,
         ),
       );
+      print(
+          'Image file added to request: ${selectedImage!.name}'); // Log the image file info
+    } else {
+      print('No image selected for upload.'); // Log if no image is selected
+    }
+
+    // Include the token in the request headers if needed
+    if (authToken != null) {
+      request.headers['Authorization'] = 'Bearer $authToken';
+      print('Authorization header added to request.'); // Log if token is added
     }
 
     try {
       final response = await request.send();
+      print(
+          'Profile settings update response status: ${response.statusCode}'); // Log the response status
 
       if (response.statusCode == 200) {
+        final responseBody = await http.Response.fromStream(response);
+        print(
+            'Profile settings updated successfully: ${responseBody.body}'); // Log the successful update
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Profile settings updated successfully!')),
         );
       } else {
+        print(
+            'Failed to update profile settings: ${response.statusCode} - ${await response.stream.bytesToString()}'); // Log the error response
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to update profile settings.')),
         );
       }
     } catch (error) {
-      print('Error: $error');
+      print(
+          'Error updating profile settings: $error'); // Log any error that occurs
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred. Please try again.')),
+        const SnackBar(
+            content:
+                Text('An error occurred while updating profile settings.')),
       );
     }
   }
 
-  void _pickImage() async {
+  Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      setState(() {
-        selectedImage = pickedFile;
-      });
-    }
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      selectedImage = image;
+    });
+    print(
+        'Image selected: ${selectedImage?.path}'); // Log the selected image path
   }
 
-  // Build TextField widget with validation
   Widget _buildTextField(
-    String label,
-    TextEditingController controller,
-    bool isRequired, {
-    bool isNumeric = false,
-    bool isEmail = false,
-  }) {
+      String label, TextEditingController controller, bool required,
+      {bool isNumeric = false, bool isEmail = false}) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(labelText: label),
-      keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
+      keyboardType: isNumeric
+          ? TextInputType.number
+          : (isEmail ? TextInputType.emailAddress : TextInputType.text),
       validator: (value) {
-        if (isRequired && (value == null || value.isEmpty)) {
-          return '$label is required';
+        if (required && (value == null || value.isEmpty)) {
+          return 'This field is required';
         }
-        if (isEmail && !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value!)) {
-          return 'Enter a valid email';
+        if (isEmail &&
+            value != null &&
+            !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+          return 'Please enter a valid email address';
         }
         return null;
       },
     );
   }
 
-  // Build Dropdown widget
-  Widget _buildDropdown(
-    String label,
-    String value,
-    List<String> options,
-    ValueChanged<String?> onChanged,
-  ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildDropdown(String label, String currentValue, List<String> items,
+      Function(String?) onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label),
         DropdownButton<String>(
-          value: value,
+          value: currentValue,
           onChanged: onChanged,
-          items: options.map<DropdownMenuItem<String>>((String value) {
+          items: items.map((String item) {
             return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
+              value: item,
+              child: Text(item),
             );
           }).toList(),
         ),

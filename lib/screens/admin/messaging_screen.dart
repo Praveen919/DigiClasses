@@ -49,7 +49,8 @@ class SendStudentMessageScreen extends StatefulWidget {
   const SendStudentMessageScreen({super.key});
 
   @override
-  _SendStudentMessageScreenState createState() => _SendStudentMessageScreenState();
+  _SendStudentMessageScreenState createState() =>
+      _SendStudentMessageScreenState();
 }
 
 class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
@@ -285,7 +286,8 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
   }
 
   Future<void> _fetchStaff() async {
-    const url = '${AppConfig.baseUrl}/api/staff'; // Replace with actual endpoint
+    const url =
+        '${AppConfig.baseUrl}/api/staff'; // Replace with actual endpoint
 
     try {
       final response = await http.get(Uri.parse(url), headers: {
@@ -297,11 +299,11 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
         setState(() {
           staffList = data
               .map((staff) => {
-            'id': staff['_id'],
-            'firstName': staff['firstName'] ?? '',
-            'middleName': staff['middleName'] ?? '',
-            'lastName': staff['lastName'] ?? '',
-          })
+                    'id': staff['_id'],
+                    'firstName': staff['firstName'] ?? '',
+                    'middleName': staff['middleName'] ?? '',
+                    'lastName': staff['lastName'] ?? '',
+                  })
               .toList();
         });
       } else {
@@ -320,7 +322,8 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
       final message = _messageController.text;
       final subject = _subjectController.text;
 
-      final url = '${AppConfig.baseUrl}/api/messageStudent/admin/staff'; // Correct API URL
+      const url =
+          '${AppConfig.baseUrl}/api/messageStudent/admin/staff'; // Correct API URL
 
       try {
         final response = await http.post(
@@ -716,7 +719,7 @@ class _SendStudentIdPasswordScreenState
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch students')),
+          const SnackBar(content: Text('Failed to fetch students')),
         );
       }
     } catch (e) {
@@ -1252,8 +1255,8 @@ class _AbsentAttendanceMessageScreenState
     setState(() {
       filteredAbsentees = absentees
           .where((absent) =>
-      absent.reason.toLowerCase().contains(query.toLowerCase()) ||
-          absent.studentName.toLowerCase().contains(query.toLowerCase()))
+              absent.reason.toLowerCase().contains(query.toLowerCase()) ||
+              absent.studentName.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -1274,9 +1277,9 @@ class _AbsentAttendanceMessageScreenState
             children: [
               // Search Bar
               TextField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Search',
-                  suffixIcon: const Icon(Icons.search),
+                  suffixIcon: Icon(Icons.search),
                 ),
                 onChanged: (query) {
                   _filterAbsentees(query);
@@ -1294,24 +1297,25 @@ class _AbsentAttendanceMessageScreenState
                 const Center(child: CircularProgressIndicator())
               else if (errorMessage.isNotEmpty)
                 Center(
-                    child:
-                    Text(errorMessage, style: const TextStyle(color: Colors.red)))
+                    child: Text(errorMessage,
+                        style: const TextStyle(color: Colors.red)))
               else
                 filteredAbsentees.isEmpty
                     ? const Center(child: Text('No absentees found'))
                     : ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filteredAbsentees.length,
-                  itemBuilder: (context, index) {
-                    return AbsentStudentCard(
-                      studentName: filteredAbsentees[index].studentName,
-                      reason: filteredAbsentees[index].reason,
-                      date: filteredAbsentees[index].createdAt,
-                      document: filteredAbsentees[index].document, // Include document
-                    );
-                  },
-                ),
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filteredAbsentees.length,
+                        itemBuilder: (context, index) {
+                          return AbsentStudentCard(
+                            studentName: filteredAbsentees[index].studentName,
+                            reason: filteredAbsentees[index].reason,
+                            date: filteredAbsentees[index].createdAt,
+                            document: filteredAbsentees[index]
+                                .document, // Include document
+                          );
+                        },
+                      ),
             ],
           ),
         ),
@@ -1336,8 +1340,10 @@ class AbsentMessage {
 
   factory AbsentMessage.fromJson(Map<String, dynamic> json) {
     return AbsentMessage(
-      studentName: json['studentName'] ?? 'Unknown', // Default to 'Unknown' if null
-      reason: json['reason'] ?? 'No reason provided', // Default to a message if null
+      studentName:
+          json['studentName'] ?? 'Unknown', // Default to 'Unknown' if null
+      reason: json['reason'] ??
+          'No reason provided', // Default to a message if null
       createdAt: DateTime.parse(json['createdAt']),
       document: json['document'], // Keep it nullable
     );
@@ -1375,7 +1381,8 @@ class AbsentStudentCard extends StatelessWidget {
             Text(
               'Date: ${date.toLocal().toString().split(' ')[0]}', // Display the date
             ),
-            if (document != null && document!.isNotEmpty) // Show document if it exists
+            if (document != null &&
+                document!.isNotEmpty) // Show document if it exists
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Text(
@@ -1389,7 +1396,6 @@ class AbsentStudentCard extends StatelessWidget {
     );
   }
 }
-
 
 class ReceivedMessage {
   final String senderName;
@@ -1447,13 +1453,17 @@ class MessageCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(senderName, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(senderName,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4.0),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)), // Display title
+            Text(title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold)), // Display title
             const SizedBox(height: 4.0),
             Text(message),
             const SizedBox(height: 4.0),
-            Text('Received on: ${timestamp.toLocal().toString().split(' ')[0]}'),
+            Text(
+                'Received on: ${timestamp.toLocal().toString().split(' ')[0]}'),
           ],
         ),
       ),
@@ -1502,7 +1512,8 @@ class _MessageReceivingScreenState extends State<MessageReceivingScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/api/messageStudent/teacher/admin/messages'),
+        Uri.parse(
+            '${AppConfig.baseUrl}/api/messageStudent/teacher/admin/messages'),
         headers: {
           'Authorization': 'Bearer $_token',
           'Content-Type': 'application/json',
@@ -1514,7 +1525,8 @@ class _MessageReceivingScreenState extends State<MessageReceivingScreen> {
         if (responseData['success']) {
           List<dynamic> data = responseData['messages'];
           setState(() {
-            messages = data.map((item) => ReceivedMessage.fromJson(item)).toList();
+            messages =
+                data.map((item) => ReceivedMessage.fromJson(item)).toList();
             isLoading = false;
           });
         } else {
@@ -1540,29 +1552,29 @@ class _MessageReceivingScreenState extends State<MessageReceivingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Received Messages')),
+      appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: const Text('Received Messages')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : errorMessage.isNotEmpty
-            ? Center(child: Text(errorMessage, style: const TextStyle(color: Colors.red)))
-            : ListView.builder(
-          itemCount: messages.length,
-          itemBuilder: (context, index) {
-            return MessageCard(
-              senderName: messages[index].senderName,
-              title: messages[index].title,
-              message: messages[index].message,
-              timestamp: messages[index].timestamp,
-            );
-          },
-        ),
+                ? Center(
+                    child: Text(errorMessage,
+                        style: const TextStyle(color: Colors.red)))
+                : ListView.builder(
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      return MessageCard(
+                        senderName: messages[index].senderName,
+                        title: messages[index].title,
+                        message: messages[index].message,
+                        timestamp: messages[index].timestamp,
+                      );
+                    },
+                  ),
       ),
     );
   }
 }
-
-
-
-

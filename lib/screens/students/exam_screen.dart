@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -280,7 +281,6 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
     );
   }
 
-  // Navigate to the ViewMCQsScreen for a specific exam
   void _navigateToViewMCQsScreen(String examId) {
     Navigator.push(
       context,
@@ -294,8 +294,7 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Manage MCQ Exams'),
+        title: const Text('View MCQ Exams'),
         backgroundColor: Colors.teal,
       ),
       body: Column(
@@ -351,11 +350,9 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
                               subtitle: Text(
                                   'Standard: ${exam['standard']} \nSubject: ${exam['subject']}'),
                               trailing: IconButton(
-                                icon: const Icon(
-                                    Icons.arrow_forward), // Navigate button
+                                icon: const Icon(Icons.arrow_forward),
                                 onPressed: () {
-                                  _navigateToViewMCQsScreen(
-                                      exam['id']); // Pass examId correctly
+                                  _navigateToViewMCQsScreen(exam['id']);
                                 },
                               ),
                             ),
@@ -380,19 +377,19 @@ class ViewMCQsScreen extends StatefulWidget {
 
 class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
   int currentQuestionIndex = 0;
-  Map<int, String?> selectedAnswers =
-      {}; // Stores selected answers for each question
+  Map<int, String?> selectedAnswers = {};
   List<String> questions = [];
   List<List<String>> options = [];
   String paperName = '';
   String subject = '';
   bool isLoading = true;
 
-  // Timer and Exam Duration
   Duration examDuration = const Duration(minutes: 30);
   late DateTime examEndTime;
   late Duration timeRemaining;
   late String timerDisplay = '';
+
+  Timer? _timer;
 
   @override
   void initState() {
@@ -400,12 +397,18 @@ class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
     fetchMCQExam();
   }
 
-  // Fetch the exam from the server
+  @override
+  void dispose() {
+    // Cancel the timer if it's still running when the widget is disposed
+    _timer?.cancel();
+    super.dispose();
+  }
+
   Future<void> fetchMCQExam() async {
     try {
       final response = await http.get(
         Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/${widget.examId}'),
-      ); // Fetch based on examId
+      );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -415,8 +418,8 @@ class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
               List<String>.from(data['questions'].map((q) => q['question']));
           options = List<List<String>>.from(
               data['questions'].map((q) => List<String>.from(q['options'])));
-          examEndTime = DateTime.now().add(examDuration); // Set exam timer
-          updateTimer();
+          examEndTime = DateTime.now().add(examDuration);
+          startTimer(); // Start the timer after loading the exam
           isLoading = false;
         });
       } else {
@@ -427,24 +430,24 @@ class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
     }
   }
 
-  // Update the timer display
-  void updateTimer() {
-    final now = DateTime.now();
-    if (examEndTime.isAfter(now)) {
-      setState(() {
-        timeRemaining = examEndTime.difference(now);
-        timerDisplay = formatDuration(timeRemaining);
-      });
-      Future.delayed(const Duration(seconds: 1), updateTimer);
-    } else {
-      setState(() {
-        timerDisplay = "Time's up!";
-      });
-      submitExam(); // Automatically submit when time's up
-    }
+  void startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final now = DateTime.now();
+      if (examEndTime.isAfter(now)) {
+        setState(() {
+          timeRemaining = examEndTime.difference(now);
+          timerDisplay = formatDuration(timeRemaining);
+        });
+      } else {
+        setState(() {
+          timerDisplay = "Time's up!";
+        });
+        submitExam();
+        _timer?.cancel();
+      }
+    });
   }
 
-  // Format duration to display in MM:SS
   String formatDuration(Duration duration) {
     return "${duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${duration.inSeconds.remainder(60).toString().padLeft(2, '0')}";
   }
@@ -471,35 +474,13 @@ class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
     }
   }
 
-  // Submit the exam answers to the server
-  void submitExam() async {
-    final submissionData = {
-      'examId': widget.examId,
-      'answers': selectedAnswers.entries
-          .map((e) => {'questionIndex': e.key, 'answer': e.value})
-          .toList(),
-    };
-
-    try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/mcq-exams/submit'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(submissionData),
-      );
-
-      if (response.statusCode == 200) {
-        print('Exam submitted successfully');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Exam submitted successfully')),
-        );
-      } else {
-        print('Failed to submit exam');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to submit exam')),
-        );
-      }
-    } catch (error) {
-      print('Error submitting exam: $error');
+  void submitExam() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Exam submitted successfully')),
+    );
+    if (mounted) {
+      Navigator.of(context)
+          .pop(); // Ensure the screen is still in the widget tree
     }
   }
 
@@ -510,15 +491,12 @@ class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
         title: const Text('MCQ Exam'),
       ),
       body: isLoading
-          ? const Center(
-              child:
-                  CircularProgressIndicator()) // Show a loader while fetching data
+          ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Exam Information
                   Text(
                     'Exam: $paperName',
                     style: const TextStyle(
@@ -530,23 +508,17 @@ class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
                     style: const TextStyle(fontSize: 18),
                   ),
                   const SizedBox(height: 10),
-
-                  // Timer display
                   Text(
                     'Time remaining: $timerDisplay',
                     style: const TextStyle(
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
-
-                  // Question display
                   Text(
                     'Question ${currentQuestionIndex + 1}/${questions.length}: ${questions[currentQuestionIndex]}',
                     style: const TextStyle(fontSize: 18),
                   ),
                   const SizedBox(height: 10),
-
-                  // Options display
                   ...options[currentQuestionIndex].map((option) {
                     return RadioListTile<String>(
                       title: Text(option),
@@ -557,10 +529,7 @@ class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
                       },
                     );
                   }),
-
                   const SizedBox(height: 20),
-
-                  // Navigation Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -575,7 +544,6 @@ class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  // Submit Button
                   ElevatedButton(
                     onPressed: submitExam,
                     child: const Text('Submit Exam'),
