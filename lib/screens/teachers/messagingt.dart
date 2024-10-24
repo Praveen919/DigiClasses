@@ -64,8 +64,7 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
 
   Future<void> _fetchStudents() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AppConfig.baseUrl}/api/registration/students'));
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/registration/students'));
 
       if (response.statusCode == 200) {
         setState(() {
@@ -117,15 +116,13 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
         // Clear the fields
         _titleController.clear();
         _messageController.clear();
-        setState(() {
-          _selectedStudentId = null; // Reset selected student
+        setState(() {_selectedStudentId = null; // Reset selected student
         });
       } else {
         // Handle error response
         final errorMessage =
             json.decode(response.body)['error'] ?? 'Failed to send message';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
@@ -272,7 +269,7 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'teacherId': selectedStaffId,
-          'subject': titleController.text,
+          'title': titleController.text,
           'message': messageController.text,
         }),
       );
