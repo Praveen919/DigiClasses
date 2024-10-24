@@ -11,8 +11,8 @@ const MessageStudentSchema = new mongoose.Schema({
 
 // Schema for messages sent from student to admin/teacher
 const StudentToAdminTeacherMessageSchema = new mongoose.Schema({
-  senderStudentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
-  recipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'AdminTeacher', required: true },
+  senderStudentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
+  adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
   subject: { type: String, required: true },
   message: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
