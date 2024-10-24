@@ -19,9 +19,9 @@ const StudentToAdminTeacherMessageSchema = new mongoose.Schema({
 
 // Schema for messages sent from teacher to student
 const TeacherToStudentMessageSchema = new mongoose.Schema({
-  teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher', required: true },
+  //teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher', required: true },
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
-  subject: { type: String, required: true },
+  title: { type: String, required: true },
   message: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
@@ -29,12 +29,13 @@ const TeacherToStudentMessageSchema = new mongoose.Schema({
 // Schema for messages sent from teacher to staff
 const TeacherToStaffMessageSchema = new mongoose.Schema({
   teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher', required: true },
-  staffId: { type: mongoose.Schema.Types.ObjectId, ref: 'Staff', required: true },
-  subject: { type: String, required: true },
+  //staffId: { type: mongoose.Schema.Types.ObjectId, ref: 'Staff', required: true },
+  title: { type: String, required: true },
   message: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
 
+//Schema to send message from admin to students for exam reminder
 const ExamNotificationSchema = new mongoose.Schema({
   standard: {type: String,required: true,},
   subject: {type: String,required: true,},
@@ -42,23 +43,12 @@ const ExamNotificationSchema = new mongoose.Schema({
   date: {type: Date,default: Date.now,},
 });
 
+// Schema for messages sent from admin to teacher
 const adminToTeacherMessageSchema = new mongoose.Schema({
-  teacherId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Teacher', // Reference to Teacher model
-    required: true,
-  },
-  subject: {
-    type: String,
-    required: false,
-  },
-  message: {
-    type: String,
-    required: true,
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now,
+  teacherId: {type: mongoose.Schema.Types.ObjectId,ref: 'Teacher', required: true,},
+  subject: {type: String,required: false,},
+  message: {type: String,required: true,},
+  timestamp: {type: Date,default: Date.now,
   },
 });
 
