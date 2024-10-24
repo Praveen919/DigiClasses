@@ -34,6 +34,8 @@ class _MessagingScreenState extends State<MessagingScreen> {
         return SendExamReminderScreen();
       case 'absentAttendance':
         return const AbsentAttendanceMessageScreen();
+      case 'receivedMessage':
+        return const MessageReceivingScreen();
       default:
         return const Center(child: Text('Unknown Option'));
     }
@@ -47,8 +49,7 @@ class SendStudentMessageScreen extends StatefulWidget {
   const SendStudentMessageScreen({super.key});
 
   @override
-  _SendStudentMessageScreenState createState() =>
-      _SendStudentMessageScreenState();
+  _SendStudentMessageScreenState createState() => _SendStudentMessageScreenState();
 }
 
 class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
@@ -161,7 +162,7 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Message sent successfully!')),
         );
@@ -261,30 +262,46 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
   String? _subject;
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _subjectController = TextEditingController();
+  String? _token; // Variable to hold the token
 
   @override
   void initState() {
     super.initState();
-    _fetchStaff(); // Fetch staff members on initialization
+    _loadToken(); // Load token on initialization
+  }
+
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('authToken');
+    });
+    if (_token != null) {
+      _fetchStaff(); // Fetch staff if token exists
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No token found. Please log in again.')),
+      );
+    }
   }
 
   Future<void> _fetchStaff() async {
-    const url =
-        '${AppConfig.baseUrl}/api/staff'; // Replace with actual endpoint
+    const url = '${AppConfig.baseUrl}/api/staff'; // Replace with actual endpoint
 
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url), headers: {
+        'Authorization': 'Bearer $_token', // Add token to headers
+      });
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
           staffList = data
               .map((staff) => {
-                    'id': staff['_id'],
-                    'firstName': staff['firstName'] ?? '',
-                    'middleName': staff['middleName'] ?? '',
-                    'lastName': staff['lastName'] ?? '',
-                  })
+            'id': staff['_id'],
+            'firstName': staff['firstName'] ?? '',
+            'middleName': staff['middleName'] ?? '',
+            'lastName': staff['lastName'] ?? '',
+          })
               .toList();
         });
       } else {
@@ -303,13 +320,15 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
       final message = _messageController.text;
       final subject = _subjectController.text;
 
-      final url =
-          '${AppConfig.baseUrl}/api/messageStudent/admin/staff'; // Correct API URL
+      final url = '${AppConfig.baseUrl}/api/messageStudent/admin/staff'; // Correct API URL
 
       try {
         final response = await http.post(
           Uri.parse(url),
-          headers: {"Content-Type": "application/json"},
+          headers: {
+            'Authorization': 'Bearer $_token', // Add token to headers
+            'Content-Type': 'application/json',
+          },
           body: json.encode({
             'staffId': selectedStaffId,
             'subject': subject,
@@ -317,7 +336,7 @@ class _SendStaffMessageScreenState extends State<SendStaffMessageScreen> {
           }),
         );
 
-        if (response.statusCode == 200) {
+        if (response.statusCode == 200 || response.statusCode == 201) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
                 'Message sent to ${staffList.firstWhere((staff) => staff['id'] == _selectedStaff)['firstName']}'),
@@ -1370,3 +1389,180 @@ class AbsentStudentCard extends StatelessWidget {
     );
   }
 }
+
+
+class ReceivedMessage {
+  final String senderName;
+  final String title;
+  final String message;
+  final DateTime timestamp;
+
+  ReceivedMessage({
+    required this.senderName,
+    required this.title,
+    required this.message,
+    required this.timestamp,
+  });
+
+  factory ReceivedMessage.fromJson(Map<String, dynamic> json) {
+    String sender = 'Unknown'; // Default value
+
+    // Check if teacherId is present
+    if (json.containsKey('teacherId') && json['teacherId'] != null) {
+      sender = json['teacherId']['name'] ?? 'Unknown';
+    }
+    // If teacherId is not there, fallback to adminId
+    else if (json.containsKey('adminId') && json['adminId'] != null) {
+      sender = 'Admin'; // Change this to actual admin name logic if available
+    }
+
+    return ReceivedMessage(
+      senderName: sender,
+      title: json['title'] ?? 'No Title',
+      message: json['message'] ?? '',
+      timestamp: DateTime.parse(json['createdAt'] ?? DateTime.now().toString()),
+    );
+  }
+}
+
+class MessageCard extends StatelessWidget {
+  final String senderName;
+  final String title;
+  final String message;
+  final DateTime timestamp;
+
+  const MessageCard({
+    super.key,
+    required this.senderName,
+    required this.title,
+    required this.message,
+    required this.timestamp,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(senderName, style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4.0),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)), // Display title
+            const SizedBox(height: 4.0),
+            Text(message),
+            const SizedBox(height: 4.0),
+            Text('Received on: ${timestamp.toLocal().toString().split(' ')[0]}'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MessageReceivingScreen extends StatefulWidget {
+  const MessageReceivingScreen({super.key});
+
+  @override
+  _MessageReceivingScreenState createState() => _MessageReceivingScreenState();
+}
+
+class _MessageReceivingScreenState extends State<MessageReceivingScreen> {
+  List<ReceivedMessage> messages = [];
+  bool isLoading = true;
+  String errorMessage = '';
+  String? _token;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadToken();
+  }
+
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('authToken');
+    });
+    if (_token != null) {
+      fetchMessages();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No token found. Please log in again.')),
+      );
+    }
+  }
+
+  Future<void> fetchMessages() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/messageStudent/teacher/admin/messages'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        if (responseData['success']) {
+          List<dynamic> data = responseData['messages'];
+          setState(() {
+            messages = data.map((item) => ReceivedMessage.fromJson(item)).toList();
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            errorMessage = 'Failed to fetch messages';
+            isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          errorMessage = 'Error: ${response.statusCode}';
+          isLoading = false;
+        });
+      }
+    } catch (error) {
+      setState(() {
+        errorMessage = 'Network error: $error';
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Received Messages')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : errorMessage.isNotEmpty
+            ? Center(child: Text(errorMessage, style: const TextStyle(color: Colors.red)))
+            : ListView.builder(
+          itemCount: messages.length,
+          itemBuilder: (context, index) {
+            return MessageCard(
+              senderName: messages[index].senderName,
+              title: messages[index].title,
+              message: messages[index].message,
+              timestamp: messages[index].timestamp,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
