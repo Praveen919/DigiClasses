@@ -625,6 +625,19 @@ class SidePanel extends StatelessWidget {
                   );
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.message_outlined),
+                title: const Text('View Messages for me'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                        const MessagingScreen(option: 'receivedMessage')),
+                  );
+                },
+              ),
             ],
           ),
           ExpansionTile(
