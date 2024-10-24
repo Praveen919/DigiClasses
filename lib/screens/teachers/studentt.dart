@@ -1149,7 +1149,6 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
       }
     } catch (e) {
       print('Error in fetching feedbacks: $e'); // Log error details
-      // Show error message to the user
       _showErrorDialog('Error fetching feedbacks: ${e.toString()}');
     }
   }
@@ -1158,9 +1157,9 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
     setState(() {
       _searchQuery = query;
       _filteredFeedbacks = _feedbacks.where((feedback) {
-        return feedback['studentId']['name']
-                .toLowerCase()
-                .contains(query.toLowerCase()) ||
+        // Add proper null check for 'studentId' and 'name'
+        final studentName = feedback['studentId']?['name'] ?? 'Unknown';
+        return studentName.toLowerCase().contains(query.toLowerCase()) ||
             feedback['subject'].toLowerCase().contains(query.toLowerCase());
       }).toList();
     });
@@ -1205,9 +1204,7 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
                 hintText: 'Search by Student Name or Subject',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
-                  onPressed: () {
-                    // Implement search functionality here if needed
-                  },
+                  onPressed: () {},
                 ),
                 border: const OutlineInputBorder(),
                 contentPadding: const EdgeInsets.symmetric(
@@ -1219,7 +1216,7 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
             // Student Feedback List
             Expanded(
               child: _filteredFeedbacks.isEmpty
-                  ? Center(
+                  ? const Center(
                       child: Text(
                           'No feedbacks to show')) // Display message if no feedbacks
                   : ListView.builder(
@@ -1228,7 +1225,6 @@ class _StudentsFeedbackScreenState extends State<StudentsFeedbackScreen> {
                         return StudentFeedbackCard(
                           feedback: _filteredFeedbacks[index],
                           onViewDetails: () {
-                            // Implement view details functionality
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -1274,7 +1270,7 @@ class StudentFeedbackCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Student: ${feedback['studentId']['name'] ?? 'Unknown'}', // Display student name
+              'Student: ${feedback['studentId']?['name'] ?? 'Unknown'}', // Corrected student name handling
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8.0),
@@ -1320,7 +1316,7 @@ class FeedbackDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Student Name: ${feedback['studentId']['name'] ?? 'Unknown'}'), // Corrected student name display
+                'Student Name: ${feedback['studentId']?['name'] ?? 'Unknown'}'), // Corrected student name display
             Text('Subject: ${feedback['subject']}'),
             Text('Feedback: ${feedback['feedback']}'),
           ],

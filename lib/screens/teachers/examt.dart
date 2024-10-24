@@ -1156,6 +1156,7 @@ class _ManageMCQExamScreenState extends State<ManageMCQExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manage MCQ Exams'),
         backgroundColor: Colors.teal,
       ),
@@ -1366,6 +1367,7 @@ class _EditMCQPaperScreenState extends State<EditMCQPaperScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Edit MCQ Paper'),
       ),
       body: SingleChildScrollView(
