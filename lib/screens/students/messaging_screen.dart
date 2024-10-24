@@ -17,7 +17,7 @@ class MessagingScreen extends StatelessWidget {
       body: ListView(
         children: [
           ListTile(
-            title: const Text('Send Message To Teacher'),
+            title: const Text('Send Message To Admin'),
             onTap: () {
               Navigator.push(
                 context,
@@ -46,7 +46,7 @@ class MessagingScreen extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text('Send Today Absent Attendance'),
+            title: const Text('Send Absent Message'),
             onTap: () {
               Navigator.push(
                 context,
@@ -55,154 +55,203 @@ class MessagingScreen extends StatelessWidget {
               );
             },
           ),
-          // Add more ListTile items if needed
+          ListTile(
+            title: const Text('View Messages for me'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => MessageReceivingScreen()),
+              );
+            },
+          ),
+          ListTile(
+            title: const Text('View Messages for me by teacher'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => MessageReceivingTeacherScreen()),
+              );
+            },
+          ),// Add more ListTile items if needed
         ],
       ),
     );
   }
 }
 
-class SendMessageScreen extends StatelessWidget {
+class SendMessageScreen extends StatefulWidget {
+  const SendMessageScreen({super.key});
+
+  @override
+  _SendMessageScreenState createState() => _SendMessageScreenState();
+}
+
+class _SendMessageScreenState extends State<SendMessageScreen> {
+  String? _selectedRecipientId;
+  String? _token;
+  List<dynamic> _recipients = [];
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
-  final TextEditingController _recipientController =
-      TextEditingController(); // To enter recipient ID
+  bool _isSubmitting = false; // Track submission state
 
-  // URL for your API (using AppConfig for the base URL)
-  final String apiUrl =
-      '${AppConfig.baseUrl}/api/messageStudent/student/messages';
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecipients();
+    _loadToken();
+  }
 
-  SendMessageScreen({super.key});
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('authToken');
+      print('Loaded Token: $_token');
+    });
+  }
+
+  Future<void> _fetchRecipients() async {
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth/admins'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _recipients = json.decode(response.body);
+        });
+      } else {
+        final errorMessage = json.decode(response.body)['error'] ?? 'Failed to fetch recipients';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching recipients. Please try again later.')),
+      );
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    if (_selectedRecipientId == null || _subjectController.text.isEmpty || _messageController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill in all fields.')));
+      return;
+    }
+
+    if (_isSubmitting) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/messageStudent/student/messages'), // Ensure this endpoint is correct
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: json.encode({
+          'adminId': _selectedRecipientId, // Ensure this is correct
+          'subject': _subjectController.text,
+          'message': _messageController.text,
+        }),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Message sent successfully!')));
+        _subjectController.clear();
+        _messageController.clear();
+        setState(() {
+          _selectedRecipientId = null;
+        });
+      } else {
+        final errorMessage = json.decode(response.body)['error'] ?? 'Failed to send message';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
+    } catch (e) {
+      print('Exception: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error sending message. Please try again later.')));
+    } finally {
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Send Message to Teacher/Admin'),
+        automaticallyImplyLeading: false,
+        title: const Text('Send Message to Admin'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Recipient ID Field
-            TextField(
-              controller: _recipientController,
-              decoration: const InputDecoration(
-                hintText: 'Enter recipient (Teacher/Admin) ID here...',
-                border: OutlineInputBorder(),
-                labelText: 'Recipient ID',
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Subject Field
-            TextField(
-              controller: _subjectController,
-              decoration: const InputDecoration(
-                hintText: 'Enter subject here...',
-                border: OutlineInputBorder(),
-                labelText: 'Subject',
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Message Field
-            TextField(
-              controller: _messageController,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                hintText: 'Type your message here...',
-                border: OutlineInputBorder(),
-                labelText: 'Message',
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Send Button
-            ElevatedButton(
-              onPressed: () {
-                String subject = _subjectController.text;
-                String message = _messageController.text;
-                String recipientId = _recipientController.text;
-
-                // Validate inputs
-                if (subject.isNotEmpty &&
-                    message.isNotEmpty &&
-                    recipientId.isNotEmpty) {
-                  // Call sendMessage() to send the data to the server
-                  sendMessage(subject, message, recipientId).then((response) {
-                    if (response['success'] == true) {
-                      // Show confirmation dialog
-                      _showDialog(context, 'Message Sent',
-                          'Your message has been sent successfully!');
-                    } else {
-                      // Show error dialog
-                      _showDialog(context, 'Error',
-                          'Failed to send the message. Try again later.');
-                    }
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Recipient Dropdown (Admin/Teacher)
+              DropdownButton<String>(
+                value: _selectedRecipientId,
+                hint: const Text('Select Admin/Teacher*'),
+                isExpanded: true,
+                items: _recipients.map((recipient) {
+                  return DropdownMenuItem<String>(
+                    value: recipient['_id'],
+                    child: Text(recipient['name'] ?? 'Unnamed Recipient'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedRecipientId = value;
                   });
-                } else {
-                  // Show validation error dialog
-                  _showDialog(context, 'Error', 'All fields are required.');
-                }
-              },
-              child: const Text('Send Message'),
-            ),
-          ],
+                },
+              ),
+
+              const SizedBox(height: 16.0),
+
+              // Subject
+              TextFormField(
+                controller: _subjectController,
+                decoration: const InputDecoration(
+                  labelText: 'Subject*',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16.0),
+
+              // Message
+              TextFormField(
+                controller: _messageController,
+                maxLines: 5,
+                decoration: const InputDecoration(
+                  labelText: 'Message*',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 32.0),
+
+              // Send Button
+              ElevatedButton(
+                onPressed: _isSubmitting ? null : _sendMessage, // Disable button during submission
+                child: _isSubmitting
+                    ? const CircularProgressIndicator() // Show loading indicator
+                    : const Text('Send'),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  // Function to send the message to the server
-  Future<Map<String, dynamic>> sendMessage(
-      String subject, String message, String recipientId) async {
-    try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'senderStudentId':
-              'studentId', // Replace with actual student ID logic
-          'recipientId': recipientId,
-          'subject': subject,
-          'message': message,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        return {'success': false};
-      }
-    } catch (e) {
-      print(e);
-      return {'success': false};
-    }
-  }
-
-  // Helper function to show a dialog
-  void _showDialog(BuildContext context, String title, String content) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Optionally, navigate back if needed
-              // Navigator.of(context).pop();
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
 }
+
 
 class RequestCredentialsScreen extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
@@ -683,6 +732,282 @@ class _TodaysAbsenceMessageScreenState
                   : const Text('Send Notification'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class ReceivedMessage {
+  final String senderName;
+  final String title;
+  final String message;
+  final DateTime timestamp;
+
+  ReceivedMessage({
+    required this.senderName,
+    required this.title,
+    required this.message,
+    required this.timestamp,
+  });
+
+  factory ReceivedMessage.fromJson(Map<String, dynamic> json) {
+    String sender = 'Unknown'; // Default value
+
+    // Check if teacherId is present
+    if (json.containsKey('teacherId') && json['teacherId'] != null) {
+      sender = json['teacherId']['name'] ?? 'Unknown';
+    }
+    // If teacherId is not there, fallback to adminId
+    else if (json.containsKey('adminId') && json['adminId'] != null) {
+      sender = 'Admin'; // Change this to actual admin name logic if available
+    }
+
+    return ReceivedMessage(
+      senderName: sender,
+      title: json['title'] ?? 'No Title',
+      message: json['message'] ?? '',
+      timestamp: DateTime.parse(json['createdAt'] ?? DateTime.now().toString()),
+    );
+  }
+}
+
+class MessageCard extends StatelessWidget {
+  final String senderName;
+  final String title;
+  final String message;
+  final DateTime timestamp;
+
+  const MessageCard({
+    super.key,
+    required this.senderName,
+    required this.title,
+    required this.message,
+    required this.timestamp,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(senderName, style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4.0),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)), // Display title
+            const SizedBox(height: 4.0),
+            Text(message),
+            const SizedBox(height: 4.0),
+            Text('Received on: ${timestamp.toLocal().toString().split(' ')[0]}'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MessageReceivingScreen extends StatefulWidget {
+  const MessageReceivingScreen({super.key});
+
+  @override
+  _MessageReceivingScreenState createState() => _MessageReceivingScreenState();
+}
+
+class _MessageReceivingScreenState extends State<MessageReceivingScreen> {
+  List<ReceivedMessage> messages = [];
+  bool isLoading = true;
+  String errorMessage = '';
+  String? _token;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadToken();
+  }
+
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('authToken');
+    });
+    if (_token != null) {
+      fetchMessages();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No token found. Please log in again.')),
+      );
+    }
+  }
+
+  Future<void> fetchMessages() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/messageStudent/student/received-messages'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        if (responseData['success']) {
+          List<dynamic> data = responseData['messages'];
+          setState(() {
+            messages = data.map((item) => ReceivedMessage.fromJson(item)).toList();
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            errorMessage = 'Failed to fetch messages';
+            isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          errorMessage = 'Error: ${response.statusCode}';
+          isLoading = false;
+        });
+      }
+    } catch (error) {
+      setState(() {
+        errorMessage = 'Network error: $error';
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: const Text('Received Messages')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : errorMessage.isNotEmpty
+            ? Center(child: Text(errorMessage, style: const TextStyle(color: Colors.red)))
+            : ListView.builder(
+          itemCount: messages.length,
+          itemBuilder: (context, index) {
+            return MessageCard(
+              senderName: messages[index].senderName,
+              title: messages[index].title,
+              message: messages[index].message,
+              timestamp: messages[index].timestamp,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class MessageReceivingTeacherScreen extends StatefulWidget {
+  const MessageReceivingTeacherScreen({super.key});
+
+  @override
+  _MessageReceivingTeacherScreenState createState() => _MessageReceivingTeacherScreenState();
+}
+
+class _MessageReceivingTeacherScreenState extends State<MessageReceivingTeacherScreen> {
+  List<ReceivedMessage> messages = [];
+  bool isLoading = true;
+  String errorMessage = '';
+  String? _token;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadToken();
+  }
+
+  Future<void> _loadToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('authToken');
+    });
+    if (_token != null) {
+      fetchMessages();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No token found. Please log in again.')),
+      );
+    }
+  }
+
+  Future<void> fetchMessages() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/messageStudent/student/messages/teacher'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        if (responseData['success']) {
+          List<dynamic> data = responseData['messages'];
+          setState(() {
+            messages = data.map((item) => ReceivedMessage.fromJson(item)).toList();
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            errorMessage = 'Failed to fetch messages';
+            isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          errorMessage = 'Error: ${response.statusCode}';
+          isLoading = false;
+        });
+      }
+    } catch (error) {
+      setState(() {
+        errorMessage = 'Network error: $error';
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: const Text('Received Messages')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : errorMessage.isNotEmpty
+            ? Center(child: Text(errorMessage, style: const TextStyle(color: Colors.red)))
+            : ListView.builder(
+          itemCount: messages.length,
+          itemBuilder: (context, index) {
+            return MessageCard(
+              senderName: messages[index].senderName,
+              title: messages[index].title,
+              message: messages[index].message,
+              timestamp: messages[index].timestamp,
+            );
+          },
         ),
       ),
     );
