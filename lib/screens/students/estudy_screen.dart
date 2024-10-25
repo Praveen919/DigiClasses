@@ -130,6 +130,7 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Study Material'),
         actions: [
           IconButton(
@@ -262,6 +263,7 @@ class _ViewSharedStudyMaterialScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Shared Study Material'),
         actions: [
           IconButton(
