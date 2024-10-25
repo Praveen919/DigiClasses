@@ -192,17 +192,6 @@ class _StudentInquiryReportScreenState
                   ),
             const SizedBox(height: 16),
             // View Report button
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Handle view report action
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue, // Button color
-                ),
-                child: const Text('View Report'),
-              ),
-            ),
           ],
         ),
       ),

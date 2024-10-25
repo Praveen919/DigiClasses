@@ -29,9 +29,9 @@ class _MessagingScreenState extends State<MessagingScreen> {
       case 'student':
         return const SendStudentMessageScreen();
       case 'staff':
-        return SendStaffMessageScreen();
+        return const SendStaffMessageScreen();
       case 'examReminder':
-        return SendExamReminderScreen();
+        return const SendExamReminderScreen();
       case 'absentAttendance':
         return const AbsentAttendanceMessageScreen();
       case 'receivedMessage':
@@ -253,6 +253,8 @@ class _SendStudentMessageScreenState extends State<SendStudentMessageScreen> {
 }
 
 class SendStaffMessageScreen extends StatefulWidget {
+  const SendStaffMessageScreen({super.key});
+
   @override
   _SendStaffMessageScreenState createState() => _SendStaffMessageScreenState();
 }
@@ -919,6 +921,8 @@ class MCQExam {
 }
 
 class SendExamReminderScreen extends StatefulWidget {
+  const SendExamReminderScreen({super.key});
+
   @override
   _SendExamReminderScreenState createState() => _SendExamReminderScreenState();
 }

@@ -412,19 +412,6 @@ class _ManageStudyMaterialScreenState extends State<ManageStudyMaterialScreen> {
     });
   }
 
-  void _navigateToCreateStudyMaterial() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => const CreateStudyMaterialScreen()),
-    );
-
-    if (result == true) {
-      // Check if the result is true
-      _fetchStudyMaterials(); // Refresh data
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -631,19 +618,6 @@ class _ManageSharedStudyMaterialScreenState
         _fetchStudyMaterials(); // Refresh data
       }
     });
-  }
-
-  void _navigateToCreateStudyMaterial() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => const CreateStudyMaterialScreen()),
-    );
-
-    if (result == true) {
-      // Check if the result is true
-      _fetchStudyMaterials(); // Refresh data
-    }
   }
 
   @override

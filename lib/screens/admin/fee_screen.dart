@@ -21,9 +21,9 @@ class FeeScreen extends StatelessWidget {
   Widget _buildContent() {
     switch (option) {
       case 'createFeeStructure':
-        return CreateFeeStructureScreen();
+        return const CreateFeeStructureScreen();
       case 'manageFeeStructure':
-        return ManageFeeStructureScreen();
+        return const ManageFeeStructureScreen();
       default:
         return const Center(child: Text('Unknown Option'));
     }

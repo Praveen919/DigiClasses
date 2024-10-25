@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart'; // For handling permissions
 import 'package:testing_app/screens/config.dart';
 import 'package:open_file/open_file.dart';
@@ -168,6 +167,7 @@ class _ViewStudyMaterialScreenState extends State<ViewStudyMaterialScreen> {
     );
   }
 }
+
 class ViewSharedStudyMaterialScreen extends StatefulWidget {
   const ViewSharedStudyMaterialScreen({super.key});
 
@@ -190,8 +190,8 @@ class _ViewSharedStudyMaterialScreenState
 
   Future<void> fetchSharedMaterials() async {
     try {
-      final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/study-material')); // Ensure the correct endpoint is used
+      final response = await http.get(Uri.parse(
+          '${AppConfig.baseUrl}/api/study-material')); // Ensure the correct endpoint is used
       if (response.statusCode == 200) {
         setState(() {
           sharedMaterials = json.decode(response.body);
@@ -282,8 +282,10 @@ class _ViewSharedStudyMaterialScreenState
                 itemCount: sharedMaterials.length,
                 itemBuilder: (context, index) {
                   final material = sharedMaterials[index];
-                  final fileUrl = material['filePath']; // Ensure this is the correct field for the file URL
-                  final fileName = material['fileName'] ?? 'unknown_file'; // Ensure this field exists
+                  final fileUrl = material[
+                      'filePath']; // Ensure this is the correct field for the file URL
+                  final fileName = material['fileName'] ??
+                      'unknown_file'; // Ensure this field exists
 
                   return ListTile(
                     title: Text(material['courseName'] ?? 'No Title'),

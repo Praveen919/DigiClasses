@@ -174,8 +174,6 @@ router.post('/student/messages', verifyJWT, async (req, res) => {
   }
 });
 
-
-
 //POST to send message to admin from teacher
 router.post('/teacher/admin/messages', verifyJWT, async (req, res) => {
   const { adminId, title, message } = req.body;
@@ -222,7 +220,6 @@ router.post('/teacher/admin/messages', verifyJWT, async (req, res) => {
   }
 });
 
-
 // Get messages sent by a teacher to an admin
 router.get('/teacher/admin/messages', verifyJWT, async (req, res) => {
   try {
@@ -246,7 +243,6 @@ router.get('/teacher/admin/messages', verifyJWT, async (req, res) => {
      res.status(500).json({ error: 'Server error while fetching messages' });
    }
  });
-
 
 // POST route to send a message from teacher to student
 router.post('/teacher/messages', verifyJWT, async (req, res) => {
@@ -317,8 +313,6 @@ router.get('/student/messages/teacher', verifyJWT, async (req, res) => {
   }
 });
 
-
-
 // POST route to send a message from teacher to staff
 router.post('/teacher/staff/messages', async (req, res) => {
   const { teacherId,  title, message } = req.body; //staffId
@@ -347,7 +341,6 @@ router.post('/teacher/staff/messages', async (req, res) => {
     res.status(500).json({ error: 'Server error while sending message' });
   }
 });
-
 
 // POST route to send a message from admin to staff
 router.post('/admin/staff', verifyJWT, async (req, res) => {
@@ -438,7 +431,6 @@ router.get('/staff/messages', verifyJWT, async (req, res) => {
   }
 });
 
-
 // POST route to send exam notification
 router.post('/exam/notifications', async (req, res) => {
   const { standard, subject, examName, date } = req.body;
@@ -468,8 +460,6 @@ router.post('/exam/notifications', async (req, res) => {
   }
 });
 
-
-
 // GET route for retrieving messages sent from a student to admin/teacher
 router.get('/student/to-admin-teacher/messages/:studentId', async (req, res) => {
   const { studentId } = req.params;
@@ -484,14 +474,25 @@ router.get('/student/to-admin-teacher/messages/:studentId', async (req, res) => 
 });
 
 // GET route for retrieving exam notifications
+// GET route for retrieving exam notifications
 router.get('/exam/notifications', async (req, res) => {
   try {
     const notifications = await ExamNotification.find();
-    res.status(200).json(notifications);
+    
+    // Map through notifications to ensure fields are properly set
+    const sanitizedNotifications = notifications.map(notification => ({
+      standard: notification.standard || 'Not Specified',
+      subject: notification.subject || 'Not Specified',
+      examName: notification.examName || 'Not Specified',
+      date: notification.date ? notification.date.toISOString() : new Date().toISOString(),
+    }));
+
+    res.status(200).json(sanitizedNotifications);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error retrieving exam notifications' });
   }
 });
+
 
 module.exports = router;

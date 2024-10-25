@@ -732,19 +732,25 @@ class _CreateMCQExamScreenState extends State<CreateMCQExamScreen> {
 
         if (response.statusCode == 201) {
           final responseData = json.decode(response.body);
-          // ignore: unused_local_variable
           final String examId = responseData['exam']?['_id'] ?? '';
 
-          // Navigate to AddMCQQuestionsScreen with the new examId
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddMCQQuestionsScreen(
-                paperName: paperName ?? 'Unnamed Paper',
-                paperId: '',
+          // Check if examId is empty
+          if (examId.isNotEmpty) {
+            // Navigate to AddMCQQuestionsScreen with the new examId
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddMCQQuestionsScreen(
+                  paperName: paperName ?? 'Unnamed Paper',
+                  paperId: examId, // Pass the examId to the next screen
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Exam ID not found')),
+            );
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to create MCQ exam')),
@@ -1517,38 +1523,6 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
       print('Error fetching questions: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error fetching questions')),
-      );
-    }
-  }
-
-  Future<void> _updateQuestion(
-      String questionId, Map<String, dynamic> updatedQuestion) async {
-    try {
-      final response = await http.put(
-        Uri.parse(
-            '${AppConfig.baseUrl}/api/mcq-exams/${widget.paperId}/questions/$questionId'),
-        body: json.encode({
-          'question': updatedQuestion['question'],
-          'options': updatedQuestion['options'],
-          'correctAnswer': updatedQuestion['correctAnswer'],
-        }),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Question updated successfully')),
-        );
-        _fetchQuestions(); // Refresh the questions list
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update question')),
-        );
-      }
-    } catch (error) {
-      print('Error updating question: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error updating question')),
       );
     }
   }

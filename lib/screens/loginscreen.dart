@@ -120,20 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.pushNamed(context, '/createAccount');
   }
 
-  Future<void> _testConnection() async {
-    try {
-      final response =
-          await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth/login'));
-      if (response.statusCode == 200) {
-        print('Connection successful!');
-      } else {
-        print('Failed to connect. Status code: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error connecting: $error');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

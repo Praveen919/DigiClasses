@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart'; // For picking images
 import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
@@ -99,8 +98,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
   void initState() {
     super.initState();
     _fetchProfileSettings();
-    fetchToken();// Fetch profile data on load
+    fetchToken(); // Fetch profile data on load
   }
+
   Future<void> fetchToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -108,6 +108,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
     });
     _fetchProfileSettings(); // Fetch profile data after fetching token
   }
+
   // Fetch existing profile settings from the server
   Future<void> _fetchProfileSettings() async {
     try {
@@ -117,7 +118,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
 
         // Prepopulate the form fields with fetched data
         setState(() {
@@ -154,76 +154,81 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator()) // Loading spinner
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              const Text(
-                'Coaching Class Detail',
-                style:
-                TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Text(
+                      'Coaching Class Detail',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                        'Institute Name', instituteNameController, true),
+                    _buildTextField('Country', countryController, true),
+                    _buildTextField('City', cityController, true),
+                    _buildTextField('Branch Name', branchNameController, true),
+                    _buildTextField(
+                        'Branch Address', branchAddressController, true),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Profile Logo',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: _pickImage,
+                      child: const Text('Select Image'),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildDropdown(
+                      'Display logo on receipt?',
+                      logoDisplay,
+                      ['Yes', 'No'],
+                      (value) {
+                        setState(() {
+                          logoDisplay = value!;
+                        });
+                      },
+                    ),
+                    _buildDropdown(
+                      'Allow students to chat?',
+                      chatOption,
+                      ['Yes', 'No'],
+                      (value) {
+                        setState(() {
+                          chatOption = value!;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Personal Details',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    _buildTextField('Name', nameController, true),
+                    _buildTextField('Mobile No.', mobileController, true,
+                        isNumeric: true),
+                    _buildTextField('Email', emailController, true,
+                        isEmail: true),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _submitData(); // Call the submit function
+                        }
+                      },
+                      child: const Text('Submit'),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 20),
-              _buildTextField('Institute Name', instituteNameController, true),
-              _buildTextField('Country', countryController, true),
-              _buildTextField('City', cityController, true),
-              _buildTextField('Branch Name', branchNameController, true),
-              _buildTextField('Branch Address', branchAddressController, true),
-              const SizedBox(height: 20),
-              const Text(
-                'Profile Logo',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _pickImage,
-                child: const Text('Select Image'),
-              ),
-              const SizedBox(height: 20),
-              _buildDropdown(
-                'Display logo on receipt?',
-                logoDisplay,
-                ['Yes', 'No'],
-                    (value) {
-                  setState(() {
-                    logoDisplay = value!;
-                  });
-                },
-              ),
-              _buildDropdown(
-                'Allow students to chat?',
-                chatOption,
-                ['Yes', 'No'],
-                    (value) {
-                  setState(() {
-                    chatOption = value!;
-                  });
-                },
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Personal Details',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              _buildTextField('Name', nameController, true),
-              _buildTextField('Mobile No.', mobileController, true,
-                  isNumeric: true),
-              _buildTextField('Email', emailController, true, isEmail: true),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _submitData(); // Call the submit function
-                  }
-                },
-                child: const Text('Submit'),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 

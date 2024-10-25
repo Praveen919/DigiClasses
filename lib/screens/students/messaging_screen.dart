@@ -21,17 +21,8 @@ class MessagingScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SendMessageScreen()),
-              );
-            },
-          ),
-          ListTile(
-            title: const Text('Request Student Id Password'),
-            onTap: () {
-              Navigator.push(
-                context,
                 MaterialPageRoute(
-                    builder: (context) => RequestCredentialsScreen()),
+                    builder: (context) => const SendMessageScreen()),
               );
             },
           ),
@@ -51,7 +42,7 @@ class MessagingScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => TodaysAbsenceMessageScreen()),
+                    builder: (context) => const TodaysAbsenceMessageScreen()),
               );
             },
           ),
@@ -61,7 +52,7 @@ class MessagingScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => MessageReceivingScreen()),
+                    builder: (context) => const MessageReceivingScreen()),
               );
             },
           ),
@@ -71,10 +62,10 @@ class MessagingScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => MessageReceivingTeacherScreen()),
+                    builder: (context) => const ExamReminderScreen()),
               );
             },
-          ),// Add more ListTile items if needed
+          ), // Add more ListTile items if needed
         ],
       ),
     );
@@ -113,28 +104,35 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
 
   Future<void> _fetchRecipients() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth/admins'));
+      final response =
+          await http.get(Uri.parse('${AppConfig.baseUrl}/api/auth/admins'));
 
       if (response.statusCode == 200) {
         setState(() {
           _recipients = json.decode(response.body);
         });
       } else {
-        final errorMessage = json.decode(response.body)['error'] ?? 'Failed to fetch recipients';
+        final errorMessage =
+            json.decode(response.body)['error'] ?? 'Failed to fetch recipients';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching recipients. Please try again later.')),
+        const SnackBar(
+            content:
+                Text('Error fetching recipients. Please try again later.')),
       );
     }
   }
 
   Future<void> _sendMessage() async {
-    if (_selectedRecipientId == null || _subjectController.text.isEmpty || _messageController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill in all fields.')));
+    if (_selectedRecipientId == null ||
+        _subjectController.text.isEmpty ||
+        _messageController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill in all fields.')));
       return;
     }
 
@@ -148,7 +146,8 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/messageStudent/student/messages'), // Ensure this endpoint is correct
+        Uri.parse(
+            '${AppConfig.baseUrl}/api/messageStudent/student/messages'), // Ensure this endpoint is correct
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_token',
@@ -163,19 +162,23 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
       if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Message sent successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Message sent successfully!')));
         _subjectController.clear();
         _messageController.clear();
         setState(() {
           _selectedRecipientId = null;
         });
       } else {
-        final errorMessage = json.decode(response.body)['error'] ?? 'Failed to send message';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+        final errorMessage =
+            json.decode(response.body)['error'] ?? 'Failed to send message';
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } catch (e) {
       print('Exception: $e');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error sending message. Please try again later.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Error sending message. Please try again later.')));
     } finally {
       setState(() {
         _isSubmitting = false;
@@ -239,7 +242,9 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
 
               // Send Button
               ElevatedButton(
-                onPressed: _isSubmitting ? null : _sendMessage, // Disable button during submission
+                onPressed: _isSubmitting
+                    ? null
+                    : _sendMessage, // Disable button during submission
                 child: _isSubmitting
                     ? const CircularProgressIndicator() // Show loading indicator
                     : const Text('Send'),
@@ -249,178 +254,6 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
         ),
       ),
     );
-  }
-}
-
-
-class RequestCredentialsScreen extends StatelessWidget {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _studentIdController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
-
-  // URL for your API (change it to your server address)
-  final String apiUrl =
-      '${AppConfig.baseUrl}/api/messageStudentIdPass/student/messages';
-
-  RequestCredentialsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Request Student ID/Password'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Instructions
-            const Text(
-              'If you have forgotten your student ID or password, please enter your email address below. '
-              'If you have a student ID, you can also enter it to expedite the process. '
-              'You can also add a message to notify the admin or teacher.',
-              style: TextStyle(fontSize: 16.0),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Email Field
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                hintText: 'Enter your email address',
-                border: OutlineInputBorder(),
-                labelText: 'Email Address',
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 16.0),
-
-            // Student ID Field (Optional)
-            TextField(
-              controller: _studentIdController,
-              decoration: const InputDecoration(
-                hintText: 'Enter your student ID (optional)',
-                border: OutlineInputBorder(),
-                labelText: 'Student ID',
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Message Field
-            TextField(
-              controller: _messageController,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                hintText: 'Type your message here...',
-                border: OutlineInputBorder(),
-                labelText: 'Message',
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Request Button
-            ElevatedButton(
-              onPressed: () {
-                String email = _emailController.text;
-                String studentId = _studentIdController.text;
-                String message = _messageController.text;
-
-                // Validate email
-                if (email.isNotEmpty) {
-                  // Process the request
-                  requestCredentials(email, studentId, message)
-                      .then((response) {
-                    if (response['success']) {
-                      // Show confirmation message
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Request Submitted'),
-                          content: const Text(
-                              'Your request has been submitted. Please check your email for further instructions.'),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                Navigator.of(context)
-                                    .pop(); // Optionally navigate back
-                              },
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else {
-                      // Show error message
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Error'),
-                          content: const Text(
-                              'Failed to submit your request. Please try again later.'),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                  });
-                } else {
-                  // Show validation error
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Error'),
-                      content: const Text('Please enter your email address.'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-              child: const Text('Request Credentials'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Function to send the request to the server
-  Future<Map<String, dynamic>> requestCredentials(
-      String email, String studentId, String message) async {
-    try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'email': email,
-          'studentId': studentId,
-          'message': message,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        return {'success': false};
-      }
-    } catch (e) {
-      print(e);
-      return {'success': false};
-    }
   }
 }
 
@@ -794,13 +627,17 @@ class MessageCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(senderName, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(senderName,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4.0),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)), // Display title
+            Text(title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold)), // Display title
             const SizedBox(height: 4.0),
             Text(message),
             const SizedBox(height: 4.0),
-            Text('Received on: ${timestamp.toLocal().toString().split(' ')[0]}'),
+            Text(
+                'Received on: ${timestamp.toLocal().toString().split(' ')[0]}'),
           ],
         ),
       ),
@@ -848,7 +685,9 @@ class _MessageReceivingScreenState extends State<MessageReceivingScreen> {
     });
 
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/messageStudent/student/received-messages'),
+      final response = await http.get(
+        Uri.parse(
+            '${AppConfig.baseUrl}/api/messageStudent/student/received-messages'),
         headers: {
           'Authorization': 'Bearer $_token',
           'Content-Type': 'application/json',
@@ -860,7 +699,8 @@ class _MessageReceivingScreenState extends State<MessageReceivingScreen> {
         if (responseData['success']) {
           List<dynamic> data = responseData['messages'];
           setState(() {
-            messages = data.map((item) => ReceivedMessage.fromJson(item)).toList();
+            messages =
+                data.map((item) => ReceivedMessage.fromJson(item)).toList();
             isLoading = false;
           });
         } else {
@@ -886,40 +726,85 @@ class _MessageReceivingScreenState extends State<MessageReceivingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: const Text('Received Messages')),
+      appBar: AppBar(title: const Text('Received Messages')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : errorMessage.isNotEmpty
-            ? Center(child: Text(errorMessage, style: const TextStyle(color: Colors.red)))
-            : ListView.builder(
-          itemCount: messages.length,
-          itemBuilder: (context, index) {
-            return MessageCard(
-              senderName: messages[index].senderName,
-              title: messages[index].title,
-              message: messages[index].message,
-              timestamp: messages[index].timestamp,
-            );
-          },
+                ? Center(
+                    child: Text(errorMessage,
+                        style: const TextStyle(color: Colors.red)))
+                : ListView.builder(
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      return MessageCard(
+                        senderName: messages[index].senderName,
+                        title: messages[index].title,
+                        message: messages[index].message,
+                        timestamp: messages[index].timestamp,
+                      );
+                    },
+                  ),
+      ),
+    );
+  }
+}
+
+class ExamReminderCard extends StatelessWidget {
+  final String examName;
+  final String subject;
+  final String date;
+
+  const ExamReminderCard({
+    super.key,
+    required this.examName,
+    required this.subject,
+    required this.date,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              examName,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subject,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              date,
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class MessageReceivingTeacherScreen extends StatefulWidget {
-  const MessageReceivingTeacherScreen({super.key});
+class ExamReminderScreen extends StatefulWidget {
+  const ExamReminderScreen({super.key});
 
   @override
-  _MessageReceivingTeacherScreenState createState() => _MessageReceivingTeacherScreenState();
+  _ExamReminderScreenState createState() => _ExamReminderScreenState();
 }
 
-class _MessageReceivingTeacherScreenState extends State<MessageReceivingTeacherScreen> {
-  List<ReceivedMessage> messages = [];
+class _ExamReminderScreenState extends State<ExamReminderScreen> {
+  List<ExamReminder> reminders = [];
   bool isLoading = true;
   String errorMessage = '';
   String? _token;
@@ -936,7 +821,7 @@ class _MessageReceivingTeacherScreenState extends State<MessageReceivingTeacherS
       _token = prefs.getString('authToken');
     });
     if (_token != null) {
-      fetchMessages();
+      fetchReminders();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No token found. Please log in again.')),
@@ -944,14 +829,15 @@ class _MessageReceivingTeacherScreenState extends State<MessageReceivingTeacherS
     }
   }
 
-  Future<void> fetchMessages() async {
+  Future<void> fetchReminders() async {
     setState(() {
       isLoading = true;
       errorMessage = '';
     });
 
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/api/messageStudent/student/messages/teacher'),
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/api/messageStudent/exam/notifications'),
         headers: {
           'Authorization': 'Bearer $_token',
           'Content-Type': 'application/json',
@@ -959,19 +845,12 @@ class _MessageReceivingTeacherScreenState extends State<MessageReceivingTeacherS
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData['success']) {
-          List<dynamic> data = responseData['messages'];
-          setState(() {
-            messages = data.map((item) => ReceivedMessage.fromJson(item)).toList();
-            isLoading = false;
-          });
-        } else {
-          setState(() {
-            errorMessage = 'Failed to fetch messages';
-            isLoading = false;
-          });
-        }
+        final List<dynamic> responseData = json.decode(response.body);
+        setState(() {
+          reminders =
+              responseData.map((item) => ExamReminder.fromJson(item)).toList();
+          isLoading = false;
+        });
       } else {
         setState(() {
           errorMessage = 'Error: ${response.statusCode}';
@@ -990,26 +869,49 @@ class _MessageReceivingTeacherScreenState extends State<MessageReceivingTeacherS
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: const Text('Received Messages')),
+        automaticallyImplyLeading: false,
+        title: const Text('Exam Reminders'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : errorMessage.isNotEmpty
-            ? Center(child: Text(errorMessage, style: const TextStyle(color: Colors.red)))
-            : ListView.builder(
-          itemCount: messages.length,
-          itemBuilder: (context, index) {
-            return MessageCard(
-              senderName: messages[index].senderName,
-              title: messages[index].title,
-              message: messages[index].message,
-              timestamp: messages[index].timestamp,
-            );
-          },
-        ),
+                ? Center(
+                    child: Text(errorMessage,
+                        style: const TextStyle(color: Colors.red)),
+                  )
+                : ListView.builder(
+                    itemCount: reminders.length,
+                    itemBuilder: (context, index) {
+                      return ExamReminderCard(
+                        examName: reminders[index].examName,
+                        subject: reminders[index].subject,
+                        date: reminders[index].date,
+                      );
+                    },
+                  ),
       ),
+    );
+  }
+}
+
+class ExamReminder {
+  final String examName;
+  final String subject;
+  final String date;
+
+  ExamReminder({
+    required this.examName,
+    required this.subject,
+    required this.date,
+  });
+
+  factory ExamReminder.fromJson(Map<String, dynamic> json) {
+    return ExamReminder(
+      examName: json['examName'] ?? '',
+      subject: json['subject'] ?? '',
+      date: json['date'] ?? '',
     );
   }
 }

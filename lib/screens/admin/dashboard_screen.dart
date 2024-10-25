@@ -792,7 +792,7 @@ class DashboardTab extends ConsumerStatefulWidget {
   final String branch;
   final String year;
 
-  DashboardTab({
+  const DashboardTab({
     super.key,
     required this.name,
     required this.branch,

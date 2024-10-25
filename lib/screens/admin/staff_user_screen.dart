@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart';
 import 'package:testing_app/screens/config.dart';
 
 class StaffUserScreen extends StatefulWidget {
@@ -406,19 +405,6 @@ class _ManageStaffScreenState extends State<ManageStaffScreen> {
     }
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        setState(() {
-          _profilePicturePath = pickedFile.path;
-        });
-      }
-    } catch (e) {
-      print('Error picking image: $e');
-    }
-  }
-
   void _onEdit(int index, Map<String, dynamic> staff) {
     setState(() {
       _editingIndex = index;
@@ -769,7 +755,7 @@ class _ManageStaffRightsScreenState extends State<ManageStaffRightsScreen> {
           newRole = 'Teacher';
       }
 
-      final url =
+      const url =
           '${AppConfig.baseUrl}/api/staff-rights/assignRights'; // Corrected API URL
 
       try {

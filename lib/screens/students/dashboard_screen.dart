@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:testing_app/screens/students/help_screen.dart';
 import 'package:testing_app/screens/students/estudy_screen.dart';
 import 'package:testing_app/screens/students/exam_screen.dart';
 import 'package:testing_app/screens/students/messaging_screen.dart';
-import 'package:testing_app/screens/students/report_screen.dart';
 import 'package:testing_app/screens/students/settings_screen.dart';
 import 'package:testing_app/screens/students/student_screen.dart';
 import 'package:http/http.dart' as http;
@@ -125,7 +123,8 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ViewSharedDocumentsScreen()),
+                        builder: (context) =>
+                            const ViewSharedDocumentsScreen()),
                   );
                 },
               ),
@@ -137,7 +136,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => GiveFeedbackScreen()),
+                        builder: (context) => const GiveFeedbackScreen()),
                   );
                 },
               ),
@@ -155,7 +154,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => ExamScreen()),
+                    MaterialPageRoute(builder: (context) => const ExamScreen()),
                   );
                   // Navigate to Student management
                 },
@@ -168,7 +167,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ViewMCQExamScreen()),
+                        builder: (context) => const ViewMCQExamScreen()),
                   );
                 },
               ),
@@ -180,7 +179,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ViewAssignmentsScreen()),
+                        builder: (context) => const ViewAssignmentsScreen()),
                   );
                 },
               ),
@@ -230,7 +229,7 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => SendMessageScreen()),
+                        builder: (context) => const SendMessageScreen()),
                   );
                 },
               ),
@@ -254,7 +253,8 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => TodaysAbsenceMessageScreen()),
+                        builder: (context) =>
+                            const TodaysAbsenceMessageScreen()),
                   );
                 },
               ),
@@ -266,19 +266,19 @@ class SidePanel extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => MessageReceivingScreen()),
+                        builder: (context) => const MessageReceivingScreen()),
                   );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.message_outlined),
-                title: const Text('View Messages for me from teacher'),
+                title: const Text('View Exam Reminders'),
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => MessageReceivingTeacherScreen()),
+                        builder: (context) => const ExamReminderScreen()),
                   );
                 },
               ),
@@ -619,7 +619,8 @@ class Shortcuts extends StatelessWidget {
             // Navigate to the Send Message Screen
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => SendMessageScreen()),
+              MaterialPageRoute(
+                  builder: (context) => const SendMessageScreen()),
             );
           },
         ),

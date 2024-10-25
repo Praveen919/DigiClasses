@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart'; // For picking images
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -161,7 +160,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch profile data')),
+          const SnackBar(content: Text('Failed to fetch profile data')),
         );
       }
     } catch (error) {
@@ -170,7 +169,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
             content: Text('An error occurred while fetching profile data')),
       );
     }
@@ -179,7 +178,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettings> {
   @override
   Widget build(BuildContext context) {
     return isLoading
-        ? Center(child: CircularProgressIndicator())
+        ? const Center(child: CircularProgressIndicator())
         : SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Form(

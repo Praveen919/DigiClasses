@@ -68,7 +68,7 @@ class ContactUsScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Icon and heading
-            CircleAvatar(
+            const CircleAvatar(
               radius: 50,
               backgroundColor: Colors.blueAccent,
               child: Icon(
@@ -94,17 +94,17 @@ class ContactUsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: ListTile(
-                leading: const Icon(
+              child: const ListTile(
+                leading: Icon(
                   Icons.email,
                   color: Colors.blueAccent,
                   size: 30,
                 ),
-                title: const Text(
+                title: Text(
                   'Email Us',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                subtitle: const Text(
+                subtitle: Text(
                   'digiclass737@gmail.com',
                   style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
@@ -118,17 +118,17 @@ class ContactUsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: ListTile(
-                leading: const Icon(
+              child: const ListTile(
+                leading: Icon(
                   Icons.phone,
                   color: Colors.green,
                   size: 30,
                 ),
-                title: const Text(
+                title: Text(
                   'Call Us',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                subtitle: const Text(
+                subtitle: Text(
                   '+91 81695 56700',
                   style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
@@ -146,17 +146,17 @@ class ContactUsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.facebook),
+                  icon: FaIcon(FontAwesomeIcons.facebook),
                   color: Colors.blue,
                   iconSize: 30,
                   onPressed: _openFacebook, // Link to your Facebook page
                 ),
                 IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.instagram),
+                  icon: FaIcon(FontAwesomeIcons.instagram),
                   color: Colors.pinkAccent,
                   iconSize: 30,
                   onPressed: _openInstagram, // Link to your Instagram page
@@ -292,7 +292,7 @@ class _ViewTeacherFeedbackScreenState extends State<ViewTeacherFeedbackScreen> {
             // Feedback List
             Expanded(
               child: _filteredFeedbacks.isEmpty
-                  ? Center(child: Text('No feedbacks to show'))
+                  ? const Center(child: Text('No feedbacks to show'))
                   : ListView.builder(
                       itemCount: _filteredFeedbacks.length,
                       itemBuilder: (context, index) {

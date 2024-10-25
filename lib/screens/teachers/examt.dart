@@ -26,15 +26,15 @@ class ExamT extends StatelessWidget {
   Widget _buildContent() {
     switch (option) {
       case 'createManualExam':
-        return CreateManualExamScreen();
+        return const CreateManualExamScreen();
       case 'manageManualExam':
-        return ManageManualExamScreen();
+        return const ManageManualExamScreen();
       case 'createMCQExam':
         return const CreateMCQExamScreen();
       case 'manageMCQExam':
         return const ManageMCQExamScreen();
       case 'createAssignments':
-        return CreateAssignmentsScreen();
+        return const CreateAssignmentsScreen();
       case 'manageAssignments':
         return const ManageAssignmentsScreen();
 
@@ -1001,7 +1001,7 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                     minimumSize:
                         const Size(double.infinity, 50), // Full-width button
                   ),
-                  child: Text('Save Questions'),
+                  child: const Text('Save Questions'),
                 ),
                 const SizedBox(height: 16.0),
                 ElevatedButton(
@@ -1010,7 +1010,7 @@ class _AddMCQQuestionsScreenState extends State<AddMCQQuestionsScreen> {
                     minimumSize:
                         const Size(double.infinity, 50), // Full-width button
                   ),
-                  child: Text('Reset'),
+                  child: const Text('Reset'),
                 ),
               ],
             ),
@@ -1528,38 +1528,6 @@ class _EditMCQsScreenState extends State<EditMCQsScreen> {
       print('Error fetching questions: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error fetching questions')),
-      );
-    }
-  }
-
-  Future<void> _updateQuestion(
-      String questionId, Map<String, dynamic> updatedQuestion) async {
-    try {
-      final response = await http.put(
-        Uri.parse(
-            '${AppConfig.baseUrl}/api/mcq-exams/${widget.paperId}/questions/$questionId'),
-        body: json.encode({
-          'question': updatedQuestion['question'],
-          'options': updatedQuestion['options'],
-          'correctAnswer': updatedQuestion['correctAnswer'],
-        }),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Question updated successfully')),
-        );
-        _fetchQuestions(); // Refresh the questions list
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update question')),
-        );
-      }
-    } catch (error) {
-      print('Error updating question: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error updating question')),
       );
     }
   }

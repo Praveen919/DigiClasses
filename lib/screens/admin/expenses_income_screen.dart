@@ -161,13 +161,13 @@ class _ExpensesIncomeScreenState extends State<ExpensesIncomeScreen> {
               updateExpense, // Now accepts the correct function signature
         );
       case 'addExpenseType':
-        return AddExpenseTypeScreen();
+        return const AddExpenseTypeScreen();
       case 'manageExpenseType':
-        return ManageExpenseTypeScreen();
+        return const ManageExpenseTypeScreen();
       case 'addIncome':
-        return AddIncomeScreen();
+        return const AddIncomeScreen();
       case 'manageIncome':
-        return ManageIncomeScreen();
+        return const ManageIncomeScreen();
       default:
         return const Center(child: Text('Unknown Option'));
     }

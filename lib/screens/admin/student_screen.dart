@@ -42,7 +42,7 @@ class _StudentScreenState extends State<StudentScreen> {
       case 'manageStudent':
         return const ManageStudentScreen();
       case 'assignClassBatch':
-        return AssignClassBatchScreen();
+        return const AssignClassBatchScreen();
       case 'shareDocuments':
         return const ShareDocumentsScreen();
       case 'manageSharedDocuments':
@@ -1726,11 +1726,11 @@ class StudentCard extends StatelessWidget {
   final VoidCallback onDelete;
 
   const StudentCard({
-    Key? key,
+    super.key,
     required this.student,
     required this.onEdit,
     required this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1787,11 +1787,13 @@ class StudentCard extends StatelessWidget {
 
 extension DateTimeExtension on DateTime {
   String toShortDateString() {
-    return "${this.day.toString().padLeft(2, '0')}/${this.month.toString().padLeft(2, '0')}/${this.year}";
+    return "${day.toString().padLeft(2, '0')}/${month.toString().padLeft(2, '0')}/$year";
   }
 }
 
 class AssignClassBatchScreen extends StatefulWidget {
+  const AssignClassBatchScreen({super.key});
+
   @override
   _AssignClassBatchScreenState createState() => _AssignClassBatchScreenState();
 }
@@ -1853,7 +1855,7 @@ class _AssignClassBatchScreenState extends State<AssignClassBatchScreen> {
             String middleName = student['middleName'] ?? '';
             String lastName = student['lastName'] ?? '';
             String fullName =
-                '$firstName ${middleName.isNotEmpty ? middleName + ' ' : ''}$lastName'
+                '$firstName ${middleName.isNotEmpty ? '$middleName ' : ''}$lastName'
                     .trim();
 
             return {
@@ -2462,6 +2464,7 @@ class SharedDocumentCard extends StatelessWidget {
   final VoidCallback onView;
 
   const SharedDocumentCard({
+    super.key,
     required this.documentData,
     required this.onEdit,
     required this.onDelete,

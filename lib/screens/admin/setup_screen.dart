@@ -176,7 +176,7 @@ class _AddYearScreenState extends State<AddYearScreen> {
         Navigator.pop(context, true); // Pass 'true' indicating success
       } else {
         // Log the response body for debugging
-        final errorResponse = await response.body; // Check this
+        final errorResponse = response.body; // Check this
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to save year: $errorResponse')),
         );
@@ -1308,7 +1308,7 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime:
-      isFromTime ? fromTime ?? TimeOfDay.now() : toTime ?? TimeOfDay.now(),
+          isFromTime ? fromTime ?? TimeOfDay.now() : toTime ?? TimeOfDay.now(),
     );
     if (picked != null) {
       setState(() {
@@ -1383,7 +1383,6 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -1485,9 +1484,9 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(
-                      valueColor:
-                      AlwaysStoppedAnimation<Color>(Colors.white),
-                    )
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          )
                         : const Text('SAVE'),
                   ),
                 ),
@@ -1497,12 +1496,12 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
                     onPressed: _isLoading
                         ? null
                         : () {
-                      _formKey.currentState!.reset();
-                      setState(() {
-                        fromTime = null;
-                        toTime = null;
-                      });
-                    },
+                            _formKey.currentState!.reset();
+                            setState(() {
+                              fromTime = null;
+                              toTime = null;
+                            });
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[900],
                     ),
@@ -1517,7 +1516,6 @@ class _AddClassBatchScreenState extends State<AddClassBatchScreen> {
     );
   }
 }
-
 
 // Model class for ClassBatch
 class ClassBatch {

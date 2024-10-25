@@ -177,19 +177,6 @@ class SidePanel extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.message_outlined),
-                title: const Text('Chat with Students'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const StudentT(option: 'chatWithStudents')),
-                  );
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.feedback_outlined),
                 title: const Text('View Students Feedback'),
                 onTap: () {
@@ -348,7 +335,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingT(option: 'admin')),
+                            const MessagingT(option: 'admin')),
                   );
                 },
               ),
@@ -400,7 +387,7 @@ class SidePanel extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const MessagingT(option: 'receivedMessage')),
+                            const MessagingT(option: 'receivedMessage')),
                   );
                 },
               ),
@@ -419,7 +406,6 @@ class SidePanel extends StatelessWidget {
               ),
             ],
           ),
-
           ExpansionTile(
             leading: const Icon(Icons.live_help_outlined),
             title: const Text('Help'),
@@ -585,7 +571,8 @@ class StatisticsNotifier extends StateNotifier<Statistics> {
 
         // Fetch today's absentees count
         final absenteesResponse = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/api/statistics/absentees/count'),
+          Uri.parse(
+              '${AppConfig.baseUrl}/api/absenceMessage/absences/today/count'),
           headers: {
             'Authorization': 'Bearer $token',
           },
@@ -620,10 +607,10 @@ class StatisticsCard extends StatelessWidget {
   final int absenteesCount;
 
   const StatisticsCard({
-    Key? key,
+    super.key,
     required this.studentsCount,
     required this.absenteesCount,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
