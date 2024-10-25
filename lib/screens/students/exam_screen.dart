@@ -108,6 +108,7 @@ class _ViewManualExamScreenState extends State<ViewManualExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Manual Exams'),
       ),
       body: FutureBuilder<List<Exam>>(
@@ -294,6 +295,7 @@ class _ViewMCQExamScreenState extends State<ViewMCQExamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('View MCQ Exams'),
         backgroundColor: Colors.teal,
       ),
@@ -488,6 +490,7 @@ class _ViewMCQsScreenState extends State<ViewMCQsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('MCQ Exam'),
       ),
       body: isLoading
@@ -640,6 +643,7 @@ class _ViewAssignmentsScreenState extends State<ViewAssignmentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Assignments'),
         actions: [
           IconButton(
