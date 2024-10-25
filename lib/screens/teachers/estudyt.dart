@@ -121,6 +121,7 @@ class _CreateStudyMaterialScreenState extends State<CreateStudyMaterialScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Create Study Material'),
       ),
       body: Padding(
